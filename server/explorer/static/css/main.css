@@ -1,0 +1,21 @@
+body {
+  background-color: aliceblue; }
+
+.c-location-table {
+  margin-bottom: 0; }
+
+.c-vc {
+  margin: 0;
+  position: absolute;
+  top: 50%;
+  -ms-transform: translateY(-50%);
+  transform: translateY(-50%); }
+
+.c-ib {
+  display: inline-block; }
+
+.c-tc-icon1 {
+  width: 40px; }
+
+.c-tc-icon2 {
+  width: 100px; }

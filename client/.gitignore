@@ -1,0 +1,5 @@
+.idea/
+build/
+dc_client.egg-info/
+dist/
+**/*/__pycache__/

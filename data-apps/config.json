@@ -1,0 +1,11 @@
+{
+    "livy": {
+        "service_url": "http://10.0.0.18:60008/",
+        "username": "root",
+        "password": "changeme"
+    },
+    "bridge": {
+        "hostname": "spnode1",
+        "stage_dir": "/root/.stage"
+    }
+}

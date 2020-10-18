@@ -1,0 +1,48 @@
+Pipeline Context 格式
+
+{
+    "required": {
+        "dataset_instances": [
+            'trading_version:1.0:1/{{dt}}'
+        ]
+    },
+    "tasks": [...array of TASK...]
+}
+
+TASK的格式
+{
+    'app': 'spark_sql',
+    'name': '...task的名字',
+    'context': '不透明的参数'
+}
+
+TASK的context，对不同类型的task可以有不同的格式和解释。
+
+这里，目前我们只实现了spark_sql一种task
+
+
+例子:
+
+{
+    "require": {
+        "dataset_instances": [
+            'trading_version:1.0:1/{{dt}}'
+        ]
+    },
+    "tasks": [
+        {
+            "type": "spark-sql",
+            "name": "get_min_max_table",
+            "context": {}
+        },
+        {
+            "type": "spark-sql",
+            "name": "gen_output",
+            "context": {}
+        }
+    ]
+}
+
+pipeline_group: dc3e8fa1671a46f4876f2733bb63fd7d
+
+pipeline instance:

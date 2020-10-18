@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Foo{% endblock %}
+
+{% block content %}
+
+<div class="row justify-content-center align-items-center">
+    <div class="col col-sm-6 col-md-6 col-lg-4 col-xl-3">
+        {% if user.is_authenticated %}
+            <div class="alert alert-primary" role="alert">
+                You already logged in
+            </div>        
+        {% else %}
+            {% if msg %}
+            <div class="alert alert-danger" role="alert">
+                {{ msg }}
+            </div>        
+            {% endif %}
+            <form action="login" method="POST">
+                {% csrf_token %}
+                <div class="form-group">
+                    <input type="text" class="form-control form-control-lg" placeholder="Enter user name" name="username">
+                </div>
+                <div class="form-group">
+                    <input type="password" class="form-control form-control-lg" placeholder="Enter password" name="password">
+                </div>
+                <div class="form-group">
+                    <button class="btn btn-info btn-lg btn-block">Sign In</button>
+                </div>
+            </form>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}

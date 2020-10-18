@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block title %}Pipeline{% endblock %}
+
+{% block content %}
+<div
+    id='app'
+    data-dataset-id="{{pipeline_id}}"
+    data-username="{{request.user.username}}">
+</div>
+{% endblock %}
