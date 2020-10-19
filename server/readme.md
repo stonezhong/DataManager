@@ -1,20 +1,12 @@
-# js debug
-see "devtool: '#inline-source-map'" in webpack.config.js, you can remove this line for production.
+# [setup and deploy](setup.md)
 
+# Tips
+<details>
+<summary>Enable js debug</summary>
 
-# Data Catalog Service
-## APIs
-```
-POST /Datasets              Create a dataset
-GET /Datasets               List all dataset
-DEL /Datasets/<id>          Delete a dataset, only can delete if there is not dataset instance
-PATCH /Datasets/<id>        Only description, author, team can change
-```
-
-
-# TODO
-- Dataset PATCH method only can update description, author and team field.
+see the following line in `webpack.config.js`:
 
 ```
-npm install @babel/core @babel/preset-env @babel/preset-react @babel/plugin-proposal-class-properties babel-loader html-loader html-webpack-plugin webpack webpack-cli --save-dev
+devtool: '#inline-source-map'
 ```
+</details>
