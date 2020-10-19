@@ -10,7 +10,7 @@ import Modal from 'react-bootstrap/Modal'
 
 import classNames from 'classnames'
 import * as Icon from 'react-bootstrap-icons'
-import {SQLStepEditor} from './sql_step_editor.jsx'
+import {SQLStepEditor} from '../sql_step_editor/sql_step_editor.jsx'
 
 const _ = require('lodash');
 

@@ -14,7 +14,7 @@ import Container from 'react-bootstrap/Container'
 import * as Icon from 'react-bootstrap-icons';
 
 import {get_csrf_token, get_app_context, get_app_config} from './common_lib'
-import {PipelineGroupEditor} from './components/pipeline_group_editor.jsx'
+import {PipelineGroupEditor} from './components/pipeline_group_editor/pipeline_group_editor.jsx'
 
 const _ = require("lodash");
 

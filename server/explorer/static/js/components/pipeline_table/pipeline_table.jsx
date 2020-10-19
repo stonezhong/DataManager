@@ -14,7 +14,7 @@ import Button from 'react-bootstrap/Button'
 import * as Icon from 'react-bootstrap-icons'
 import Spinner from 'react-bootstrap/Spinner'
 
-import {get_app_config} from '../common_lib'
+import {get_app_config} from '../../common_lib'
 
 /*************************************************************************
  * props
