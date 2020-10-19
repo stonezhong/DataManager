@@ -11,11 +11,11 @@ import Row from 'react-bootstrap/Row'
 import Table from 'react-bootstrap/Table'
 import Container from 'react-bootstrap/Container'
 
-import {PipelineGroupEditor} from './components/pipeline_group_editor/pipeline_group_editor.jsx'
+import {PipelineGroupEditor} from '/components/pipeline_group_editor/pipeline_group_editor.jsx'
 
 import $ from 'jquery'
 
-import {dt_2_utc_string, get_csrf_token} from './common_lib'
+import {dt_2_utc_string, get_csrf_token} from '/common_lib'
 
 class PipelineGroups extends React.Component {
     state = {

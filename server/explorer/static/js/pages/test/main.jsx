@@ -2,14 +2,14 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 import $ from 'jquery'
 
-import {get_app_context} from './common_lib'
-import {TestTaskEditor} from './components/task_editor/test.jsx'
-import {TestApplicationEditor} from './components/application_editor/test.jsx'
-import {TestDatasetEditor} from './components/dataset_editor/test.jsx'
-import {TestPipelineEditor} from './components/pipeline_editor/test.jsx'
-import {TestSQLStepEditor} from './components/sql_step_editor/test.jsx'
-import {TestPipelineGroupEditor} from './components/pipeline_group_editor/test.jsx'
-import {TestPipelineTable} from './components/pipeline_table/test.jsx'
+import {get_app_context} from '/common_lib'
+import {TestTaskEditor} from '/components/task_editor/test.jsx'
+import {TestApplicationEditor} from '/components/application_editor/test.jsx'
+import {TestDatasetEditor} from '/components/dataset_editor/test.jsx'
+import {TestPipelineEditor} from '/components/pipeline_editor/test.jsx'
+import {TestSQLStepEditor} from '/components/sql_step_editor/test.jsx'
+import {TestPipelineGroupEditor} from '/components/pipeline_group_editor/test.jsx'
+import {TestPipelineTable} from '/components/pipeline_table/test.jsx'
 
 class TestPage extends React.Component {
     render() {

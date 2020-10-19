@@ -3,18 +3,15 @@ import ReactDOM from 'react-dom'
 import $ from 'jquery'
 
 import Modal from 'react-bootstrap/Modal'
-import ButtonToolbar from 'react-bootstrap/ButtonToolbar'
-import ButtonGroup from 'react-bootstrap/ButtonGroup'
 import Button from 'react-bootstrap/Button'
 import Form from 'react-bootstrap/Form'
 import Col from 'react-bootstrap/Col'
 import Row from 'react-bootstrap/Row'
 import Table from 'react-bootstrap/Table'
 import Container from 'react-bootstrap/Container'
-import * as Icon from 'react-bootstrap-icons';
 
-import {get_csrf_token, get_app_context, get_app_config} from './common_lib'
-import {PipelineGroupEditor} from './components/pipeline_group_editor/pipeline_group_editor.jsx'
+import {get_csrf_token, get_app_context, get_app_config} from '/common_lib'
+import {PipelineGroupEditor} from '/components/pipeline_group_editor/pipeline_group_editor.jsx'
 
 const _ = require("lodash");
 

@@ -10,8 +10,8 @@ import * as Icon from 'react-bootstrap-icons'
 
 import $ from 'jquery'
 
-import {dt_2_utc_string, get_csrf_token} from './common_lib'
-import {DatasetEditor} from './components/dataset_editor/dataset_editor.jsx'
+import {dt_2_utc_string, get_csrf_token} from '/common_lib'
+import {DatasetEditor} from '/components/dataset_editor/dataset_editor.jsx'
 
 
 class Datasets extends React.Component {

@@ -7,7 +7,7 @@ import Row from 'react-bootstrap/Row'
 import Table from 'react-bootstrap/Table'
 import Container from 'react-bootstrap/Container'
 
-import {get_app_context} from './common_lib'
+import {get_app_context} from '/common_lib'
 
 class DatasetInstances extends React.Component {
     render() {
