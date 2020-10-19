@@ -1,0 +1,20 @@
+.dataset-table {
+    th[data-role='author'] {
+        width: 120px;
+    }
+    th[data-role='team'] {
+        width: 120px;
+    }
+    th[data-role='publish_time'] {
+        width: 180px;
+    }
+    th[data-role='expired_time'] {
+        width: 180px;
+    }
+    th[data-role='major_version'] {
+        width: 100px;
+    }
+    th[data-role='minor_version'] {
+        width: 100px;
+    }
+}

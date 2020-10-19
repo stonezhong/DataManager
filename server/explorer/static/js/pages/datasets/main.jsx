@@ -6,9 +6,11 @@ import Col from 'react-bootstrap/Col'
 import Row from 'react-bootstrap/Row'
 import Table from 'react-bootstrap/Table'
 import Container from 'react-bootstrap/Container'
+import Form from 'react-bootstrap/Form'
 import * as Icon from 'react-bootstrap-icons'
 
 import $ from 'jquery'
+const buildUrl = require('build-url');
 
 import {dt_2_utc_string, get_csrf_token, get_current_user} from '/common_lib'
 import {DatasetEditor} from '/components/dataset_editor/dataset_editor.jsx'
@@ -17,6 +19,7 @@ import {DatasetEditor} from '/components/dataset_editor/dataset_editor.jsx'
 class Datasets extends React.Component {
     state = {
         datasets: [],
+        show_expired_datasets: false
     };
 
     constructor(props) {
@@ -25,7 +28,18 @@ class Datasets extends React.Component {
     }
 
     load_datasets = () => {
-        fetch("/api/Datasets/")
+        const buildArgs = {
+            path: "/api/Datasets/",
+            queryParams: {
+                ordering: '-publish_time',
+            }
+        };
+        if (!this.state.show_expired_datasets) {
+            buildArgs.queryParams.expiration_time__isnull="True"
+        }
+        const url = buildUrl('', buildArgs);
+
+        fetch(url)
         .then(res => res.json())
         .then(
             (result) => {
@@ -95,29 +109,43 @@ class Datasets extends React.Component {
                     <Row>
                         <Col>
                             <h1 className="c-ib">Datasets</h1>
-                            <Button
-                                disabled = {!this.props.current_user}
-                                size="sm"
-                                className="c-vc ml-2"
-                                onClick={() => {
-                                    this.theDatasetEditorRef.current.openDialog();
-                                }}
-                            >
-                                Create
-                            </Button>
+                            <div className="c-vc c-ib">
+                                <Button
+                                    disabled = {!this.props.current_user}
+                                    size="sm"
+                                    className="ml-2"
+                                    onClick={() => {
+                                        this.theDatasetEditorRef.current.openDialog();
+                                    }}
+                                >
+                                    Create
+                                </Button>
+                                <Form.Check type="checkbox" label="Show Expired Datasets"
+                                    inline
+                                    className="ml-2"
+                                    checked={this.state.show_expired_datasets}
+                                    onChange={(event) => {
+                                        this.setState({
+                                            show_expired_datasets: event.target.checked
+                                        }, this.load_datasets);
+                                    }}
+                                />
+                            </div>
                         </Col>
                     </Row>
                     <Row>
                         <Col>
-                            <Table hover>
+                            <Table hover size="sm" className="dataset-table">
                                 <thead className="thead-dark">
                                     <tr>
                                         <th className="c-tc-icon1"></th>
-                                        <th>Name</th>
-                                        <th>Author</th>
-                                        <th>Team</th>
-                                        <th>Major Version</th>
-                                        <th>Minor Version</th>
+                                        <th data-role='name'>Name</th>
+                                        <th data-role='author'>Author</th>
+                                        <th data-role='team'>Team</th>
+                                        <th data-role='publish_time'>Published</th>
+                                        <th data-role='expired_time'>Expired</th>
+                                        <th data-role='major_version'>Major Version</th>
+                                        <th data-role='minor_version'>Minor Version</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -140,6 +168,8 @@ class Datasets extends React.Component {
                                                 <td><a href={`dataset?id=${dataset.id}`}>{dataset.name}</a></td>
                                                 <td>{dataset.author}</td>
                                                 <td>{dataset.team}</td>
+                                                <td>{dataset.publish_time}</td>
+                                                <td>{dataset.expiration_time}</td>
                                                 <td>{dataset.major_version}</td>
                                                 <td>{dataset.minor_version}</td>
                                             </tr>
