@@ -11,7 +11,7 @@ import Row from 'react-bootstrap/Row'
 import Table from 'react-bootstrap/Table'
 import Container from 'react-bootstrap/Container'
 
-import {PipelineGroupEditor} from './components/pipeline_group_editor.jsx'
+import {PipelineGroupEditor} from './components/pipeline_group_editor/pipeline_group_editor.jsx'
 
 import $ from 'jquery'
 

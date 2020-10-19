@@ -12,7 +12,7 @@ import Table from 'react-bootstrap/Table'
 import Container from 'react-bootstrap/Container'
 import * as Icon from 'react-bootstrap-icons'
 
-import {ApplicationEditor} from './components/application_editor.jsx'
+import {ApplicationEditor} from './components/application_editor/application_editor.jsx'
 
 import $ from 'jquery'
 

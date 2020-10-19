@@ -28,7 +28,12 @@ def get_app_config():
     }
     return json.dumps(config)
 
+# test page is for testing UI components
 def test(request):
+    app_context = {
+        'component': request.GET.get("component", None)
+    }
+
     return render(
         request,
         'test.html',
@@ -37,7 +42,9 @@ def test(request):
             'scripts':[
                 '/static/js-bundle/test.js'
             ],
-            'nav_item_role': 'home',
+            'nav_item_role': '',
+            'app_config': get_app_config(),
+            'app_context': json.dumps(app_context),
         }
     )
 
@@ -222,35 +229,4 @@ def applications(request):
             'app_config': get_app_config()
         }
     )
-
-
-def create_dag(request):
-    print("Web API: create_dag is requested")
-    payload = json.loads(request.body)
-    print(f"payload: {payload}")
-
-    dag_template = payload['dag-template']
-    dag_name = payload['dag-name']
-    pipeline_id = payload['pipeline-id'].replace('-', '')
-
-    template_file = os.path.join(
-        settings.BASE_DIR,
-        "dag-templates",
-        f"{dag_template}.py"
-    )
-
-    with open(template_file, "rt") as f:
-        content = f.read()
-
-    template = jinja2.Template(content)
-    to_write = template.render({
-        'pipeline_id': pipeline_id,
-        'dag_id': dag_name,
-    })
-
-    airflow_lib.create_dag(f"{pipeline_id}.py", dag_name, to_write)
-
-    # do the creation
-    return JsonResponse({
-    })
 
