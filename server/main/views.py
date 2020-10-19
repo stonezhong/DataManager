@@ -30,8 +30,13 @@ class DatasetViewSet(viewsets.ModelViewSet):
     queryset = Dataset.objects.all()
     serializer_class = DatasetSerializer
     filter_backends = [DjangoFilterBackend, OrderingFilter]
-    filterset_fields = ['name', 'major_version', 'minor_version']
-    ordering_fields = ['name', 'major_version', 'minor_version']
+    filterset_fields = {
+        'name'              : ['exact'],
+        'major_version'     : ['exact'],
+        'minor_version'     : ['exact'],
+        'expiration_time'   : ['isnull', 'exact']
+    }
+    ordering_fields = ['name', 'major_version', 'minor_version', 'publish_time']
 
     @action(detail=True, methods=['get'])
     def children(self, request, pk=None):
