@@ -38,8 +38,6 @@
 <body style="background-color: rgb(250, 250, 250);">
     {% include "header.html" %}
 
-    <div class="container-fluid" style="padding-top:70px;">
-        {% block content %}{% endblock %}
-    </div>
+    {% block content %}{% endblock %}
 </body>
 </html>
