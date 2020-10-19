@@ -9,6 +9,7 @@ from django.contrib.auth import logout as do_logout, \
     authenticate as do_authenticate, login as do_login
 from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction
+from django.urls import reverse
 
 from main.models import Dataset, Pipeline, PipelineGroup, PipelineInstance, \
     Application
@@ -49,21 +50,9 @@ def test(request):
     )
 
 def index(request):
-    return render(
-        request,
-        'index.html',
-        context={
-            'user': request.user,
-            'scripts':[
-                '/static/js-bundle/home.js'
-            ],
-            'nav_item_role': 'home',
-            'app_config': get_app_config()
-        }
-    )
+    return redirect(reverse('datasets'))
 
 def datasets(request):
-    # datasets = Dataset.get_active_datasets(request.user)
     return render(
         request,
         'datasets.html',
