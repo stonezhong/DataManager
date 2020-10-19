@@ -10,7 +10,7 @@ import Container from 'react-bootstrap/Container'
 
 import {PipelineTable} from '/components/pipeline_table/pipeline_table.jsx'
 import {PipelineEditor} from '/components/pipeline_editor/pipeline_editor.jsx'
-import {get_csrf_token, pipeline_to_django_model, pipeline_from_django_model, get_app_context} from '/common_lib'
+import {get_csrf_token, pipeline_to_django_model, pipeline_from_django_model, get_app_context, get_current_user} from '/common_lib'
 
 class Pipelines extends React.Component {
     state = {
@@ -147,7 +147,7 @@ class Pipelines extends React.Component {
                         <Col>
                             <h1 className="c-ib">Pipelines</h1>
                             <Button
-                                disabled = {this.props.username == ''}
+                                disabled = {!this.props.current_user}
                                 size="sm"
                                 className="c-vc ml-2"
                                 onClick={() => {
@@ -162,7 +162,7 @@ class Pipelines extends React.Component {
                         <Col>
                             <PipelineTable
                                 pipelines={this.state.pipelines.map(pipeline_from_django_model)}
-                                allowEdit = {this.props.username != ''}
+                                allowEdit = {this.props.current_user}
                                 onPause = {this.onPausePipeline}
                                 onUnpause = {this.onUnpausePipeline}
                                 editPipeline={
@@ -185,12 +185,12 @@ class Pipelines extends React.Component {
 }
 
 $(function() {
-    const username = document.getElementById('app').getAttribute("data-username");
+    const current_user = get_current_user()
     const app_context = get_app_context();
 
     ReactDOM.render(
         <Pipelines
-            username={username}
+            current_user={current_user}
             applications={app_context.applications}
         />,
         document.getElementById('app')

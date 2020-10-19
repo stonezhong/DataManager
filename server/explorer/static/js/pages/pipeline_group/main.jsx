@@ -10,7 +10,7 @@ import Row from 'react-bootstrap/Row'
 import Table from 'react-bootstrap/Table'
 import Container from 'react-bootstrap/Container'
 
-import {get_csrf_token, get_app_context, get_app_config} from '/common_lib'
+import {get_csrf_token, get_app_context, get_app_config, get_current_user} from '/common_lib'
 import {PipelineGroupEditor} from '/components/pipeline_group_editor/pipeline_group_editor.jsx'
 
 const _ = require("lodash");
@@ -289,12 +289,12 @@ class PipelineGroup extends React.Component {
 }
 
 $(function() {
-    const username = document.getElementById('app').getAttribute("data-username");
+    const current_user = get_current_user()
     const app_context = get_app_context();
 
     ReactDOM.render(
         <PipelineGroup
-            username={username}
+            current_user={current_user}
             pipeline_group_id={app_context.pipeline_group_id}
         />,
         document.getElementById('app')

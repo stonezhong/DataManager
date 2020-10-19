@@ -12,7 +12,7 @@ import {ApplicationEditor} from '/components/application_editor/application_edit
 
 import $ from 'jquery'
 
-import {get_csrf_token} from '/common_lib'
+import {get_csrf_token, get_current_user} from '/common_lib'
 
 class Applications extends React.Component {
     state = {
@@ -96,7 +96,7 @@ class Applications extends React.Component {
                         <Col>
                             <h1 className="c-ib">Applications</h1>
                             <Button
-                                disabled = {this.props.username == ''}
+                                disabled = {!this.props.current_user}
                                 size="sm"
                                 className="c-vc ml-2"
                                 onClick={() => {
@@ -124,7 +124,7 @@ class Applications extends React.Component {
                                     <tr key={application.id}>
                                         <td  className="align-middle">
                                             <Button
-                                                disabled = {this.props.username == ''}
+                                                disabled = {!this.props.current_user}
                                                 variant="secondary"
                                                 size="sm"
                                                 onClick={event => {
@@ -156,9 +156,9 @@ class Applications extends React.Component {
 }
 
 $(function() {
-    const username = document.getElementById('app').getAttribute("data-username");
+    const current_user = get_current_user()
     ReactDOM.render(
-        <Applications username={username} />,
+        <Applications current_user={current_user} />,
         document.getElementById('app')
     );
 });

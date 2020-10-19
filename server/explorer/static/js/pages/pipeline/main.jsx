@@ -3,7 +3,7 @@ import $ from 'jquery';
 import React from 'react'
 import ReactDOM from 'react-dom'
 
-import {get_app_context} from '/common_lib'
+import {get_app_context, get_current_user} from '/common_lib'
 
 class Pipeline extends React.Component {
     render() {
@@ -16,11 +16,11 @@ class Pipeline extends React.Component {
 }
 
 $(function() {
-    const username = document.getElementById('app').getAttribute("data-username");
+    const current_user = get_current_user()
     const app_context = get_app_context();
 
     ReactDOM.render(
-        <Pipeline username={username} pipeline={app_context.pipeline}/>,
+        <Pipeline current_user={current_user} pipeline={app_context.pipeline}/>,
         document.getElementById('app')
     );
 });

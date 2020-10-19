@@ -10,7 +10,7 @@ import * as Icon from 'react-bootstrap-icons'
 
 import $ from 'jquery'
 
-import {dt_2_utc_string, get_csrf_token} from '/common_lib'
+import {dt_2_utc_string, get_csrf_token, get_current_user} from '/common_lib'
 import {DatasetEditor} from '/components/dataset_editor/dataset_editor.jsx'
 
 
@@ -96,7 +96,7 @@ class Datasets extends React.Component {
                         <Col>
                             <h1 className="c-ib">Datasets</h1>
                             <Button
-                                disabled = {this.props.username == ''}
+                                disabled = {!this.props.current_user}
                                 size="sm"
                                 className="c-vc ml-2"
                                 onClick={() => {
@@ -162,9 +162,9 @@ class Datasets extends React.Component {
 }
 
 $(function() {
-    const username = document.getElementById('app').getAttribute("data-username");
+    const current_user = get_current_user()
     ReactDOM.render(
-        <Datasets username={username} />,
+        <Datasets current_user={current_user} />,
         document.getElementById('app')
     );
 });

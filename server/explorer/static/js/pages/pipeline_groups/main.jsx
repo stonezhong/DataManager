@@ -15,7 +15,7 @@ import {PipelineGroupEditor} from '/components/pipeline_group_editor/pipeline_gr
 
 import $ from 'jquery'
 
-import {dt_2_utc_string, get_csrf_token} from '/common_lib'
+import {dt_2_utc_string, get_csrf_token, get_current_user} from '/common_lib'
 
 class PipelineGroups extends React.Component {
     state = {
@@ -73,7 +73,7 @@ class PipelineGroups extends React.Component {
                         <Col>
                             <h1 className="c-ib">Executions</h1>
                             <Button
-                                disabled = {this.props.username == ''}
+                                disabled = {!this.props.current_user}
                                 size="sm"
                                 className="c-vc ml-2"
                                 onClick={() => {
@@ -123,9 +123,9 @@ class PipelineGroups extends React.Component {
 }
 
 $(function() {
-    const username = document.getElementById('app').getAttribute("data-username");
+    const current_user = get_current_user()
     ReactDOM.render(
-        <PipelineGroups username={username} />,
+        <PipelineGroups current_user={current_user} />,
         document.getElementById('app')
     );
 });

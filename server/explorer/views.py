@@ -55,9 +55,10 @@ def index(request):
 def datasets(request):
     return render(
         request,
-        'datasets.html',
+        'common_page.html',
         context={
             'user': request.user,
+            'sub_title': "Datasets",
             'scripts':[
                 '/static/js-bundle/datasets.js'
             ],
@@ -78,10 +79,10 @@ def dataset(request):
 
     return render(
         request,
-        'dataset.html',
+        'common_page.html',
         context={
             'user': request.user,
-            'dataset_id': dataset_id,
+            'sub_title': "Dataset",
             'scripts':[
                 '/static/js-bundle/dataset.js'
             ],
@@ -131,9 +132,10 @@ def pipelines(request):
 
     return render(
         request,
-        'pipelines.html',
+        'common_page.html',
         context={
             'user': request.user,
+            'sub_title': "Pipelines",
             'scripts':[
                 '/static/js-bundle/pipelines.js'
             ],
@@ -155,9 +157,10 @@ def pipeline(request):
 
     return render(
         request,
-        'pipeline.html',
+        'common_page.html',
         context={
             'user': request.user,
+            'sub_title': "Pipeline",
             'pipeline_id': pipeline_id,
             'scripts':[
                 '/static/js-bundle/pipeline.js'
@@ -171,9 +174,10 @@ def pipeline(request):
 def pipeline_groups(request):
     return render(
         request,
-        'pipeline_groups.html',
+        'common_page.html',
         context={
             'user': request.user,
+            'sub_title': "Executions",
             'scripts':[
                 '/static/js-bundle/pipeline_groups.js'
             ],
@@ -191,9 +195,10 @@ def pipeline_group(request):
 
     return render(
         request,
-        'pipeline_group.html',
+        'common_page.html',
         context={
             'user': request.user,
+            'sub_title': "Execution",
             'pipeline_group_id': pipeline_group_id,
             'scripts':[
                 '/static/js-bundle/pipeline_group.js'
@@ -208,9 +213,10 @@ def pipeline_group(request):
 def applications(request):
     return render(
         request,
-        'applications.html',
+        'common_page.html',
         context={
             'user': request.user,
+            'sub_title': "Applications",
             'scripts':[
                 '/static/js-bundle/applications.js'
             ],
