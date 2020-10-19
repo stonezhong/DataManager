@@ -37,9 +37,10 @@ def test(request):
 
     return render(
         request,
-        'test.html',
+        'common_page.html',
         context={
             'user': request.user,
+            'sub_title': "UI Test",
             'scripts':[
                 '/static/js-bundle/test.js'
             ],
