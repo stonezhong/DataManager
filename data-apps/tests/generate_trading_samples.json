@@ -1,0 +1,12 @@
+{
+    "pipeline_group_context": {
+        "dt": "2020-10-06"
+    },
+    "dc_config": {
+        "url_base": "http://192.168.0.14:8888/api",
+        "username": "stonezhong",
+        "password": "iamrich"
+    },
+    "app_args": {}
+}
+

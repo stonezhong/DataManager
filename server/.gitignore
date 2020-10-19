@@ -1,0 +1,4 @@
+.venv/
+.vscode/
+node_modules/
+explorer/static/js-bundle/
