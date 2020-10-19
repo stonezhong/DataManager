@@ -3,7 +3,7 @@ import $ from 'jquery';
 import React from 'react'
 import ReactDOM from 'react-dom'
 
-import {get_app_context} from './common_lib'
+import {get_app_context} from '/common_lib'
 
 class Pipeline extends React.Component {
     render() {

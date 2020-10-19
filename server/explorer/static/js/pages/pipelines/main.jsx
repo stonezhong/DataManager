@@ -8,9 +8,9 @@ import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
 import Container from 'react-bootstrap/Container'
 
-import {PipelineTable} from './components/pipeline_table/pipeline_table.jsx'
-import {PipelineEditor} from './components/pipeline_editor/pipeline_editor.jsx'
-import {get_csrf_token, pipeline_to_django_model, pipeline_from_django_model, get_app_context} from './common_lib'
+import {PipelineTable} from '/components/pipeline_table/pipeline_table.jsx'
+import {PipelineEditor} from '/components/pipeline_editor/pipeline_editor.jsx'
+import {get_csrf_token, pipeline_to_django_model, pipeline_from_django_model, get_app_context} from '/common_lib'
 
 class Pipelines extends React.Component {
     state = {

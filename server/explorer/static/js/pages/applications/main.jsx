@@ -1,22 +1,18 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 
-import Modal from 'react-bootstrap/Modal'
 import Button from 'react-bootstrap/Button'
-import ButtonToolbar from 'react-bootstrap/ButtonToolbar'
-import ButtonGroup from 'react-bootstrap/ButtonGroup'
-import Form from 'react-bootstrap/Form'
 import Col from 'react-bootstrap/Col'
 import Row from 'react-bootstrap/Row'
 import Table from 'react-bootstrap/Table'
 import Container from 'react-bootstrap/Container'
 import * as Icon from 'react-bootstrap-icons'
 
-import {ApplicationEditor} from './components/application_editor/application_editor.jsx'
+import {ApplicationEditor} from '/components/application_editor/application_editor.jsx'
 
 import $ from 'jquery'
 
-import {get_csrf_token} from './common_lib'
+import {get_csrf_token} from '/common_lib'
 
 class Applications extends React.Component {
     state = {
