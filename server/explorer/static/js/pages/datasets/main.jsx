@@ -135,7 +135,7 @@ class Datasets extends React.Component {
                     </Row>
                     <Row>
                         <Col>
-                            <Table hover size="sm" className="dataset-table">
+                            <Table hover className="dataset-table">
                                 <thead className="thead-dark">
                                     <tr>
                                         <th className="c-tc-icon1"></th>
