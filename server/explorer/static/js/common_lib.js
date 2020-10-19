@@ -1,6 +1,23 @@
 // import { EventEmitter } from 'events';
 import $ from 'jquery'
 
+/*************************************************************************
+ * Common elements for each page
+ *
+ * <meta name="user" content="JSON_OBJECT">
+ *      This the user information for the current user
+ *      If user is not logged in, then this element does not exist
+ *
+ * <meta name="csrf" content="...">
+ *      This is the csrf token for the current page
+ *
+ * <meta name="app_config" content="JSON_OBJECT">
+ *      This is the global application config. It is the same cross the board
+ *
+ * <meta name="app_context" content="JSON_OBJECT">
+ *      This is the application specific context, different from app to app.
+ *************************************************************************/
+
 export function dt_2_utc_string(dt) {
     const year   = dt.getUTCFullYear();
     const month  = ('0' + (dt.getUTCMonth()+1)).slice(-2)
@@ -16,18 +33,13 @@ export function get_csrf_token() {
     return $("meta[name='csrf']")[0].content;
 }
 
-// const ee = new EventEmitter();
-
-// export function emit(subject, payload) {
-//     ee.emit(subject, payload);
-// }
-
-// // Like ee.on, but execute the callback in a delayed fasion
-// export function onDelayed(subject, cb) {
-//     ee.on(subject, v => {
-//         setTimeout(() => cb(v), 0);
-//     });
-// }
+export function get_current_user() {
+    const elements = $("meta[name='user']");
+    if (elements.length > 0)
+        return JSON.parse(elements[0].content);
+    else
+        return null
+}
 
 export function get_app_config() {
     const elements = $("meta[name='app_config']");
