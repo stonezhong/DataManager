@@ -1,8 +1,52 @@
+import uuid
+from datetime import datetime, timedelta
+
 from django.db import models
 from django.contrib.auth.models import User
-import uuid
 import pytz
-from datetime import datetime
+
+TIME_UNIT_YEAR      = "YEAR"
+TIME_UNIT_MONTH     = "MONTH"
+TIME_UNIT_DAY       = "DAY"
+TIME_UNIT_HOUR      = "HOUR"
+TIME_UNIT_MINUTE    = "MINUTE"
+TIME_UNIT_SECOND    = "SECOND"
+VALID_INTERVAL_UNITS = [
+    TIME_UNIT_YEAR, TIME_UNIT_MONTH, TIME_UNIT_DAY,
+    TIME_UNIT_HOUR, TIME_UNIT_MINUTE, TIME_UNIT_SECOND
+]
+
+# adjust datetime
+def adjust_time(dt, delta_unit, delta_amount):
+    if delta_unit == TIME_UNIT_YEAR:
+        year, month, day, hour, minutes, second, microsecond = dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, dt.microsecond
+        year += delta_amount
+        return dt.tzinfo.localize(datetime(year, month, day, hour, minute, second, microsecond))
+
+    if delta_unit == TIME_UNIT_MONTH:
+        year, month, day, hour, minutes, second, microsecond = dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, dt.microsecond
+        x = month - 1 + delta_amount
+        if x >= 0:
+            year += x // 12
+            month = x % 12 + 1
+        else:
+            x_year = (-x+11) // 12  # number of years to absorb
+            year -= x_year
+            month = x + 12*x_year + 1
+        return dt.tzinfo.localize(datetime(year, month, day, hour, minute, second, microsecond))
+
+    if delta_unit == TIME_UNIT_DAY:
+        return dt + timedelta(days=delta_amount)
+
+    if delta_unit == TIME_UNIT_HOUR:
+        return dt + timedelta(hours=delta_amount)
+
+    if delta_unit == TIME_UNIT_MINUTE:
+        return dt + timedelta(minutes=delta_amount)
+
+    if delta_unit == TIME_UNIT_SECOND:
+        return dt + timedelta(seconds=delta_amount)
+
 
 class AppException(Exception):
     pass
@@ -397,3 +441,110 @@ class Application(models.Model):
         )
         application.save()
         return application
+
+class Timer(models.Model):
+    id                  = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name                = models.CharField(max_length=255, blank=False, unique=True)     # required
+    description         = models.TextField(blank=True)
+    author              = models.ForeignKey(
+        User,
+        on_delete=models.PROTECT,
+        null=False,
+        related_name='timer_created'
+    )                                                                       # required
+    team                = models.CharField(max_length=64, blank=False)      # required
+    paused              = models.BooleanField(null=False)
+
+    interval_unit       = models.CharField(max_length=20, blank=False)
+    interval_amount     = models.IntegerField(null=False)
+
+    offset_unit         = models.CharField(max_length=20, blank=False)
+    offset_amount       = models.IntegerField(null=False)
+
+    initial_base        = models.DateTimeField(null=False)
+
+    # The last due we triggered
+    last_base           = models.DateTimeField(null=True)
+
+    # create a timer
+    @classmethod
+    def create(cls, requester, name, description, team, paused,
+               interval_unit, interval_amount, offset_unit, offset_amount,
+               initial_base):
+
+        if not requester.is_authenticated:
+            raise PermissionDeniedException()
+
+        # TODO: validate arguments
+        timer = Timer(name = name,
+                      description = description,
+                      author = requester,
+                      team = team,
+                      paused = paused,
+                      interval_unit = interval_unit,
+                      interval_amount = interval_amount,
+                      offset_unit = offset_unit,
+                      offset_amount = offset_amount,
+                      initial_base = initial_base,
+                      last_base = None)
+        timer.save()
+        return timer
+
+    def next_due(self, dryrun=True):
+        # if dryrun is True, we only return the next due and base, but do not
+        # write to db
+
+        if self.last_base is None:
+            new_last_base = self.initial_base
+        else:
+            new_last_base = adjust_time(
+                self.last_base,
+                self.interval_unit, self.interval_amount
+            )
+        due = adjust_time(new_last_base, self.offset_unit, self.offset_amount)
+        if dryrun:
+            return due
+
+        self.last_base = new_last_base
+
+        se = ScheduledEvent(
+            timer = self,
+            due = due,
+            acked = False
+        )
+
+        self.save()
+        se.save()
+        return due
+
+    @classmethod
+    def produce_next_due(cls):
+        # For now, we assume all the timer uses UTC timezone
+        now = datetime.utcnow().replace(tzinfo=pytz.UTC)
+
+        picked_timer = None
+        picked_due = None
+        for timer in Timer.objects.filter(paused=False):
+            due = timer.next_due()
+            if picked_due is None or due < picked_due:
+                picked_due = due
+                picked_timer = timer
+
+        if picked_timer is None or picked_timer > now:
+            # no schedule event generated
+            return False
+
+        picked_timer.next_due(dryrun=False)
+        return True
+
+
+class ScheduledEvent(models.Model):
+    id                  = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    timer               = models.ForeignKey(
+        Timer,
+        on_delete=models.PROTECT,
+        null=False,
+        related_name='events'
+    )
+    due                 = models.DateTimeField(null=False)
+    acked               = models.BooleanField(null=False)

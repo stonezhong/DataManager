@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 
 from .models import Dataset, DatasetInstance, DataLocation, Pipeline, \
-    PipelineGroup, PipelineInstance, Application
+    PipelineGroup, PipelineInstance, Application, Timer, ScheduledEvent
 
 
 class DatasetSerializer(serializers.ModelSerializer):
@@ -162,4 +162,46 @@ class ApplicationSerializer(serializers.ModelSerializer):
             'url',
             'id', 'name', 'description', 'author', 'team',
             'retired', 'app_location'
+        ]
+
+class TimerSerializer(serializers.ModelSerializer):
+    author = serializers.ReadOnlyField(source='author.username')
+    initial_base = serializers.DateTimeField(
+        allow_null=False,
+        format='%Y-%m-%d %H:%M:%S',
+        input_formats=['%Y-%m-%d %H:%M:%S']
+    )
+    last_base = serializers.DateTimeField(
+        allow_null=False,
+        read_only=True,
+        format='%Y-%m-%d %H:%M:%S',
+        input_formats=['%Y-%m-%d %H:%M:%S']
+    )
+
+    class Meta:
+        model = Timer
+        fields = [
+            'url',
+            'id', 'name', 'description', 'author', 'team',
+            'paused',
+            'interval_unit', 'interval_amount',
+            'offset_unit', 'offset_amount',
+            'initial_base', 'last_base',
+        ]
+
+class ScheduledEventSerializer(serializers.ModelSerializer):
+    # due should be read-only field, otherwise it is dangerous
+    due = serializers.DateTimeField(
+        allow_null=False,
+        read_only=True,
+        format='%Y-%m-%d %H:%M:%S',
+        input_formats=['%Y-%m-%d %H:%M:%S']
+    )
+    timer = TimerSerializer(many=False, read_only=True)
+
+    class Meta:
+        model = ScheduledEvent
+        fields = [
+            'url',
+            'id', 'timer', 'due', 'acked',
         ]
