@@ -137,6 +137,44 @@ models = {
         "additionalProperties": False,
         "required": ["name", "description", "team", "app_location"]
     },
+    "create_timer_input": {
+        "type": "object",
+        "properties": {
+            "name": {
+                "type": "string"
+            },
+            "description": {
+                "type": "string"
+            },
+            "team": {
+                "type": "string"
+            },
+            "paused": {
+                "type": "boolean",
+            },
+            "interval_unit": {
+                "type": "string",
+                "enum": ["YEAR", "MONTH", "DAY", "HOUR", "MINUTE", "SECOND"]
+            },
+            "interval_amount": {
+                "type": "integer",
+                "minimum": 1
+            },
+            "offset_unit": {
+                "type": "string",
+                "enum": ["YEAR", "MONTH", "DAY", "HOUR", "MINUTE", "SECOND"]
+            },
+            "offset_amount": {
+                "type": "integer",
+                "minimum": 0
+            },
+            "initial_base": {
+                "type": "string",
+                "is_datetime_string": {
+                }
+            },
+        }
+    }
 }
 
 def validate_model(model_name, data):

@@ -18,12 +18,13 @@ import jinja2
 import json
 
 from .models import Dataset, DatasetInstance, DataLocation, Pipeline, \
-    PipelineGroup, PipelineInstance, Application
+    PipelineGroup, PipelineInstance, Application, Timer, ScheduledEvent
 from .serializers import DatasetSerializer, DatasetInstanceSerializer, \
     DataLocationSerializer, PipelineSerializer, PipelineGroupSerializer, \
-    PipelineInstanceSerializer, ApplicationSerializer, PipelineGroupDetailsSerializer
+    PipelineInstanceSerializer, ApplicationSerializer, PipelineGroupDetailsSerializer, \
+    TimerSerializer, ScheduledEventSerializer
 from .api_input import CreateDatasetInput, CreateDatasetInstanceInput, \
-    CreatePipelineInput, CreateApplicationInput
+    CreatePipelineInput, CreateApplicationInput, CreateTimerInput
 import explorer.airflow_lib as airflow_lib
 
 class DatasetViewSet(viewsets.ModelViewSet):
@@ -293,3 +294,43 @@ class ApplicationViewSet(viewsets.ModelViewSet):
         )
         response = ApplicationSerializer(instance=app, context={'request': request}).data
         return Response(response)
+
+class TimerViewSet(viewsets.ModelViewSet):
+    queryset = Timer.objects.all()
+    serializer_class = TimerSerializer
+
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    filterset_fields = []
+    ordering_fields = []
+
+    @transaction.atomic
+    def create(self, request):
+        """
+        Create a Timer
+        """
+
+        data = request.data
+        create_timer_input = CreateTimerInput.from_json(data)
+
+        timer = Timer.create(
+            request.user,
+            create_timer_input.name,
+            create_timer_input.description,
+            create_timer_input.team,
+            create_timer_input.paused,
+            create_timer_input.interval_unit,
+            create_timer_input.interval_amount,
+            create_timer_input.offset_unit,
+            create_timer_input.offset_amount,
+            create_timer_input.initial_base,
+        )
+        response = TimerSerializer(instance=timer, context={'request': request}).data
+        return Response(response)
+
+class ScheduledEventViewSet(viewsets.ModelViewSet):
+    queryset = ScheduledEvent.objects.all()
+    serializer_class = ScheduledEventSerializer
+
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    filterset_fields = ['acked']
+    ordering_fields = ['due']
