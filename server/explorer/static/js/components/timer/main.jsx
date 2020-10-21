@@ -7,11 +7,11 @@ import Col from 'react-bootstrap/Col'
 import Form from 'react-bootstrap/Form'
 import Table from 'react-bootstrap/Table'
 import Modal from 'react-bootstrap/Modal'
+import InputGroup from 'react-bootstrap/InputGroup'
 
 import classNames from 'classnames'
 import * as Icon from 'react-bootstrap-icons'
 import {SQLStepEditor} from '../sql_step_editor/sql_step_editor.jsx'
-import { assert } from 'console'
 
 const _ = require('lodash');
 
@@ -235,19 +235,61 @@ export class TimerEditor extends React.Component {
                                     </Form.Group>
                                 </Col>
                             </Row>
+
                             <Row>
                                 <Col>
-                                    <Form.Group as={Row} controlId="interval_amount">
-                                        <Form.Label column sm={6}>Interval Aamount</Form.Label>
-                                        <Col sm={6}>
+                                    <Form.Group as={Row} controlId="interval">
+                                        <Form.Label column sm={2}>Interval</Form.Label>
+                                        <Col sm={10}>
+                                            <InputGroup className="mb-3">
+                                                <Form.Control
+                                                    disabled = {this.state.mode=='view'}
+                                                    value={this.state.timer.interval_amount}
+                                                    onChange={(event) => {
+                                                        const v = event.target.value;
+                                                        this.setState(
+                                                            state => {
+                                                                state.timer.interval_amount = parseInt(v);
+                                                                return state;
+                                                            }
+                                                        )
+                                                    }}
+                                                />
+                                                <Form.Control
+                                                    as="select"
+                                                    disabled = {this.state.mode=='view'}
+                                                    value={this.state.timer.interval_unit}
+                                                    onChange={event => {
+                                                        const v = event.target.value;
+                                                        this.setState(state => {
+                                                            state.timer.interval_unit = v;
+                                                            return state;
+                                                        });
+                                                    }}
+                                                >
+                                                    <option key="YEAR" value="YEAR">YEAR</option>
+                                                    <option key="MONTH" value="MONTH">MONTH</option>
+                                                    <option key="DAY" value="DAY">DAY</option>
+                                                    <option key="HOUR" value="HOUR">HOUR</option>
+                                                    <option key="MINUTE" value="MINUTE">MINUTE</option>
+                                                    <option key="SECOND" value="SECOND">SECOND</option>
+                                                </Form.Control>
+                                            </InputGroup>
+                                        </Col>
+                                    </Form.Group>
+                                </Col>
+                                <Col>
+                                    <Form.Group as={Row} controlId="start_from">
+                                        <Form.Label column sm={2}>Start</Form.Label>
+                                        <Col sm={10}>
                                             <Form.Control
                                                 disabled = {this.state.mode=='view'}
-                                                value={this.state.timer.interval_amount}
+                                                value={this.state.timer.start_from}
                                                 onChange={(event) => {
                                                     const v = event.target.value;
                                                     this.setState(
                                                         state => {
-                                                            state.timer.interval_amount = parseInt(v);
+                                                            state.timer.start_from = v;
                                                             return state;
                                                         }
                                                     )
@@ -256,51 +298,7 @@ export class TimerEditor extends React.Component {
                                         </Col>
                                     </Form.Group>
                                 </Col>
-                                <Col>
-                                    <Form.Group as={Row} controlId="interval_unit">
-                                        <Form.Label column sm={6}>Interval Unit</Form.Label>
-                                        <Col sm={6}>
-                                            <Form.Control
-                                                as="select"
-                                                disabled = {this.state.mode=='view'}
-                                                value={this.state.timer.interval_unit}
-                                                onChange={event => {
-                                                    const v = event.target.value;
-                                                    this.setState(state => {
-                                                        state.timer.interval_unit = v;
-                                                        return state;
-                                                    });
-                                                }}
-                                            >
-                                                <option key="YEAR" value="YEAR">YEAR</option>
-                                                <option key="MONTH" value="MONTH">MONTH</option>
-                                                <option key="DAY" value="DAY">DAY</option>
-                                                <option key="HOUR" value="HOUR">HOUR</option>
-                                                <option key="MINUTE" value="MINUTE">MINUTE</option>
-                                                <option key="SECOND" value="SECOND">SECOND</option>
-                                            </Form.Control>
-                                        </Col>
-                                    </Form.Group>
-                                </Col>
                             </Row>
-                            <Form.Group as={Row} controlId="start_from">
-                                <Form.Label column sm={2}>Start from</Form.Label>
-                                <Col sm={10}>
-                                    <Form.Control
-                                        disabled = {this.state.mode=='view'}
-                                        value={this.state.timer.start_from}
-                                        onChange={(event) => {
-                                            const v = event.target.value;
-                                            this.setState(
-                                                state => {
-                                                    state.timer.start_from = v;
-                                                    return state;
-                                                }
-                                            )
-                                        }}
-                                    />
-                                </Col>
-                            </Form.Group>
                         </Form>
                     </Container>
                 </Modal.Body>
