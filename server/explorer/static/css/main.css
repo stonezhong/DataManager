@@ -20,3 +20,24 @@ body {
 
 .c-tc-icon2 {
   width: 100px; }
+
+table.timer-table th[data-role='icons'] {
+  width: 40px; }
+
+table.timer-table th[data-role='paused'] {
+  width: 40px; }
+
+table.timer-table th[data-role='topic'] {
+  width: 200px; }
+
+table.timer-table th[data-role='author'] {
+  width: 120px; }
+
+table.timer-table th[data-role='team'] {
+  width: 120px; }
+
+table.timer-table th[data-role='interval'] {
+  width: 120px; }
+
+table.timer-table th[data-role='start'] {
+  width: 180px; }

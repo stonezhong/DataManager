@@ -10,6 +10,7 @@ import {TestPipelineEditor} from '/components/pipeline_editor/test.jsx'
 import {TestSQLStepEditor} from '/components/sql_step_editor/test.jsx'
 import {TestPipelineGroupEditor} from '/components/pipeline_group_editor/test.jsx'
 import {TestPipelineTable} from '/components/pipeline_table/test.jsx'
+import {TestTimerTable} from '/components/timer/test.jsx'
 
 class TestPage extends React.Component {
     render() {
@@ -26,6 +27,7 @@ class TestPage extends React.Component {
                             <li><a href="?component=SQLStepEditor">SQLStepEditor</a></li>
                             <li><a href="?component=PipelineGroupEditor">PipelineGroupEditor</a></li>
                             <li><a href="?component=PipelineTable">PipelineTable</a></li>
+                            <li><a href="?component=TimerTable">TimerTable</a></li>
                         </ul>
                     </div>
                 }
@@ -50,6 +52,9 @@ class TestPage extends React.Component {
                 }
                 {
                     this.props.component === "PipelineTable" && <TestPipelineTable />
+                }
+                {
+                    this.props.component === "TimerTable" && <TestTimerTable />
                 }
             </div>
         )

@@ -160,19 +160,17 @@ models = {
                 "type": "integer",
                 "minimum": 1
             },
-            "offset_unit": {
-                "type": "string",
-                "enum": ["YEAR", "MONTH", "DAY", "HOUR", "MINUTE", "SECOND"]
-            },
-            "offset_amount": {
-                "type": "integer",
-                "minimum": 0
-            },
-            "initial_base": {
+            "start_from": {
                 "type": "string",
                 "is_datetime_string": {
                 }
             },
+            "topic": {
+                "type": "string"
+            },
+            "context": {
+                "type": "string"
+            }
         }
     }
 }

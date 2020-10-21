@@ -1,0 +1,23 @@
+table.timer-table {
+    th[data-role='icons'] {
+        width: 40px;
+    }
+    th[data-role='paused'] {
+        width: 40px;
+    }
+    th[data-role='topic'] {
+        width: 200px;
+    }
+    th[data-role='author'] {
+        width: 120px;
+    }
+    th[data-role='team'] {
+        width: 120px;
+    }
+    th[data-role='interval'] {
+        width: 120px;
+    }
+    th[data-role='start'] {
+        width: 180px;
+    }
+}

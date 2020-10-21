@@ -320,9 +320,9 @@ class TimerViewSet(viewsets.ModelViewSet):
             create_timer_input.paused,
             create_timer_input.interval_unit,
             create_timer_input.interval_amount,
-            create_timer_input.offset_unit,
-            create_timer_input.offset_amount,
-            create_timer_input.initial_base,
+            create_timer_input.start_from,
+            create_timer_input.topic,
+            create_timer_input.context
         )
         response = TimerSerializer(instance=timer, context={'request': request}).data
         return Response(response)
