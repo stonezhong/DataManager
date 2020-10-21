@@ -229,3 +229,19 @@ def applications(request):
         }
     )
 
+
+def schedulers(request):
+    return render(
+        request,
+        'common_page.html',
+        context={
+            'user': request.user,
+            'sub_title': "Schedulers",
+            'scripts':[
+                '/static/js-bundle/schedulers.js'
+            ],
+            'nav_item_role': 'schedulers',
+            'app_config': get_app_config()
+        }
+    )
+

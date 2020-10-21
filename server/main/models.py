@@ -458,19 +458,22 @@ class Timer(models.Model):
     interval_unit       = models.CharField(max_length=20, blank=False)
     interval_amount     = models.IntegerField(null=False)
 
-    offset_unit         = models.CharField(max_length=20, blank=False)
-    offset_amount       = models.IntegerField(null=False)
-
-    initial_base        = models.DateTimeField(null=False)
+    start_from          = models.DateTimeField(null=False)
 
     # The last due we triggered
-    last_base           = models.DateTimeField(null=True)
+    last_due            = models.DateTimeField(null=True)
+
+    # when an event is triggered, the topic and context will be copied to the ScheduledEvent
+    topic               = models.CharField(max_length=1024, blank=True)
+    # A JSON object
+    context             = models.TextField(blank=True)
+
 
     # create a timer
     @classmethod
     def create(cls, requester, name, description, team, paused,
-               interval_unit, interval_amount, offset_unit, offset_amount,
-               initial_base):
+               interval_unit, interval_amount,
+               start_from, topic, context):
 
         if not requester.is_authenticated:
             raise PermissionDeniedException()
@@ -483,34 +486,32 @@ class Timer(models.Model):
                       paused = paused,
                       interval_unit = interval_unit,
                       interval_amount = interval_amount,
-                      offset_unit = offset_unit,
-                      offset_amount = offset_amount,
-                      initial_base = initial_base,
-                      last_base = None)
+                      start_from = start_from,
+                      last_due = None,
+                      topic = topic,
+                      context = context)
         timer.save()
         return timer
 
     def next_due(self, dryrun=True):
-        # if dryrun is True, we only return the next due and base, but do not
+        # if dryrun is True, we only return the next due, but do not
         # write to db
 
-        if self.last_base is None:
-            new_last_base = self.initial_base
+        if self.last_due is None:
+            due = self.start_from
         else:
-            new_last_base = adjust_time(
-                self.last_base,
-                self.interval_unit, self.interval_amount
-            )
-        due = adjust_time(new_last_base, self.offset_unit, self.offset_amount)
+            due = adjust_time(self.last_due, self.interval_unit, self.interval_amount)
         if dryrun:
             return due
 
-        self.last_base = new_last_base
+        self.last_due = due
 
         se = ScheduledEvent(
             timer = self,
             due = due,
-            acked = False
+            acked = False,
+            topic = self.topic,
+            context = self.context
         )
 
         self.save()
@@ -530,7 +531,7 @@ class Timer(models.Model):
                 picked_due = due
                 picked_timer = timer
 
-        if picked_timer is None or picked_timer > now:
+        if picked_due is None or picked_due > now:
             # no schedule event generated
             return False
 
@@ -548,3 +549,5 @@ class ScheduledEvent(models.Model):
     )
     due                 = models.DateTimeField(null=False)
     acked               = models.BooleanField(null=False)
+    topic               = models.CharField(max_length=1024, blank=True)
+    context             = models.TextField(blank=True)

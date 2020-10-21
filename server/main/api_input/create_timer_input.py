@@ -13,9 +13,9 @@ class CreateTimerInput:
         self.paused = data["paused"]
         self.interval_unit = data["interval_unit"]
         self.interval_amount = data["interval_amount"]
-        self.offset_unit = data["offset_unit"]
-        self.offset_amount = data["offset_amount"]
-        self.initial_base = datetime.strptime(
-            data["initial_base"], "%Y-%m-%d %H:%M:%S"
+        self.start_from = datetime.strptime(
+            data["start_from"], "%Y-%m-%d %H:%M:%S"
         )
+        self.topic = data['topic']
+        self.context = data['context']
         return self

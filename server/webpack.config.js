@@ -21,6 +21,7 @@ module.exports = {
         "pipeline_groups"   : './explorer/static/js/pages/pipeline_groups/main.jsx',
         "pipeline_group"    : './explorer/static/js/pages/pipeline_group/main.jsx',
         "applications"      : './explorer/static/js/pages/applications/main.jsx',
+        "schedulers"        : './explorer/static/js/pages/schedulers/main.jsx',
         "test"              : './explorer/static/js/pages/test/main.jsx',
     },
     output: {

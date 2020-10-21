@@ -10,6 +10,7 @@ urlpatterns = [
     path('executions', views.pipeline_groups, name='executions'),
     path('execution', views.pipeline_group, name='execution'),
     path('applications', views.applications, name='applications'),
+    path('schedulers', views.schedulers, name='schedulers'),
     path('logout', views.logout, name='logout'),
     path('login', views.login, name='login'),
     path('test', views.test, name='test'), # for testing UI components
