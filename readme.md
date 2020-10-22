@@ -64,3 +64,5 @@ Here are the reasons:
 
 # [Data Manager Server](server)
 # [Data Applications](data-apps)
+
+Feel free to contact [me](mailto:stonezhong@hotmail.com)
