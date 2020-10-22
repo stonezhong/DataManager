@@ -7,8 +7,7 @@ import $ from 'jquery'
 
 import {get_csrf_token, get_current_user} from '/common_lib'
 
-class Schedulers extends React.Component {
-
+class SchedulersPage extends React.Component {
     state = {
         timers: [],
     }
@@ -101,7 +100,7 @@ class Schedulers extends React.Component {
 $(function() {
     const current_user = get_current_user()
     ReactDOM.render(
-        <Schedulers current_user={current_user} />,
+        <SchedulersPage current_user={current_user} />,
         document.getElementById('app')
     );
 });
