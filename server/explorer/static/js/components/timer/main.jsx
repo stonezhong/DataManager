@@ -9,14 +9,12 @@ import Table from 'react-bootstrap/Table'
 import Modal from 'react-bootstrap/Modal'
 import InputGroup from 'react-bootstrap/InputGroup'
 
-import classNames from 'classnames'
 import * as Icon from 'react-bootstrap-icons'
-import {SQLStepEditor} from '../sql_step_editor/sql_step_editor.jsx'
 
 const _ = require('lodash');
 
 /*********************************************************************************
- * Purpose: Show list of timers
+ * Purpose: edit or view a timer, or create a new timer
  * TODO: pagination
  *
  * Props
@@ -56,7 +54,7 @@ export class TimerEditor extends React.Component {
     };
 
     openDialog = (mode, timer) => {
-        if (mode === "view" || mode == "edit") {
+        if (mode === "view" || mode === "edit") {
             this.setState({
                 show: true,
                 mode: mode,
@@ -105,7 +103,7 @@ export class TimerEditor extends React.Component {
                                 <Form.Label column sm={2}>Name</Form.Label>
                                 <Col sm={10}>
                                     <Form.Control
-                                        disabled = {this.state.mode=='edit'||this.state.mode=='view'}
+                                        disabled = {this.state.mode==='edit'||this.state.mode==='view'}
                                         value={this.state.timer.name}
                                         onChange={(event) => {
                                             const v = event.target.value;
@@ -123,7 +121,7 @@ export class TimerEditor extends React.Component {
                                 <Form.Label column sm={2}>Description</Form.Label>
                                 <Col sm={10}>
                                     <Form.Control as="textarea" rows={3}
-                                        disabled = {this.state.mode=='view'}
+                                        disabled = {this.state.mode==='view'}
                                         value={this.state.timer.description}
                                         onChange={(event) => {
                                             const v = event.target.value;
@@ -142,7 +140,7 @@ export class TimerEditor extends React.Component {
                                 <Col sm={10}>
                                     <Form.Check type="checkbox"
                                         className="c-vc"
-                                        disabled = {this.state.mode=='view'}
+                                        disabled = {this.state.mode==='view'}
                                         checked={this.state.timer.paused}
                                         onChange={(event) => {
                                             const v = event.target.checked;
@@ -160,7 +158,7 @@ export class TimerEditor extends React.Component {
                                 <Form.Label column sm={2}>Topic</Form.Label>
                                 <Col sm={10}>
                                     <Form.Control
-                                        disabled = {this.state.mode=='view'}
+                                        disabled = {this.state.mode==='view'}
                                         value={this.state.timer.topic}
                                         onChange={(event) => {
                                             const v = event.target.value;
@@ -178,7 +176,7 @@ export class TimerEditor extends React.Component {
                                 <Form.Label column sm={2}>Context</Form.Label>
                                 <Col sm={10}>
                                     <Form.Control as="textarea" rows={3}
-                                        disabled = {this.state.mode=='view'}
+                                        disabled = {this.state.mode==='view'}
                                         value={this.state.timer.context}
                                         onChange={(event) => {
                                             const v = event.target.value;
@@ -198,7 +196,7 @@ export class TimerEditor extends React.Component {
                                         <Form.Label column sm={2}>Author</Form.Label>
                                         <Col sm={10}>
                                             <Form.Control
-                                                className={this.state.mode=="new"?"d-none":"d-block"}
+                                                className={this.state.mode==="new"?"d-none":"d-block"}
                                                 disabled = {true}
                                                 value={this.state.timer.author}
                                                 onChange={(event) => {
@@ -219,7 +217,7 @@ export class TimerEditor extends React.Component {
                                         <Form.Label column sm={2}>Team</Form.Label>
                                         <Col sm={10}>
                                             <Form.Control
-                                                disabled = {this.state.mode=='view'}
+                                                disabled = {this.state.mode==='view'}
                                                 value={this.state.timer.team}
                                                 onChange={(event) => {
                                                     const v = event.target.value;
@@ -243,7 +241,7 @@ export class TimerEditor extends React.Component {
                                         <Col sm={10}>
                                             <InputGroup className="mb-3">
                                                 <Form.Control
-                                                    disabled = {this.state.mode=='view'}
+                                                    disabled = {this.state.mode==='view'}
                                                     value={this.state.timer.interval_amount}
                                                     onChange={(event) => {
                                                         const v = event.target.value;
@@ -257,7 +255,7 @@ export class TimerEditor extends React.Component {
                                                 />
                                                 <Form.Control
                                                     as="select"
-                                                    disabled = {this.state.mode=='view'}
+                                                    disabled = {this.state.mode==='view'}
                                                     value={this.state.timer.interval_unit}
                                                     onChange={event => {
                                                         const v = event.target.value;
@@ -283,7 +281,7 @@ export class TimerEditor extends React.Component {
                                         <Form.Label column sm={2}>Start</Form.Label>
                                         <Col sm={10}>
                                             <Form.Control
-                                                disabled = {this.state.mode=='view'}
+                                                disabled = {this.state.mode==='view'}
                                                 value={this.state.timer.start_from}
                                                 onChange={(event) => {
                                                     const v = event.target.value;
@@ -303,7 +301,7 @@ export class TimerEditor extends React.Component {
                     </Container>
                 </Modal.Body>
                 <Modal.Footer>
-                    {(this.state.mode == "edit" || this.state.mode == "new") && <Button variant="primary" onClick={this.onSave}>Save changes</Button>}
+                    {(this.state.mode === "edit" || this.state.mode === "new") && <Button variant="primary" onClick={this.onSave}>Save changes</Button>}
                     <Button variant="secondary" onClick={this.onClose}>Close</Button>
                 </Modal.Footer>
             </Modal>
@@ -365,19 +363,19 @@ export class TimerTable extends React.Component {
                             return (
                                 <tr key={timer.id}>
                                     <td>
-                                    <Button
-                                        variant="secondary"
-                                        size="sm"
-                                        onClick={
-                                            event => {
-                                                this.theTimerEditorRef.current.openDialog(this.props.allowEdit?"edit":"view", timer)
+                                        <Button
+                                            variant="secondary"
+                                            size="sm"
+                                            onClick={
+                                                event => {
+                                                    this.theTimerEditorRef.current.openDialog(
+                                                        this.props.allowEdit?"edit":"view", timer
+                                                    )
+                                                }
                                             }
-                                        }
-                                    >
-                                        { this.props.allowEdit?<Icon.Pencil />:<Icon.Info />}
-
-                                    </Button>
-
+                                        >
+                                            { this.props.allowEdit?<Icon.Pencil />:<Icon.Info />}
+                                        </Button>
                                     </td>
                                     <td>{timer.name}</td>
                                     <td>{timer.paused?"yes":"no"}</td>

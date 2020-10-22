@@ -1,41 +1,19 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 
-import Button from 'react-bootstrap/Button'
-import Col from 'react-bootstrap/Col'
-import Row from 'react-bootstrap/Row'
-import Table from 'react-bootstrap/Table'
-import Container from 'react-bootstrap/Container'
-import * as Icon from 'react-bootstrap-icons'
-
-import {ApplicationEditor} from '/components/application_editor/application_editor.jsx'
+import {ApplicationTable} from '/components/application/application_table.jsx'
 
 import $ from 'jquery'
 
 import {get_csrf_token, get_current_user} from '/common_lib'
 
-class Applications extends React.Component {
+class ApplicationsPage extends React.Component {
     state = {
         applications: [],
     };
 
-    constructor(props) {
-        super();
-        this.theApplicationEditorRef = React.createRef();
-    }
-
-    load_apps() {
-        fetch("/api/Applications/")
-        .then(res => res.json())
-        .then(
-            (result) => {
-                this.setState({applications: result})
-            }
-        )
-    }
-
-    onApplicationSaved = (mode, application) => {
-        if (mode == "new") {
+    onSave = (mode, application) => {
+        if (mode === "new") {
             // for new application, you do not need to pass "retired" -- it is false
             const to_post = {
                 name            : application.name,
@@ -55,11 +33,10 @@ class Applications extends React.Component {
                 .then((res) => res.json())
                 .then(
                     (result) => {
-                        this.load_apps();
+                        this.load_applications();
                     }
                 )
-        } else {
-            // You cannot change name
+        } else if (mode === "edit") {
             const to_patch = {
                 description     : application.description,
                 team            : application.team,
@@ -77,78 +54,36 @@ class Applications extends React.Component {
                 .then((res) => res.json())
                 .then(
                     (result) => {
-                        this.load_apps();
+                        this.load_applications();
                     }
                 )
         }
-
     };
 
+
+    load_applications() {
+        fetch("/api/Applications/")
+        .then(res => res.json())
+        .then(
+            (result) => {
+                this.setState({applications: result})
+            }
+        )
+    }
+
+
     componentDidMount() {
-        this.load_apps();
+        this.load_applications();
     }
 
     render() {
         return (
             <div>
-                <Container fluid>
-                    <Row>
-                        <Col>
-                            <h1 className="c-ib">Applications</h1>
-                            <Button
-                                disabled = {!this.props.current_user}
-                                size="sm"
-                                className="c-vc ml-2"
-                                onClick={() => {
-                                    this.theApplicationEditorRef.current.openDialog();
-                                }}
-                            >
-                                Create
-                            </Button>
-                        </Col>
-                    </Row>
-                    <Table hover>
-                        <thead className="thead-dark">
-                            <tr>
-                                <th className="c-tc-icon1"></th>
-                                <th>Name</th>
-                                <th>Author</th>
-                                <th>Team</th>
-                                <th>Retired</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                        {
-                            this.state.applications.map((application) => {
-                                return (
-                                    <tr key={application.id}>
-                                        <td  className="align-middle">
-                                            <Button
-                                                disabled = {!this.props.current_user}
-                                                variant="secondary"
-                                                size="sm"
-                                                onClick={event => {
-                                                    this.theApplicationEditorRef.current.openDialog(application);
-                                                }}
-                                            >
-                                                <Icon.Pencil />
-                                            </Button>
-                                        </td>
-                                        <td className="align-middle">{application.name}</td>
-                                        <td className="align-middle">{application.author}</td>
-                                        <td className="align-middle">{application.team}</td>
-                                        <td className="align-middle">{application.retired?"Yes":"No"}</td>
-                                    </tr>
-                                )
-                            })
-                        }
-                        </tbody>
-                    </Table>
-                </Container>
-
-                <ApplicationEditor
-                    ref={this.theApplicationEditorRef}
-                    onSave={this.onApplicationSaved}
+                <ApplicationTable
+                    allowEdit={!!this.props.current_user}
+                    allowNew={!!this.props.current_user}
+                    applications={this.state.applications}
+                    onSave={this.onSave}
                 />
             </div>
         )
@@ -158,7 +93,7 @@ class Applications extends React.Component {
 $(function() {
     const current_user = get_current_user()
     ReactDOM.render(
-        <Applications current_user={current_user} />,
+        <ApplicationsPage current_user={current_user} />,
         document.getElementById('app')
     );
 });
