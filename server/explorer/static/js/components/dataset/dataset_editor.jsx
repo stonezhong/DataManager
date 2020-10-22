@@ -5,34 +5,38 @@ import Container from 'react-bootstrap/Container'
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
 import Form from 'react-bootstrap/Form'
+import Table from 'react-bootstrap/Table'
 import Modal from 'react-bootstrap/Modal'
+
+import classNames from 'classnames'
+import * as Icon from 'react-bootstrap-icons'
 
 const _ = require("lodash");
 
 /*********************************************************************************
- * Purpose: Edit an Application
+ * Purpose: Edit a Dataset
  *
  * Props
- *     onSave   : called when user hit "Save Changes", onSave(mode, application) is called.
+ *     onSave   : called when user hit "Save Changes", onSave(mode, dataset) is called.
  *                mode is either "new" or "edit"
  *
  */
 
-export class ApplicationEditor extends React.Component {
-    initApplicationValue = () => {
+export class DatasetEditor extends React.Component {
+    initDatasetValue = () => {
         return {
             name: '',
-            description: '',
-            team: '',
-            retired: false,
-            app_location: ''
+            major_version: "1.0",
+            minor_version: 1,
+            description: "",
+            team: "",
         }
     };
 
     state = {
         show: false,
         mode: "new",      // either edit or new
-        application: this.initApplicationValue(),
+        dataset: this.initDatasetValue(),
     };
 
     onClose = () => {
@@ -40,24 +44,24 @@ export class ApplicationEditor extends React.Component {
     };
 
     onSave = () => {
-        const application = _.cloneDeep(this.state.application);
+        const dataset = _.cloneDeep(this.state.dataset);
         const mode = this.state.mode;
-        this.setState({show: false}, () => {this.props.onSave(mode, application)});
+        this.setState({show: false}, () => {this.props.onSave(mode, dataset)});
     };
 
 
-    openDialog = (mode, application) => {
+    openDialog = (mode, dataset) => {
         if (mode === "view" || mode === "edit") {
             this.setState({
                 show: true,
                 mode: mode,
-                application: application
+                dataset: dataset
             })
         } else if (mode === "new") {
             this.setState({
                 show: true,
                 mode: mode,
-                application: this.initApplicationValue()
+                dataset: this.initDatasetValue()
             })
         } else {
             // wrong parameter
@@ -65,16 +69,14 @@ export class ApplicationEditor extends React.Component {
         }
     };
 
-
     get_title = () => {
         if (this.state.mode === "new") {
-            return "new Application";
+            return "new Dataset";
         } else if (this.state.mode === "edit") {
-            return "edit Application";
+            return "edit Dataset";
         } else if (this.state.mode === "view") {
-            return "Application"
+            return "Dataset"
         } else {
-            // wrong parameter
             console.assert(false, "mode must be edit, view or new");
         }
     };
@@ -88,7 +90,6 @@ export class ApplicationEditor extends React.Component {
                 size='lg'
                 scrollable
             >
-
                 <Modal.Header closeButton>
                     <Modal.Title>{this.get_title()}</Modal.Title>
                 </Modal.Header>
@@ -100,12 +101,12 @@ export class ApplicationEditor extends React.Component {
                                 <Col sm={10}>
                                     <Form.Control
                                         disabled = {this.state.mode==='edit'||this.state.mode==='view'}
-                                        value={this.state.application.name}
+                                        value={this.state.dataset.name}
                                         onChange={(event) => {
                                             const v = event.target.value;
                                             this.setState(
                                                 state => {
-                                                    state.application.name = v;
+                                                    state.dataset.name = v;
                                                     return state;
                                                 }
                                             )
@@ -118,12 +119,48 @@ export class ApplicationEditor extends React.Component {
                                 <Col sm={10}>
                                     <Form.Control
                                         disabled = {this.state.mode==='view'}
-                                        value={this.state.application.team}
+                                        value={this.state.dataset.team}
                                         onChange={(event) => {
                                             const v = event.target.value;
                                             this.setState(
                                                 state => {
-                                                    state.application.team = v;
+                                                    state.dataset.team = v;
+                                                    return state;
+                                                }
+                                            )
+                                        }}
+                                    />
+                                </Col>
+                            </Form.Group>
+                            <Form.Group as={Row} controlId="major_version">
+                                <Form.Label column sm={2}>Major Version</Form.Label>
+                                <Col sm={10}>
+                                    <Form.Control
+                                        disabled = {this.state.mode==='edit'||this.state.mode==='view'}
+                                        value={this.state.dataset.major_version}
+                                        onChange={(event) => {
+                                            const v = event.target.value;
+                                            this.setState(
+                                                state => {
+                                                    state.dataset.major_version = v;
+                                                    return state;
+                                                }
+                                            )
+                                        }}
+                                    />
+                                </Col>
+                            </Form.Group>
+                            <Form.Group as={Row} controlId="minor_version">
+                                <Form.Label column sm={2}>Minor Version</Form.Label>
+                                <Col sm={10}>
+                                    <Form.Control
+                                        disabled = {this.state.mode==='edit'||this.state.mode==='view'}
+                                        value={this.state.dataset.minor_version}
+                                        onChange={(event) => {
+                                            const v = event.target.value;
+                                            this.setState(
+                                                state => {
+                                                    state.dataset.minor_version = v;
                                                     return state;
                                                 }
                                             )
@@ -134,51 +171,14 @@ export class ApplicationEditor extends React.Component {
                             <Form.Group as={Row} controlId="description">
                                 <Form.Label column sm={2}>Description</Form.Label>
                                 <Col sm={10}>
-                                    <Form.Control as="textarea" rows={5}
+                                    <Form.Control as="textarea" rows={10}
                                         disabled = {this.state.mode==='view'}
-                                        value={this.state.application.description}
+                                        value={this.state.dataset.description}
                                         onChange={(event) => {
                                             const v = event.target.value;
                                             this.setState(
                                                 state => {
-                                                    state.application.description = v;
-                                                    return state;
-                                                }
-                                            )
-                                        }}
-                                    />
-                                </Col>
-                            </Form.Group>
-                            <Form.Group as={Row} controlId="app_location">
-                                <Form.Label column sm={2}>Location</Form.Label>
-                                <Col sm={10}>
-                                    <Form.Control
-                                        disabled = {this.state.mode==='view'}
-                                        value={this.state.application.app_location}
-                                        onChange={(event) => {
-                                            const v = event.target.value;
-                                            this.setState(
-                                                state => {
-                                                    state.application.app_location = v;
-                                                    return state;
-                                                }
-                                            )
-                                        }}
-                                    />
-                                </Col>
-                            </Form.Group>
-                            <Form.Group as={Row} controlId="retired">
-                                <Form.Label column sm={2}>Retired</Form.Label>
-                                <Col sm={10}>
-                                    <Form.Check type="checkbox"
-                                        className="c-vc"
-                                        disabled = {this.state.mode=='new'||this.state.mode==="view"}
-                                        checked={this.state.application.retired}
-                                        onChange={(event) => {
-                                            const v = event.target.checked;
-                                            this.setState(
-                                                state => {
-                                                    state.application.retired = v;
+                                                    state.dataset.description = v;
                                                     return state;
                                                 }
                                             )
