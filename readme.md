@@ -65,4 +65,4 @@ Here are the reasons:
 # [Data Manager Server](server)
 # [Data Applications](data-apps)
 
-Feel free to contact [me](mailto:stonezhong@hotmail.com)
+Feel free to contact me at [stonezhong@hotmail.com](mailto:stonezhong@hotmail.com) if you have any questions.
