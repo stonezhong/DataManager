@@ -59,6 +59,23 @@ Here are the reasons:
         </ul>
     </td>
 </tr>
+
+<tr>
+    <td>
+        <ul>
+            <li>
+                Pipeline dependency is horrible. I set a airflow job to run a 3:00 PM daily just because I think the prior job will finish by 2:00 pm (and adding some safe buffer). If the prior job didn't finish, this job will fail since the data it requires is not there.
+            </li>
+        </ul>
+    </td>
+    <td>
+        <ul>
+            <li>
+                With data manager, when you define pipeline, you need to declare the dataset instances it depends on, and the scehduler will only invoke the pipeline once the dataset instances it requires are all ready.
+            </li>
+        </ul>
+    </td>
+</tr>
 </table>
 </html>
 
