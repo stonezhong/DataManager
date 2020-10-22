@@ -1,6 +1,8 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 
+import Container from 'react-bootstrap/Container'
+
 import {ApplicationTable} from '/components/application/application_table.jsx'
 
 import $ from 'jquery'
@@ -78,14 +80,14 @@ class ApplicationsPage extends React.Component {
 
     render() {
         return (
-            <div>
+            <Container fluid>
                 <ApplicationTable
                     allowEdit={!!this.props.current_user}
                     allowNew={!!this.props.current_user}
                     applications={this.state.applications}
                     onSave={this.onSave}
                 />
-            </div>
+            </Container>
         )
     }
 }

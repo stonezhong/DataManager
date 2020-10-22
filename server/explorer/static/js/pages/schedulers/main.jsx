@@ -1,6 +1,8 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 
+import Container from 'react-bootstrap/Container'
+
 import {TimerTable} from '/components/timer/main.jsx'
 
 import $ from 'jquery'
@@ -85,14 +87,14 @@ class SchedulersPage extends React.Component {
 
     render() {
         return (
-            <div>
+            <Container fluid>
                 <TimerTable
                     allowEdit={!!this.props.current_user}
                     allowNew={!!this.props.current_user}
                     timers={this.state.timers}
                     onSave={this.onSave}
                 />
-            </div>
+            </Container>
         )
     }
 }
