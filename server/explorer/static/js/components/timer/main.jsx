@@ -68,7 +68,7 @@ export class TimerEditor extends React.Component {
             })
         } else {
             // wrong parameter
-            assert(false);
+            console.assert(false, "mode must be edit, view or new");
         }
     };
 
@@ -80,7 +80,8 @@ export class TimerEditor extends React.Component {
         } else if (this.state.mode === "view") {
             return "Scheduler"
         } else {
-            assert(false);
+            // wrong parameter
+            console.assert(false, "mode must be edit, view or new");
         }
     };
 
