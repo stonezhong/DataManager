@@ -25,7 +25,7 @@ Here are the reasons:
                 With the data catalog Data Manager provides, I can easily find the data I needed. I can go to the Datasets menu, find the dataset, and click the dataset, I can see all the instances of that dataset. (TODO) Use the search menu, I can search dataset by name.
             </li>
             <li>
-                With the data catalog Data Manager provides, your ETL pipeline can reference dataset by "local name" instead of physical location, if the data moves the location, your pipeline stay unbroken.
+                With the data catalog Data Manager provides, your ETL pipeline can reference dataset by "logical name" instead of physical location, if the data moves the location, your pipeline stay unbroken.
             </li>
         </ul>
     </td>
