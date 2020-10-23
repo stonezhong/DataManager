@@ -12,95 +12,9 @@ import Container from 'react-bootstrap/Container'
 
 import {get_csrf_token, get_app_context, get_app_config, get_current_user} from '/common_lib'
 import {PipelineGroupEditor} from '/components/pipeline_group/pipeline_group_editor.jsx'
+import {PipelineSelector} from '/components/pipeline/pipeline_selector.jsx'
 
 const _ = require("lodash");
-
-class PipelineSelector extends React.Component {
-    state = {
-        show: false,
-        pipelines: [],
-        selected: new Set(),
-    };
-
-    onClose = () => {
-        this.setState({show: false});
-    };
-
-    onSelect = () => {
-        const pipeline_ids = [... this.state.selected ];
-        if (pipeline_ids.length > 0) {
-            this.setState({show: false}, () => {this.props.onSelect(pipeline_ids)});
-        } else {
-            this.setState({show: false});
-        }
-
-    };
-
-    openDialog = (pipelines) => {
-        this.setState({
-            show: true,
-            pipelines: pipelines
-        })
-    };
-
-
-    render() {
-        return (
-            <Modal
-                show={this.state.show}
-                onHide={this.onClose}
-                backdrop="static"
-                size='lg'
-                scrollable
-            >
-                <Modal.Header closeButton>
-                    <Modal.Title>
-                        Select Pipelines
-                    </Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    {
-                        this.state.pipelines.map(pipeline => {
-                            return (
-                                <Form.Group as={Row} controlId={pipeline.id} key={pipeline.id}>
-                                    <Col sm={1}>
-                                        <Form.Check type="checkbox" className="c-vc"
-                                            defaultValue={this.state.selected.has(pipeline.id)}
-                                            onChange={(event) => {
-                                                const v = event.target.checked;
-                                                if (v) {
-                                                    this.setState(
-                                                        state => {
-                                                            state.selected.add(pipeline.id);
-                                                            return state;
-                                                        }
-                                                    )
-                                                } else {
-                                                    this.setState(
-                                                        state => {
-                                                            state.selected.delete(pipeline.id);
-                                                            return state;
-                                                        }
-                                                    )
-                                                }
-                                            }}
-                                        />
-                                    </Col>
-                                    <Form.Label column>{pipeline.name}</Form.Label>
-                                </Form.Group>
-                            );
-                        })
-                    }
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={this.onClose}>Close</Button>
-                    <Button variant="primary" onClick={this.onSelect}>Select</Button>
-                </Modal.Footer>
-
-            </Modal>
-        );
-    }
-}
 
 class PipelineGroup extends React.Component {
     state = {

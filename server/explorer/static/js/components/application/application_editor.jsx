@@ -17,7 +17,6 @@ const _ = require("lodash");
  *                mode is either "new" or "edit"
  *
  */
-
 export class ApplicationEditor extends React.Component {
     initApplicationValue = () => {
         return {
@@ -88,7 +87,6 @@ export class ApplicationEditor extends React.Component {
                 size='lg'
                 scrollable
             >
-
                 <Modal.Header closeButton>
                     <Modal.Title>{this.get_title()}</Modal.Title>
                 </Modal.Header>
