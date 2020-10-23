@@ -2,21 +2,19 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 import $ from 'jquery'
 
-import Modal from 'react-bootstrap/Modal'
 import Button from 'react-bootstrap/Button'
-import Form from 'react-bootstrap/Form'
 import Col from 'react-bootstrap/Col'
 import Row from 'react-bootstrap/Row'
-import Table from 'react-bootstrap/Table'
 import Container from 'react-bootstrap/Container'
 
 import {get_csrf_token, get_app_context, get_app_config, get_current_user} from '/common_lib'
 import {PipelineGroupEditor} from '/components/pipeline_group/pipeline_group_editor.jsx'
 import {PipelineSelector} from '/components/pipeline/pipeline_selector.jsx'
+import {PipelineInstanceTable} from '/components/pipeline_group/pipeline_instance_table.jsx'
 
 const _ = require("lodash");
 
-class PipelineGroup extends React.Component {
+class PipelineGroupPage extends React.Component {
     state = {
         pipeline_group: null
     };
@@ -46,16 +44,12 @@ class PipelineGroup extends React.Component {
     thePipelineGroupEditorRef = React.createRef();
     thePipelineSelectorRef    = React.createRef();
 
-    get pipeline_instances() {
-        return this.state.pipeline_group.pis;
-    }
-
-    get_dag_run_url = (pipeline_instance, app_config) => {
+    get_dag_run_url = (pipeline_instance) => {
         if (pipeline_instance.status === 'created') {
             return null;
         }
         // either started, finished or failed
-        const AIRFLOW_BASE_URL = app_config.AIRFLOW_BASE_URL;
+        const AIRFLOW_BASE_URL = this.props.app_config.AIRFLOW_BASE_URL;
         const context = JSON.parse(pipeline_instance.context);
 
         const run_id = context.dag_run.execution_date;
@@ -67,12 +61,10 @@ class PipelineGroup extends React.Component {
         );
     };
 
-    get_dag_url = (pipeline_instance, app_config) => {
-        const AIRFLOW_BASE_URL = app_config.AIRFLOW_BASE_URL;
-        const context = JSON.parse(pipeline_instance.context);
+    get_dag_url = (pipeline_instance) => {
+        const AIRFLOW_BASE_URL = this.props.app_config.AIRFLOW_BASE_URL;
         const dag_id = pipeline_instance.pipeline.name;
         const q = `dag_id=${encodeURIComponent(dag_id)}`
-
         return (
             <a href={`${AIRFLOW_BASE_URL}/admin/airflow/tree?${q}`}>DAG</a>
         );
@@ -121,74 +113,53 @@ class PipelineGroup extends React.Component {
         return (
             <div>
                 <Container fluid>
-                    <Row>
-                        <Col>
-                            <h1 className="c-ib">Execution</h1>
-                            <div className="c-vc c-ib ml-2">
-                                {
-                                    this.state.pipeline_group && <Button
-                                        variant="primary"
-                                        size="sm"
-                                        onClick={event => {
-                                            this.thePipelineGroupEditorRef.current.openDialog(
-                                                "edit",
-                                                this.state.pipeline_group
-                                            );
-                                        }}
-                                    >
-                                        Edit
-                                    </Button>
-                                }
-                                <Button
-                                    variant="primary"
-                                    size="sm"
-                                    className="ml-2"
-                                    onClick={this.openDiagForAttach}
-                                >
-                                    Attach
-                                </Button>
-                            </div>
-                        </Col>
-                    </Row>
-                    <Row>
-                        <Col>
-                            <h2>{this.state.pipeline_group?this.state.pipeline_group.name:""}</h2>
-                        </Col>
-                    </Row>
-                    <Row>
-                        <Col>
-                            <Table hover>
-                                <thead className="thead-dark">
-                                    <tr>
-                                        <th>Pipeline</th>
-                                        <th>Airflow</th>
-                                        <th>Status</th>
-                                        <th></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                {
-                                    this.state.pipeline_group && this.pipeline_instances.map((pipeline_instance) => {
-                                        const app_config = get_app_config();
-                                        const AIRFLOW_BASE_URL = app_config.AIRFLOW_BASE_URL;
-                                        const context = JSON.parse(pipeline_instance.context);
-                                        return (
-                                            <tr key={pipeline_instance.id}>
-                                                <td><a href={`pipeline?id=${pipeline_instance.pipeline.id}`}>{pipeline_instance.pipeline.name}</a></td>
-                                                <td>
-                                                    { this.get_dag_url(pipeline_instance, app_config)}
-                                                    { " | " }
-                                                    { this.get_dag_run_url(pipeline_instance, app_config) }
-                                                </td>
-                                                <td>{pipeline_instance.status}</td>
-                                            </tr>
-                                        )
-                                    })
-                                }
-                                </tbody>
-                            </Table>
-                        </Col>
-                    </Row>
+                    {
+                        this.state.pipeline_group && <div>
+                            <Row>
+                                <Col>
+                                    <h1 className="c-ib">Execution</h1>
+                                    {
+                                        <div className="c-vc c-ib ml-2">
+                                            <Button
+                                                variant="primary"
+                                                size="sm"
+                                                onClick={event => {
+                                                    this.thePipelineGroupEditorRef.current.openDialog(
+                                                        "edit",
+                                                        this.state.pipeline_group
+                                                    );
+                                                }}
+                                            >
+                                                Edit
+                                            </Button>
+                                            <Button
+                                                variant="primary"
+                                                size="sm"
+                                                className="ml-2"
+                                                onClick={this.openDiagForAttach}
+                                            >
+                                                Attach
+                                            </Button>
+                                        </div>
+                                    }
+                                </Col>
+                            </Row>
+                            <Row>
+                                <Col>
+                                    <h2>{this.state.pipeline_group.name}</h2>
+                                </Col>
+                            </Row>
+                            <Row>
+                                <Col>
+                                    <PipelineInstanceTable
+                                        pipeline_instances = {this.state.pipeline_group.pis}
+                                        get_dag_url = {this.get_dag_url}
+                                        get_dag_run_url = {this.get_dag_run_url}
+                                    />
+                                </Col>
+                            </Row>
+                        </div>
+                    }
                 </Container>
                 <PipelineGroupEditor
                     ref={this.thePipelineGroupEditorRef}
@@ -205,9 +176,11 @@ class PipelineGroup extends React.Component {
 $(function() {
     const current_user = get_current_user()
     const app_context = get_app_context();
+    const app_config = get_app_config();
 
     ReactDOM.render(
-        <PipelineGroup
+        <PipelineGroupPage
+            app_config = {app_config}
             current_user={current_user}
             pipeline_group_id={app_context.pipeline_group_id}
         />,
