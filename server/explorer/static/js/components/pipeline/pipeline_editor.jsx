@@ -10,7 +10,7 @@ import Modal from 'react-bootstrap/Modal'
 
 import classNames from 'classnames'
 import * as Icon from 'react-bootstrap-icons'
-import {SequentialTaskEditor} from '../task_editor/task_editor.jsx'
+import {SequentialTaskEditor} from './task_editor.jsx'
 
 const _ = require("lodash");
 
