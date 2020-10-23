@@ -11,7 +11,7 @@ import Table from 'react-bootstrap/Table'
 import Container from 'react-bootstrap/Container'
 
 import {get_csrf_token, get_app_context, get_app_config, get_current_user} from '/common_lib'
-import {PipelineGroupEditor} from '/components/pipeline_group_editor/pipeline_group_editor.jsx'
+import {PipelineGroupEditor} from '/components/pipeline_group/pipeline_group_editor.jsx'
 
 const _ = require("lodash");
 
