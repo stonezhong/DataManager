@@ -22,7 +22,8 @@ Here are the reasons:
     <td>
         <ul>
             <li>
-                With the data catalog Data Manager provides, I can easily find the data I needed. I can go to the Datasets menu, find the dataset, and click the dataset, I can see all the instances of that dataset. (TODO) Use the search menu, I can search dataset by name.
+                <b><big style="color:#07c;">Data Manager provides Data Catalog with UI and APIs.</big></b>
+                I can easily find the data I needed. I can go to the Datasets menu, find the dataset, and click the dataset, I can see all the instances of that dataset. (TODO) Use the search menu, I can search dataset by name.
             </li>
             <li>
                 With the data catalog Data Manager provides, your ETL pipeline can reference dataset by "logical name" instead of physical location, if the data moves the location, your pipeline stay unbroken.
@@ -48,10 +49,10 @@ Here are the reasons:
     <td>
         <ul>
             <li>
-                Now I just click the "Pipelines" menu, 95% of time, I can create pipeline using SparkSQL with this tool, and for the 5% rare cases, our Data Engineer write highly reusable Data Application to help me.
+                <b style="color:#07c;"><big>ETL Pipeline creation is fully self serviceable.</big></b> Now I just click the "Pipelines" menu, 95% of time, I can create pipeline using SparkSQL with this tool, and for the rest 5% rare cases, our Data Engineer write <b>highly reusable Data Application</b> to help me.
             </li>
             <li>
-                I can also create pipeline with mixed steps, some steps uses the SparkSQL, and some steps invokes the in-house Data Applications.
+                I can also create pipeline with mixed steps through web UI, some steps uses the SparkSQL, and some steps invokes the in-house Data Applications.
             </li>
             <li>
                 Data Manager creates airflow DAG for me based on the steps I entered in Web UI, Data Manager also allows me to set the schedule for the pipeline, so I can create our daily trading data processing pipeline easily, and launch it quickly.
@@ -71,7 +72,8 @@ Here are the reasons:
     <td>
         <ul>
             <li>
-                With data manager, when you define pipeline, you need to declare the dataset instances it depends on, and the scehduler will only invoke the pipeline once the dataset instances it requires are all ready.
+                <b><big style="color:#07c;">Data Manager manages the pipeline dependencies.</big></b>
+                When you define your pipeline, you need to declare the dataset instances it depends on, and the scehduler will only invoke the pipeline once the dataset instances it requires are all ready.
             </li>
         </ul>
     </td>
