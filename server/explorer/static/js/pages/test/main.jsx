@@ -6,11 +6,11 @@ import {get_app_context} from '/common_lib'
 import {TestTimerTable} from '/components/timer/test.jsx'
 import {TestApplicationEditor} from '/components/application/test.jsx'
 import {TestDatasetEditor} from '/components/dataset/test.jsx'
+import {TestPipelineGroupEditor} from '/components/pipeline_group/test.jsx'
 
 import {TestTaskEditor} from '/components/task_editor/test.jsx'
 import {TestPipelineEditor} from '/components/pipeline_editor/test.jsx'
 import {TestSQLStepEditor} from '/components/sql_step_editor/test.jsx'
-import {TestPipelineGroupEditor} from '/components/pipeline_group_editor/test.jsx'
 import {TestPipelineTable} from '/components/pipeline_table/test.jsx'
 
 class TestPage extends React.Component {
