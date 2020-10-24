@@ -6,11 +6,13 @@ import Container from 'react-bootstrap/Container'
 import $ from 'jquery'
 const buildUrl = require('build-url');
 
-import {dt_2_utc_string, get_csrf_token, get_current_user} from '/common_lib'
+import {dt_2_utc_string, get_csrf_token, get_current_user, empty_str_2_null} from '/common_lib'
 import {DatasetTable} from '/components/dataset/dataset_table.jsx'
-
+import {TopMessage} from '/components/top_message/main.jsx'
 
 class DatasetsPage extends React.Component {
+    theTopMessageRef = React.createRef();
+
     state = {
         datasets: [],
         showExpired: false
@@ -38,6 +40,9 @@ class DatasetsPage extends React.Component {
                 body: JSON.stringify(to_post)
             })
                 .then((res) => res.json())
+                .catch(() => {
+                    this.theTopMessageRef.current.show("danger", "Unable to save!");
+                })
                 .then(
                     (result) => {
                         this.load_datasets();
@@ -48,6 +53,7 @@ class DatasetsPage extends React.Component {
             const to_patch = {
                 description     : dataset.description,
                 team            : dataset.team,
+                expiration_time : empty_str_2_null(dataset.expiration_time),
             }
             fetch(`/api/Datasets/${dataset.id}/`, {
                 method: 'patch',
@@ -101,6 +107,7 @@ class DatasetsPage extends React.Component {
     render() {
         return (
             <Container fluid>
+                <TopMessage ref={this.theTopMessageRef} />
                 <DatasetTable
                     allowEdit={!!this.props.current_user}
                     allowNew={!!this.props.current_user}
