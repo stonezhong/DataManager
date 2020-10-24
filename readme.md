@@ -73,7 +73,7 @@ Here are the reasons:
         <ul>
             <li>
                 <b><big style="color:#07c;">Data Manager manages the pipeline dependencies.</big></b>
-                When you define your pipeline, you need to declare the dataset instances it depends on, and the scehduler will only invoke the pipeline once the dataset instances it requires are all ready.
+                When you define your pipeline, you need to declare the asserts it depends on, and the scehduler will only invoke the pipeline once the asserts it requires are all ready.
             </li>
         </ul>
     </td>

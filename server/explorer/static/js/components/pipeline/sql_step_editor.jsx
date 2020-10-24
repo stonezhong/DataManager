@@ -158,13 +158,13 @@ export class SQLStepEditor extends React.Component {
                             </Row>
                             <Row>
                                 <Col>
-                                    <h3>Import Dataset Instances</h3>
+                                    <h3>Import Asserts</h3>
                                     <Table hover bordered variant="dark" size="sm">
                                             <thead>
                                                 <tr>
                                                     <th className="c-tc-icon1"></th>
                                                     <th style={{width: "200px"}}>Alias</th>
-                                                    <th>Dataset name</th>
+                                                    <th>Assert path</th>
                                                 </tr>
                                             </thead>
                                             <tbody>

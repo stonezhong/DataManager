@@ -209,7 +209,7 @@ export class PipelineEditor extends React.Component {
                             </Row>
                             <Row>
                                 <Col>
-                                    <h2>Required dataset instances</h2>
+                                    <h2>Required asserts</h2>
                                     <Table hover bordered  size="sm" >
                                         <thead className="thead-dark">
                                             <tr>

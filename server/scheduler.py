@@ -92,7 +92,7 @@ def handle_pipeline_instance_active(pi):
         print("")
         return
 
-    print("ALL required dataset instances are ready!!")
+    print("ALL required asserts are ready!!")
     print(f"triggering DAG {pi.pipeline.name}")
     r = airflow_lib.trigger_dag(
         pi.pipeline.name,

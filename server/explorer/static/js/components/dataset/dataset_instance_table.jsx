@@ -18,7 +18,7 @@ export class DatasetInstanceTable extends React.Component {
         return (
             <Row>
                 <Col>
-                    <h1>Dataset Instances</h1>
+                    <h1>Asserts</h1>
                     <Table>
                         <thead thead className="thead-dark">
                             <tr>
