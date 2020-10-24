@@ -5,11 +5,9 @@ import Container from 'react-bootstrap/Container'
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
 import Form from 'react-bootstrap/Form'
-import Table from 'react-bootstrap/Table'
 import Modal from 'react-bootstrap/Modal'
 
-import classNames from 'classnames'
-import * as Icon from 'react-bootstrap-icons'
+import {null_2_empty_str} from '/common_lib'
 
 const _ = require("lodash");
 
@@ -30,6 +28,7 @@ export class DatasetEditor extends React.Component {
             minor_version: 1,
             description: "",
             team: "",
+            expiration_time: "",
         }
     };
 
@@ -49,13 +48,16 @@ export class DatasetEditor extends React.Component {
         this.setState({show: false}, () => {this.props.onSave(mode, dataset)});
     };
 
+    canSave = () => {
+        return this.state.dataset.name && this.state.dataset.team;
+    };
 
     openDialog = (mode, dataset) => {
         if (mode === "view" || mode === "edit") {
             this.setState({
                 show: true,
                 mode: mode,
-                dataset: dataset
+                dataset: _.cloneDeep(dataset)
             })
         } else if (mode === "new") {
             this.setState({
@@ -171,7 +173,7 @@ export class DatasetEditor extends React.Component {
                             <Form.Group as={Row} controlId="description">
                                 <Form.Label column sm={2}>Description</Form.Label>
                                 <Col sm={10}>
-                                    <Form.Control as="textarea" rows={10}
+                                    <Form.Control as="textarea" rows={5}
                                         disabled = {this.state.mode==='view'}
                                         value={this.state.dataset.description}
                                         onChange={(event) => {
@@ -186,12 +188,37 @@ export class DatasetEditor extends React.Component {
                                     />
                                 </Col>
                             </Form.Group>
+                            <Form.Group as={Row} controlId="expiration_time">
+                                <Form.Label column sm={2}>Expire</Form.Label>
+                                <Col sm={10}>
+                                    <Form.Control
+                                        disabled = {this.state.mode==='new' || this.state.mode==='view'}
+                                        value={null_2_empty_str(this.state.dataset.expiration_time)}
+                                        onChange={(event) => {
+                                            const v = event.target.value;
+                                            this.setState(
+                                                state => {
+                                                    state.dataset.expiration_time = v;
+                                                    return state;
+                                                }
+                                            )
+                                        }}
+                                        placeholder="YYYY-mm-dd HH:MM:SS"
+                                    />
+                                </Col>
+                            </Form.Group>
                         </Form>
                     </Container>
                 </Modal.Body>
 
                 <Modal.Footer>
-                    {(this.state.mode === "edit" || this.state.mode === "new") && <Button variant="primary" onClick={this.onSave}>Save changes</Button>}
+                    {(this.state.mode === "edit" || this.state.mode === "new") && <Button
+                        variant="primary"
+                        onClick={this.onSave}
+                        disabled={!this.canSave()}
+                    >
+                        Save changes
+                    </Button>}
                     <Button variant="secondary" onClick={this.onClose}>Close</Button>
                 </Modal.Footer>
             </Modal>

@@ -1,5 +1,6 @@
 // import { EventEmitter } from 'events';
 import $ from 'jquery'
+const _ = require("lodash");
 
 /*************************************************************************
  * Common elements for each page
@@ -102,4 +103,14 @@ export function pipeline_from_django_model(pipeline) {
         dag_version: pipeline.dag_version,
     }
     return p;
+}
+
+export function null_2_empty_str(v) {
+    // if v is null, return empty string
+    return v?v:"";
+}
+
+export function empty_str_2_null(v) {
+    const vv = _.trim(v);
+    return vv?vv:null;
 }
