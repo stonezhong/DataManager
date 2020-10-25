@@ -4,12 +4,15 @@ import ReactDOM from 'react-dom'
 import Container from 'react-bootstrap/Container'
 
 import {ApplicationTable} from '/components/application/application_table.jsx'
+import {TopMessage} from '/components/top_message/main.jsx'
 
 import $ from 'jquery'
 
 import {get_csrf_token, get_current_user} from '/common_lib'
 
 class ApplicationsPage extends React.Component {
+    theTopMessageRef = React.createRef();
+
     state = {
         applications: [],
     };
@@ -33,6 +36,9 @@ class ApplicationsPage extends React.Component {
                 body: JSON.stringify(to_post)
             })
                 .then((res) => res.json())
+                .catch(() => {
+                    this.theTopMessageRef.current.show("danger", "Unable to save!");
+                })
                 .then(
                     (result) => {
                         this.load_applications();
@@ -54,6 +60,9 @@ class ApplicationsPage extends React.Component {
                 body: JSON.stringify(to_patch)
             })
                 .then((res) => res.json())
+                .catch(() => {
+                    this.theTopMessageRef.current.show("danger", "Unable to save!");
+                })
                 .then(
                     (result) => {
                         this.load_applications();
@@ -81,6 +90,7 @@ class ApplicationsPage extends React.Component {
     render() {
         return (
             <Container fluid>
+                <TopMessage ref={this.theTopMessageRef} />
                 <ApplicationTable
                     allowEdit={!!this.props.current_user}
                     allowNew={!!this.props.current_user}
