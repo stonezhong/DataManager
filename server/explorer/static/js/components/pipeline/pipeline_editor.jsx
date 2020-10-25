@@ -253,7 +253,12 @@ export class PipelineEditor extends React.Component {
                                                                         disabled = {this.state.mode==='view'}
                                                                         variant="secondary"
                                                                         size="sm"
-                                                                        onClick={event => this.deleteRequiredDSI(requiredDSI)}
+                                                                        onClick={ event => {
+                                                                            this.setState(state => {
+                                                                                _.remove(state.pipeline.requiredDSIs, i => i===requiredDSI);
+                                                                                return state;
+                                                                            });
+                                                                        }}
                                                                     >
                                                                         <Icon.X />
                                                                     </Button>
