@@ -78,6 +78,10 @@ export class ApplicationEditor extends React.Component {
         }
     };
 
+    canSave = () => {
+        return this.state.application.name && this.state.application.app_location;
+    };
+
     render() {
         return (
             <Modal
@@ -189,7 +193,14 @@ export class ApplicationEditor extends React.Component {
                 </Modal.Body>
 
                 <Modal.Footer>
-                    {(this.state.mode === "edit" || this.state.mode === "new") && <Button variant="primary" onClick={this.onSave}>Save changes</Button>}
+                    {(this.state.mode === "edit" || this.state.mode === "new") &&
+                    <Button
+                        variant="primary"
+                        onClick={this.onSave}
+                        disabled={!this.canSave()}
+                    >
+                        Save changes
+                    </Button>}
                     <Button variant="secondary" onClick={this.onClose}>Close</Button>
                 </Modal.Footer>
             </Modal>

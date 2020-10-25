@@ -64,6 +64,9 @@ class DatasetsPage extends React.Component {
                 body: JSON.stringify(to_patch)
             })
                 .then((res) => res.json())
+                .catch(() => {
+                    this.theTopMessageRef.current.show("danger", "Unable to save!");
+                })
                 .then(
                     (result) => {
                         this.load_datasets();
