@@ -20,7 +20,6 @@ const _ = require('lodash');
  *     applications: a list of all possible applications
  *                   each application must has field 'id' and 'name'
  *     onSave   : called when user hit "Save Changes", onSave(task) is called
- *     onCancel : called when user hit "Close" or close the dialog without save the change
  *
  */
 export class SequentialTaskEditor extends React.Component {
@@ -53,36 +52,33 @@ export class SequentialTaskEditor extends React.Component {
     }
 
     onClose = () => {
-        if (this.props.onCancel) {
-            this.setState({show: false}, this.props.onCancel);
-        } else {
-            this.setState({show: false});
-        }
+        this.setState({show: false});
     };
 
     onSave = () => {
-        const savedTask = _.cloneDeep(this.state.task);
-        this.setState({show: false}, () => {this.props.onSave(savedTask)});
+        const task = _.cloneDeep(this.state.task);
+        const mode = this.state.mode;
+        this.setState({show: false}, () => {this.props.onSave(mode, task)});
     };
 
-    openDialog = (task) => {
-        if (task) {
+    openDialog = (mode, task) => {
+        if (mode === "view" || mode === "edit") {
             this.setState({
                 show: true,
-                mode: "edit",
-                task: task
+                mode: mode,
+                task: _.cloneDeep(task)
             });
         } else {
             this.setState({
                 show: true,
-                mode: "new",
+                mode: mode,
                 task: this.initTaskValue()
             });
         }
     };
 
     addStep = () => {
-        this.theSQLEditorRef.current.openDialog();
+        this.theSQLEditorRef.current.openDialog("new");
     };
 
     deleteSQLStep = step => {
@@ -94,10 +90,14 @@ export class SequentialTaskEditor extends React.Component {
     };
 
     editSQLStep = step => {
-        this.theSQLEditorRef.current.openDialog(step);
+        this.theSQLEditorRef.current.openDialog("edit", step);
     };
 
-    onSQLStepSaved = (step) => {
+    viewSQLStep = step => {
+        this.theSQLEditorRef.current.openDialog("view", step);
+    };
+
+    onSQLStepSaved = (mode, step) => {
         this.setState(state => {
             const idx = state.task.steps.findIndex(stepX => stepX.name == step.name);
             if (idx >= 0) {
@@ -109,110 +109,116 @@ export class SequentialTaskEditor extends React.Component {
         });
     };
 
+    get_title = () => {
+        if (this.state.mode === "new") {
+            return "new Task";
+        } else if (this.state.mode === "edit") {
+            return "edit Task";
+        } else if (this.state.mode === "view") {
+            return "Task"
+        } else {
+            // wrong parameter
+            console.assert(false, "mode must be edit, view or new");
+        }
+    };
+
+    canSave = () => {
+        return this.state.task.name;
+    };
+
     render() {
         return (
             <Modal
                 show={this.state.show}
                 onHide={this.onClose}
                 backdrop="static"
-                size='xl'
+                size='lg'
                 scrollable
             >
                 <Modal.Header closeButton>
-                    <Modal.Title>
-                        {this.state.mode=="edit"?"Edit Task":"New Task"}
-                    </Modal.Title>
+                    <Modal.Title>{this.get_title()}</Modal.Title>
                 </Modal.Header>
-
                 <Modal.Body>
                     <Container fluid className="pb-2 mb-2">
                         <Row>
                             <Col>
-                                <Button
-                                    variant={"primary"}
-                                    size="sm"
-                                    onClick={this.show}
-                                    className={this.state.show?"d-none":"d-block"}
-                                >
-                                    New Task
-                                </Button>
+                                <Form.Group controlId="task-name">
+                                    <Form.Label>Name</Form.Label>
+                                    <Form.Control
+                                        disabled = {this.state.mode==='edit' || this.state.mode==='view'}
+                                        value={this.state.task.name}
+                                        onChange={(event) => {
+                                            const v = event.target.value;
+                                            this.setState(state => {
+                                                state.task.name = v;
+                                                return state;
+                                            });
+                                        }}
+                                    />
+                                </Form.Group>
                             </Col>
                         </Row>
-                        <div className={this.state.show?"d-block":"d-none"}>
-                            <Row>
-                                <Col>
-                                    <Form.Group controlId="task-name">
-                                        <Form.Label>Task name</Form.Label>
-                                        <Form.Control
-                                            disabled = {this.state.mode=='edit'}
-                                            value={this.state.task.name}
-                                            onChange={(event) => {
-                                                const v = event.target.value;
-                                                this.setState(state => {
-                                                    state.task.name = v;
-                                                    return state;
-                                                });
-                                            }}
-                                        />
-                                    </Form.Group>
-                                </Col>
-                            </Row>
-                            <Row>
-                                <Col>
-                                    <Form.Group controlId="task-description">
-                                        <Form.Label>Task Description</Form.Label>
-                                        <Form.Control
-                                            value={this.state.task.description}
-                                            onChange={(event) => {
-                                                const v = event.target.value;
-                                                this.setState(state => {
-                                                    state.task.description = v;
-                                                    return state;
-                                                });
-                                            }}
-                                            as="textarea" rows="5"
-                                        />
-                                    </Form.Group>
-                                </Col>
-                            </Row>
-                            <Row>
-                                <Col>
-                                    <Form.Label className="pr-2" >Type</Form.Label>
-                                    <Form.Check
-                                        name="task-type"
-                                        inline
-                                        label="Spark-SQL"
-                                        type="radio"
-                                        checked={this.state.task.type=="spark-sql"}
-                                        onChange={() => {
+                        <Row>
+                            <Col>
+                                <Form.Group controlId="task-description">
+                                    <Form.Label>Description</Form.Label>
+                                    <Form.Control
+                                        disabled = {this.state.mode==='view'}
+                                        value={this.state.task.description}
+                                        onChange={(event) => {
+                                            const v = event.target.value;
                                             this.setState(state => {
-                                                state.task.type = "spark-sql";
+                                                state.task.description = v;
                                                 return state;
-                                            })
+                                            });
                                         }}
+                                        as="textarea" rows="3"
                                     />
-                                    <Form.Check
-                                        name="task-type"
-                                        inline
-                                        label="other"
-                                        type="radio"
-                                        checked={this.state.task.type=="other"}
-                                        onChange={() => {
-                                            this.setState(state => {
-                                                state.task.type = "other";
-                                                return state;
-                                            })
-                                        }}
-                                    />
-                                </Col>
-                            </Row>
-                            {/* other only fields */}
-                            <Row className={this.state.task.type=="other"?"d-block":"d-none"}>
+                                </Form.Group>
+                            </Col>
+                        </Row>
+                        <Row>
+                            <Col>
+                                <Form.Label className="pr-2" >Type</Form.Label>
+                                <Form.Check
+                                    name="task-type"
+                                    inline
+                                    label="Spark-SQL"
+                                    type="radio"
+                                    disabled = {this.state.mode==='view'}
+                                    checked={this.state.task.type=="spark-sql"}
+                                    onChange={() => {
+                                        this.setState(state => {
+                                            state.task.type = "spark-sql";
+                                            return state;
+                                        })
+                                    }}
+                                />
+                                <Form.Check
+                                    name="task-type"
+                                    inline
+                                    label="other"
+                                    type="radio"
+                                    disabled = {this.state.mode==='view'}
+                                    checked={this.state.task.type=="other"}
+                                    onChange={() => {
+                                        this.setState(state => {
+                                            state.task.type = "other";
+                                            return state;
+                                        })
+                                    }}
+                                />
+                            </Col>
+                        </Row>
+                        {
+                            this.state.task.type === "other" &&
+                            <Row>
                                 <Col>
                                     <Form.Group controlId="task-app">
                                         <Form.Label>Application</Form.Label>
                                         <Form.Control
                                             as="select"
+                                            disabled = {this.state.mode==='view'}
                                             value={this.state.task.application_id}
                                             onChange={(event) => {
                                                 const v = event.target.value;
@@ -235,16 +241,19 @@ export class SequentialTaskEditor extends React.Component {
                                                 })
                                             }
                                         </Form.Control>
-
                                     </Form.Group>
                                 </Col>
                             </Row>
-                            <Row className={this.state.task.type=="other"?"d-block":"d-none"}>
+                        }
+                        {
+                            this.state.task.type === "other" &&
+                            <Row>
                                 <Col>
                                     <Form.Group controlId="task-args">
                                         <Form.Label>Task Arguments</Form.Label>
                                         <Form.Control
                                             value={this.state.task.args}
+                                            disabled = {this.state.mode==='view'}
                                             onChange={(event) => {
                                                 const v = event.target.value;
                                                 this.setState(state => {
@@ -253,16 +262,20 @@ export class SequentialTaskEditor extends React.Component {
                                                 });
                                             }}
                                             as="textarea"
-                                            rows="5"
+                                            rows="3"
                                         />
                                     </Form.Group>
                                 </Col>
                             </Row>
+                        }
 
-                            <Row className={this.state.task.type=="spark-sql"?"d-block":"d-none"}>
+                        {
+                            (this.state.task.type === "spark-sql") &&
+                            <Row>
                                 <Col>
                                     <h2 className="c-ib">Steps</h2>
                                     <Button
+                                        disabled = {this.state.mode==='view'}
                                         className="c-vc ml-2"
                                         size="sm"
                                         onClick={this.addStep}
@@ -271,8 +284,11 @@ export class SequentialTaskEditor extends React.Component {
                                     </Button>
                                 </Col>
                             </Row>
+                        }
 
-                            <Row className={this.state.task.type=="spark-sql"?"d-block":"d-none"}>
+                        {
+                            (this.state.task.type == "spark-sql") &&
+                            <Row>
                                 <Col>
                                     <Table size="sm" hover>
                                         <thead className="thead-dark">
@@ -290,6 +306,7 @@ export class SequentialTaskEditor extends React.Component {
                                                     <tr key={step.name}>
                                                         <td className="align-middle">
                                                             <Button
+                                                                disabled = {this.state.mode==='view'}
                                                                 variant="primary"
                                                                 size="sm"
                                                                 className="mr-2"
@@ -300,14 +317,22 @@ export class SequentialTaskEditor extends React.Component {
                                                             <Button
                                                                 variant="primary"
                                                                 size="sm"
-                                                                onClick={event => {this.editSQLStep(step)}}
+                                                                onClick={event => {
+                                                                    if (this.state.mode=="view") {
+                                                                        this.viewSQLStep(step);
+                                                                    } else {
+                                                                        this.editSQLStep(step);
+                                                                    }
+                                                                }}
                                                             >
-                                                                <Icon.Pencil />
+                                                                {
+                                                                    this.state.mode==='view'?<Icon.Info/>:<Icon.Pencil />
+                                                                }
                                                             </Button>
                                                         </td>
                                                         <td className="align-middle">{step.name}</td>
                                                         <td className="align-middle">{step.alias}</td>
-                                                        <td className="align-middle">{step.output.location}</td>
+                                                        <td className="align-middle">{step.output?step.output.location:""}</td>
                                                     </tr>
                                                 )
                                             })
@@ -316,6 +341,10 @@ export class SequentialTaskEditor extends React.Component {
                                     </Table>
                                 </Col>
                             </Row>
+                        }
+
+                        <div className={this.state.show?"d-block":"d-none"}>
+
                             <Row className={this.state.task.type=="spark-sql"?"d-block":"d-none"}>
                                 <Col>
                                     <SQLStepEditor
@@ -331,8 +360,19 @@ export class SequentialTaskEditor extends React.Component {
                 </Modal.Body>
 
                 <Modal.Footer>
+                    {
+                        (
+                            this.state.mode === "edit" ||
+                            this.state.mode === "new"
+                        ) &&
+                        <Button variant="primary"
+                            onClick={this.onSave}
+                            disabled={!this.canSave()}
+                        >
+                            Save changes
+                        </Button>
+                    }
                     <Button variant="secondary" onClick={this.onClose}>Close</Button>
-                    <Button variant="primary" onClick={this.onSave}>Save changes</Button>
                 </Modal.Footer>
             </Modal>
         );

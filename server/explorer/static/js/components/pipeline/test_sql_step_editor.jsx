@@ -7,15 +7,10 @@ import {SQLStepEditor} from './sql_step_editor.jsx'
 export class TestSQLStepEditor extends React.Component {
     testSQLEditorRef = React.createRef();
 
-    onSaveSQLEditor = (step) => {
-        console.log("Test SQL Step is saved");
+    onSaveSQLEditor = (mode, step) => {
+        console.log(`Test SQL Step is saved with mode ${mode}`);
         console.log(step);
     };
-
-    onCancelSQLEditor = () => {
-        console.log("Test SQL Step is not saved");
-    };
-
 
     render() {
         return (
@@ -24,12 +19,11 @@ export class TestSQLStepEditor extends React.Component {
                 <SQLStepEditor
                     ref={this.testSQLEditorRef}
                     onSave={this.onSaveSQLEditor}
-                    onCancel={this.onCancelSQLEditor}
                 />
                 <Button
                     className="mr-2"
                     onClick={() => {
-                        this.testSQLEditorRef.current.openDialog();
+                        this.testSQLEditorRef.current.openDialog('new');
                     }}
                 >
                     New Step
@@ -37,7 +31,7 @@ export class TestSQLStepEditor extends React.Component {
                 <Button
                     className="mr-2"
                     onClick={() => {
-                        this.testSQLEditorRef.current.openDialog({
+                        this.testSQLEditorRef.current.openDialog('edit', {
                             name: 'foo',
                             imports: [{alias: "X", dsi_name: "trading:1.0:1/{{dt}}"}],
                             sql: "SELECT * FROM X",
@@ -52,6 +46,25 @@ export class TestSQLStepEditor extends React.Component {
                     }}
                 >
                     Edit Step
+                </Button>
+                <Button
+                    className="mr-2"
+                    onClick={() => {
+                        this.testSQLEditorRef.current.openDialog('view', {
+                            name: 'foo',
+                            imports: [{alias: "X", dsi_name: "trading:1.0:1/{{dt}}"}],
+                            sql: "SELECT * FROM X",
+                            alias: '',
+                            output: {
+                                type: 'parquet',
+                                write_mode: 'overwrite',
+                                location: '',
+                                register_dataset_instance: ''
+                            }
+                        });
+                    }}
+                >
+                    View Step
                 </Button>
             </div>
         );

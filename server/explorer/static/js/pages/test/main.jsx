@@ -21,11 +21,11 @@ class TestPage extends React.Component {
                     <div>
                         <h1>Main Test Page</h1>
                         <ul>
+                            <li><a href="?component=SQLStepEditor">SQLStepEditor</a></li>
                             <li><a href="?component=TaskEditor">TaskEditor</a></li>
+                            <li><a href="?component=PipelineEditor">PipelineEditor</a></li>
                             <li><a href="?component=ApplicationEditor">ApplicationEditor</a></li>
                             <li><a href="?component=DatasetEditor">DatasetEditor</a></li>
-                            <li><a href="?component=PipelineEditor">PipelineEditor</a></li>
-                            <li><a href="?component=SQLStepEditor">SQLStepEditor</a></li>
                             <li><a href="?component=PipelineGroupEditor">PipelineGroupEditor</a></li>
                             <li><a href="?component=PipelineTable">PipelineTable</a></li>
                             <li><a href="?component=TimerTable">TimerTable</a></li>
@@ -34,19 +34,19 @@ class TestPage extends React.Component {
                 }
                 { this.props.component && <div><a href="?">Go back to Test Index</a></div> }
                 {
+                    this.props.component === "SQLStepEditor" && <TestSQLStepEditor />
+                }
+                {
                     this.props.component === "TaskEditor" && <TestTaskEditor />
+                }
+                {
+                    this.props.component === "PipelineEditor" && <TestPipelineEditor />
                 }
                 {
                     this.props.component === "ApplicationEditor" && <TestApplicationEditor />
                 }
                 {
                     this.props.component === "DatasetEditor" && <TestDatasetEditor />
-                }
-                {
-                    this.props.component === "PipelineEditor" && <TestPipelineEditor />
-                }
-                {
-                    this.props.component === "SQLStepEditor" && <TestSQLStepEditor />
                 }
                 {
                     this.props.component === "PipelineGroupEditor" && <TestPipelineGroupEditor />
