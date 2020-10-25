@@ -6,9 +6,12 @@ import ReactDOM from 'react-dom'
 import Container from 'react-bootstrap/Container'
 
 import {PipelineTable} from '/components/pipeline/pipeline_table.jsx'
-import {get_csrf_token, pipeline_to_django_model, get_app_context, get_current_user} from '/common_lib'
+import {
+    get_csrf_token, pipeline_to_django_model, pipeline_from_django_model,
+    get_app_context, get_current_user, get_app_config
+} from '/common_lib'
 
-class Pipelines extends React.Component {
+class PipelinesPage extends React.Component {
     state = {
         pipelines: [],
     };
@@ -20,7 +23,7 @@ class Pipelines extends React.Component {
         .then(
             (result) => {
                 this.setState(
-                    {pipelines: result},
+                    {pipelines: result.map(pipeline => pipeline_from_django_model(pipeline))},
                     () => {
                         setTimeout(this.load_pipelines, 2000)
                     }
@@ -144,6 +147,7 @@ class Pipelines extends React.Component {
                     onPause={this.onPause}
                     onUnpause={this.onUnpause}
                     onSave={this.onSave}
+                    airflow_base_url={this.props.airflow_base_url}
                 />
             </Container>
         );
@@ -153,11 +157,13 @@ class Pipelines extends React.Component {
 $(function() {
     const current_user = get_current_user()
     const app_context = get_app_context();
+    const app_config = get_app_config();
 
     ReactDOM.render(
-        <Pipelines
+        <PipelinesPage
             current_user={current_user}
             applications={app_context.applications}
+            airflow_base_url = {app_config.AIRFLOW_BASE_URL}
         />,
         document.getElementById('app')
     );
