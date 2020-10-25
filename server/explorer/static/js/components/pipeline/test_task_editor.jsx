@@ -7,13 +7,9 @@ import {SequentialTaskEditor} from './task_editor.jsx'
 export class TestTaskEditor extends React.Component {
     testTaskEditorRef = React.createRef();
 
-    onSaveTask = (task) => {
-        console.log("Test Task is saved");
+    onSaveTask = (mode, task) => {
+        console.log(`Test Task is saved with mode ${mode}`);
         console.log(task);
-    };
-
-    onCancelTask = () => {
-        console.log("Test Task is not saved");
     };
 
     render() {
@@ -23,7 +19,6 @@ export class TestTaskEditor extends React.Component {
                 <SequentialTaskEditor
                     ref={this.testTaskEditorRef}
                     onSave={this.onSaveTask}
-                    onCancel={this.onCancelTask}
                     applications={[
                         {'id': 'a', 'name': 'foo'},
                         {'id': 'b', 'name': 'bar'},
@@ -33,7 +28,7 @@ export class TestTaskEditor extends React.Component {
                 <Button
                     className="mr-2"
                     onClick={() => {
-                        this.testTaskEditorRef.current.openDialog();
+                        this.testTaskEditorRef.current.openDialog('new');
                     }}
                 >
                     New Task
@@ -41,7 +36,7 @@ export class TestTaskEditor extends React.Component {
                 <Button
                     className="mr-2"
                     onClick={() => {
-                        this.testTaskEditorRef.current.openDialog({
+                        this.testTaskEditorRef.current.openDialog('edit', {
                             name: 'foo',
                             description: 'blah...',
                             type: 'spark-sql',
@@ -66,6 +61,35 @@ export class TestTaskEditor extends React.Component {
                     }}
                 >
                     Edit Task
+                </Button>
+                <Button
+                    className="mr-2"
+                    onClick={() => {
+                        this.testTaskEditorRef.current.openDialog('view', {
+                            name: 'foo',
+                            description: 'blah...',
+                            type: 'spark-sql',
+                            appLocation: '',
+                            args: {},
+                            steps: [
+                                {
+                                    name: 'step 1',
+                                    imports: [{alias: "X", dsi_name: "trading:1.0:1/{{dt}}"}],
+                                    sql: "SELECT * FROM X",
+                                    alias: '',
+                                    output: {
+                                        type: 'parquet',
+                                        write_mode: 'overwrite',
+                                        location: '',
+                                        register_dataset_instance: ''
+                                    }
+
+                                }
+                            ]
+                        });
+                    }}
+                >
+                    View Task
                 </Button>
             </div>
         );

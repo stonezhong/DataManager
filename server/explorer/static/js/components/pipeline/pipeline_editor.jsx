@@ -8,7 +8,6 @@ import Form from 'react-bootstrap/Form'
 import Table from 'react-bootstrap/Table'
 import Modal from 'react-bootstrap/Modal'
 
-import classNames from 'classnames'
 import * as Icon from 'react-bootstrap-icons'
 import {SequentialTaskEditor} from './task_editor.jsx'
 
@@ -20,9 +19,7 @@ const _ = require("lodash");
  * Props
  *     applications: a list of all possible applications
  *                   each application must has field 'id' and 'name'
- *     onSave   : called when user hit "Save Changes", onSave(mode, pipeline) is called
- *                mode could be "new" or "edit"
- *     onCancel : called when user hit "Close" or close the dialog without save the change
+ *     onSave   : onSave(mode, pipeline) is called when user save the change
  *
  */
 export class PipelineEditor extends React.Component {
@@ -34,10 +31,12 @@ export class PipelineEditor extends React.Component {
             team: '',
             category: '',
             description: '',
-            type: 'sequential',
-            tasks: [],
+            // belong to the context
+            type        : 'sequential',
+            dag_id      : '',                // for external pipeline
             requiredDSIs: [],          // required dataset instances
-            dag_id: '',                // for external pipeline
+            tasks       : [],
+            _toAddAssertPath: ''
         };
     };
 
@@ -48,24 +47,21 @@ export class PipelineEditor extends React.Component {
     };
 
     onClose = () => {
-        if (this.props.onCancel) {
-            this.setState({show: false}, this.props.onCancel);
-        } else {
-            this.setState({show: false});
-        }
-    };
-
-    addRequiredDSI = dsi => {
-        this.setState(state => {
-            state.pipeline.requiredDSIs.push(dsi);
-            return state;
-        });
+        this.setState({show: false});
     };
 
     onSave = () => {
-        const savedPipeline = _.cloneDeep(this.state.pipeline);
+        const pipeline = _.cloneDeep(this.state.pipeline);
         const mode = this.state.mode;
-        this.setState({show: false}, () => {this.props.onSave(mode, savedPipeline)});
+        delete pipeline._toAddAssertPath;
+        this.setState({show: false}, () => {this.props.onSave(mode, pipeline)});
+    };
+
+    canSave = () => {
+        if (!this.state.pipeline.name || !this.state.pipeline.team || !this.state.category) {
+            return false;
+        }
+        return true;
     };
 
     getApplicationName = task => {
@@ -79,24 +75,28 @@ export class PipelineEditor extends React.Component {
         return "";
     };
 
-    openDialog = (pipeline) => {
-        if (pipeline) {
+    // user shall convert the django output to native pipeline format
+    // using pipeline_from_django_model
+    openDialog = (mode, pipeline) => {
+        if (mode === "view" || mode === "edit") {
+            const myPipeline = _.cloneDeep(pipeline);
+            myPipeline._toAddAssertPath = '';
             this.setState({
                 show: true,
-                mode: "edit",
-                pipeline: pipeline
+                mode: mode,
+                pipeline: myPipeline
             });
         } else {
             this.setState({
                 show: true,
-                mode: "new",
+                mode: mode,
                 pipeline: this.initPipelineValue()
             });
         }
     };
 
     addTask = () => {
-        this.theTaskEditorRef.current.openDialog();
+        this.theTaskEditorRef.current.openDialog("new");
     };
 
     deleteTask = (task) => {
@@ -107,7 +107,7 @@ export class PipelineEditor extends React.Component {
         });
     };
 
-    onTaskSaved = task => {
+    onTaskSaved = (mode, task) => {
         this.setState(state => {
             const idx = state.pipeline.tasks.findIndex(taskX => taskX.name == task.name);
             if (idx >= 0) {
@@ -120,8 +120,31 @@ export class PipelineEditor extends React.Component {
     };
 
     editTask = task => {
-        this.theTaskEditorRef.current.openDialog(task);
+        this.theTaskEditorRef.current.openDialog("edit", task);
     };
+
+    viewTask = task => {
+        this.theTaskEditorRef.current.openDialog("view", task);
+    };
+
+    get_title = () => {
+        if (this.state.mode === "new") {
+            return "new Pipeline";
+        } else if (this.state.mode === "edit") {
+            return "edit Pipeline";
+        } else if (this.state.mode === "view") {
+            return "Pipeline"
+        } else {
+            // wrong parameter
+            console.assert(false, "mode must be edit, view or new");
+        }
+    };
+
+
+    canSave = () => {
+        return this.state.pipeline.name && this.state.pipeline.team && this.state.pipeline.category;
+    };
+
 
     render() {
         return (
@@ -134,9 +157,7 @@ export class PipelineEditor extends React.Component {
             >
 
                 <Modal.Header closeButton>
-                    <Modal.Title>
-                        {this.state.mode=="edit"?"Edit Pipeline":"New Pipeline"}
-                    </Modal.Title>
+                    <Modal.Title>{this.get_title()}</Modal.Title>
                 </Modal.Header>
 
                 <Modal.Body>
@@ -147,7 +168,7 @@ export class PipelineEditor extends React.Component {
                                     <Form.Group controlId="pipeline-name">
                                         <Form.Label>Name</Form.Label>
                                         <Form.Control
-                                            disabled = {this.state.mode=='edit'}
+                                            disabled = {this.state.mode==='edit' || this.state.mode==='view'}
                                             value={this.state.pipeline.name}
                                             onChange={(event) => {
                                                 const v = event.target.value;
@@ -163,6 +184,7 @@ export class PipelineEditor extends React.Component {
                                     <Form.Group controlId="pipeline-team">
                                         <Form.Label>Team</Form.Label>
                                         <Form.Control
+                                            disabled = {this.state.mode==='view'}
                                             value={this.state.pipeline.team}
                                             onChange={(event) => {
                                                 const v = event.target.value;
@@ -178,6 +200,7 @@ export class PipelineEditor extends React.Component {
                                     <Form.Group controlId="pipeline-category">
                                         <Form.Label>Category</Form.Label>
                                         <Form.Control
+                                            disabled = {this.state.mode==='view'}
                                             value={this.state.pipeline.category}
                                             onChange={(event) => {
                                                 const v = event.target.value;
@@ -194,7 +217,8 @@ export class PipelineEditor extends React.Component {
                                 <Col>
                                     <Form.Group controlId="pipeline-description">
                                         <Form.Label>Description</Form.Label>
-                                        <Form.Control as="textarea" rows="5"
+                                        <Form.Control as="textarea" rows="3"
+                                            disabled = {this.state.mode==='view'}
                                             value={this.state.pipeline.description}
                                             onChange={(event) => {
                                                 const v = event.target.value;
@@ -207,62 +231,82 @@ export class PipelineEditor extends React.Component {
                                     </Form.Group>
                                 </Col>
                             </Row>
-                            <Row>
-                                <Col>
-                                    <h2>Required asserts</h2>
-                                    <Table hover bordered  size="sm" >
-                                        <thead className="thead-dark">
-                                            <tr>
-                                                <th className="c-tc-icon1"></th>
-                                                <th>Name</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {
-                                                this.state.pipeline.requiredDSIs.map(requiredDSI => {
-                                                    return (
-                                                        <tr key={requiredDSI}>
-                                                            <td className="align-middle">
-                                                                <Button
-                                                                    variant="secondary"
-                                                                    size="sm"
-                                                                    onClick={event => this.deleteRequiredDSI(requiredDSI)}
-                                                                >
-                                                                    <Icon.X />
-                                                                </Button>
-                                                            </td>
-                                                            <td className="align-middle">{requiredDSI}</td>
-                                                        </tr>
-                                                    );
-                                                })
-                                            }
-                                            <tr>
-                                                <td className="align-middle">
-                                                    <Button
-                                                        variant="primary"
-                                                        size="sm"
-                                                        onClick={event => {
-                                                            const v = $("#requiredDSI_to_add").val();
-                                                            this.addRequiredDSI(v);
-                                                            $("#requiredDSI_to_add").val('');
-                                                        }}
-                                                    >
-                                                        <Icon.Plus />
-                                                    </Button>
-                                                </td>
-                                                <td>
-                                                    <Form.Control id="requiredDSI_to_add"/>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </Table>
-                                </Col>
-                            </Row>
+                            {
+                                this.state.pipeline.requiredDSIs &&
+                                <Row>
+                                    <Col>
+                                        <h2>Required asserts</h2>
+                                        <Table hover bordered  size="sm" >
+                                            <thead className="thead-dark">
+                                                <tr>
+                                                    <th className="c-tc-icon1"></th>
+                                                    <th>Assert Path</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {
+                                                    this.state.pipeline.requiredDSIs.map(requiredDSI => {
+                                                        return (
+                                                            <tr key={requiredDSI}>
+                                                                <td className="align-middle">
+                                                                    <Button
+                                                                        disabled = {this.state.mode==='view'}
+                                                                        variant="secondary"
+                                                                        size="sm"
+                                                                        onClick={event => this.deleteRequiredDSI(requiredDSI)}
+                                                                    >
+                                                                        <Icon.X />
+                                                                    </Button>
+                                                                </td>
+                                                                <td className="align-middle">{requiredDSI}</td>
+                                                            </tr>
+                                                        );
+                                                    })
+                                                }
+                                                {
+                                                    (this.state.mode === 'edit' || this.state.mode === 'new') &&
+                                                    <tr>
+                                                        <td className="align-middle">
+                                                            <Button
+                                                                disabled = {!this.state.pipeline._toAddAssertPath.trim()}
+                                                                variant="primary"
+                                                                size="sm"
+                                                                onClick={event => {
+                                                                    this.setState(state => {
+                                                                        const v = state.pipeline._toAddAssertPath.trim();
+                                                                        state.pipeline.requiredDSIs.push(v);
+                                                                        state.pipeline._toAddAssertPath = '';
+                                                                        return state;
+                                                                    });
+                                                                }}
+                                                            >
+                                                                <Icon.Plus />
+                                                            </Button>
+                                                        </td>
+                                                        <td>
+                                                            <Form.Control id="requiredDSI_to_add"
+                                                                value={this.state.pipeline._toAddAssertPath}
+                                                                onChange={(event) => {
+                                                                    const v = event.target.value;
+                                                                    this.setState(state => {
+                                                                        state.pipeline._toAddAssertPath = v;
+                                                                        return state;
+                                                                    })
+                                                                }}
+                                                            />
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </Table>
+                                    </Col>
+                                </Row>
+                            }
                             <Row>
                                 <Col>
                                     <Form.Label className="pr-2" >Type</Form.Label>
                                     <Form.Check
-                                        disabled = {this.state.mode=='edit'}
+                                        disabled = {this.state.mode==='view'}
                                         name="pipeline-type"
                                         inline
                                         label="Sequential"
@@ -276,12 +320,12 @@ export class PipelineEditor extends React.Component {
                                         }}
                                     />
                                     <Form.Check
-                                        disabled = {this.state.mode=='edit'}
+                                        disabled = {this.state.mode==='view'}
                                         name="pipeline-type"
                                         inline
                                         label="External"
                                         type="radio"
-                                        checked={this.state.pipeline.type=="external"}
+                                        checked={this.state.pipeline.type==="external"}
                                         onChange={() => {
                                             this.setState(state => {
                                                 state.pipeline.type = "external";
@@ -291,86 +335,99 @@ export class PipelineEditor extends React.Component {
                                     />
                                 </Col>
                             </Row>
-                            <Row
-                                className={this.state.pipeline.type=="sequential"?"d-block":"d-none"}
-                            >
-                                <Col>
-                                    <h2 className="c-ib">Tasks</h2>
-                                    <Button
-                                        className="c-vc ml-2"
-                                        size="sm"
-                                        onClick={this.addTask}
-                                    >
-                                        Add Task
-                                    </Button>
-                                </Col>
-                            </Row>
-                            <Row
-                                className={this.state.pipeline.type=="sequential"?"d-block":"d-none"}
-                            >
-                                <Col>
-                                    <Table hover bordered size="sm">
-                                        <thead className="thead-dark">
-                                            <tr>
-                                                <th className="c-tc-icon2"></th>
-                                                <th>Name</th>
-                                                <th>Type</th>
-                                                <th>Application</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                        {
-                                            this.state.pipeline.tasks.map((task) => {
-                                                return (
-                                                    <tr key={task.name}>
-                                                        <td className="align-middle">
-                                                            <Button
-                                                                variant="secondary"
-                                                                size="sm"
-                                                                className="mr-2"
-                                                                onClick={event => {this.deleteTask(task)}}
-                                                            >
-                                                                <Icon.X />
-                                                            </Button>
-                                                            <Button
-                                                                variant="secondary"
-                                                                size="sm"
-                                                                onClick={event => {this.editTask(task)}}
-                                                            >
-                                                                <Icon.Pencil />
-                                                            </Button>
-                                                        </td>
-                                                        <td className="align-middle">{task.name}</td>
-                                                        <td className="align-middle">{task.type}</td>
-                                                        <td className="align-middle">{this.getApplicationName(task)}</td>
-                                                    </tr>
-                                                )
-                                            })
-                                        }
-                                        </tbody>
-                                    </Table>
-                                </Col>
-                            </Row>
-                            <Row
-                                className={this.state.pipeline.type=="external"?"d-block":"d-none"}
-                            >
-                                <Col>
-                                    <Form.Group as={Row} controlId="pipeline-dag-id">
-                                        <Form.Label column sm={2}>DAG ID</Form.Label>
-                                        <Col sm={10}>
-                                            <Form.Control
-                                                onChange={(event) => {
-                                                    const v = event.target.value;
-                                                    this.setState( state => {
-                                                        state.pipeline.dag_id = v;
-                                                        return state;
-                                                    });
-                                                }}
-                                            />
-                                        </Col>
-                                    </Form.Group>
-                                </Col>
-                            </Row>
+                            {
+                                (this.state.pipeline.type==="sequential") &&
+                                <Row>
+                                    <Col>
+                                        <h2 className="c-ib">Tasks</h2>
+                                        <Button
+                                            disabled = {this.state.mode==='view'}
+                                            className="c-vc ml-2"
+                                            size="sm"
+                                            onClick={this.addTask}
+                                        >
+                                            Add Task
+                                        </Button>
+                                    </Col>
+                                </Row>
+                            }
+                            {
+                                (this.state.pipeline.type==="sequential") &&
+                                <Row>
+                                    <Col>
+                                        <Table hover bordered size="sm">
+                                            <thead className="thead-dark">
+                                                <tr>
+                                                    <th className="c-tc-icon2"></th>
+                                                    <th>Name</th>
+                                                    <th>Type</th>
+                                                    <th>Application</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                            {
+                                                this.state.pipeline.tasks.map((task) => {
+                                                    return (
+                                                        <tr key={task.name}>
+                                                            <td className="align-middle">
+                                                                <Button
+                                                                    disabled = {this.state.mode==='view'}
+                                                                    variant="secondary"
+                                                                    size="sm"
+                                                                    className="mr-2"
+                                                                    onClick={event => {this.deleteTask(task)}}
+                                                                >
+                                                                    <Icon.X />
+                                                                </Button>
+                                                                <Button
+                                                                    variant="secondary"
+                                                                    size="sm"
+                                                                    onClick={event => {
+                                                                        if (this.state.mode==='view') {
+                                                                            this.viewTask(task)
+                                                                        } else {
+                                                                            this.editTask(task)
+                                                                        }
+                                                                    }}
+                                                                >
+                                                                    { this.state.mode === "view"?<Icon.Info />:<Icon.Pencil /> }
+                                                                </Button>
+                                                            </td>
+                                                            <td className="align-middle">{task.name}</td>
+                                                            <td className="align-middle">{task.type}</td>
+                                                            <td className="align-middle">{this.getApplicationName(task)}</td>
+                                                        </tr>
+                                                    )
+                                                })
+                                            }
+                                            </tbody>
+                                        </Table>
+                                    </Col>
+                                </Row>
+                            }
+                            {
+                                (this.state.pipeline.type==="external") &&
+                                <Row>
+                                    <Col>
+                                        <Form.Group as={Row} controlId="pipeline-dag-id">
+                                            <Form.Label column sm={2}>DAG ID</Form.Label>
+                                            <Col sm={10}>
+                                                <Form.Control
+                                                    disabled = {this.state.mode==='view'}
+                                                    value={this.state.pipeline.dag_id}
+                                                    onChange={(event) => {
+                                                        const v = event.target.value;
+                                                        this.setState( state => {
+                                                            state.pipeline.dag_id = v;
+                                                            return state;
+                                                        });
+                                                    }}
+                                                />
+                                            </Col>
+                                        </Form.Group>
+                                    </Col>
+                                </Row>
+                            }
                         </Form>
 
                         <Row>
@@ -387,8 +444,20 @@ export class PipelineEditor extends React.Component {
                 </Modal.Body>
 
                 <Modal.Footer>
+                    {
+                        (
+                            this.state.mode === "edit" ||
+                            this.state.mode === "new"
+                        ) &&
+                        <Button
+                            variant="primary"
+                            onClick={this.onSave}
+                            disabled={!this.canSave()}
+                        >
+                            Save changes
+                        </Button>
+                    }
                     <Button variant="secondary" onClick={this.onClose}>Close</Button>
-                    <Button variant="primary" onClick={this.onSave}>Save changes</Button>
                 </Modal.Footer>
             </Modal>
         );

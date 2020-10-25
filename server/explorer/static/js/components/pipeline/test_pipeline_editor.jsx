@@ -34,7 +34,7 @@ export class TestPipelineEditor extends React.Component {
                 <Button
                     className="mr-2"
                     onClick={() => {
-                        this.testPipelineEditorRef.current.openDialog();
+                        this.testPipelineEditorRef.current.openDialog('new');
                     }}
                 >
                     New Pipeline
@@ -42,7 +42,7 @@ export class TestPipelineEditor extends React.Component {
                 <Button
                     className="mr-2"
                     onClick={() => {
-                        this.testPipelineEditorRef.current.openDialog({
+                        this.testPipelineEditorRef.current.openDialog('edit', {
                             type: "sequential",
                             author: "stonezhong",
                             category: "daily",
@@ -69,6 +69,37 @@ export class TestPipelineEditor extends React.Component {
                     }}
                 >
                     Edit Pipeline
+                </Button>
+                <Button
+                    className="mr-2"
+                    onClick={() => {
+                        this.testPipelineEditorRef.current.openDialog('view', {
+                            type: "sequential",
+                            author: "stonezhong",
+                            category: "daily",
+                            team: "trading",
+                            dag_id: "",
+                            version: 1,
+                            dag_version: "",
+                            description: "",
+                            id: "7bbafbcd-725e-4208-93b6-df7efc75df9f",
+                            name: "import-trading-data",
+                            paused: false,
+                            requiredDSIs: [],
+                            tasks: [
+                                {
+                                    application_id: '1e871b84-5ee8-45e3-bd29-a62b52bdfe56',
+                                    args: "{}",
+                                    description: "",
+                                    name: "import-trading-data",
+                                    steps: [],
+                                    type: "other"
+                                }
+                            ],
+                        });
+                    }}
+                >
+                    View Pipeline
                 </Button>
             </div>
         );

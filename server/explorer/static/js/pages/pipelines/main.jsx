@@ -3,24 +3,16 @@ import $ from 'jquery';
 import React from 'react'
 import ReactDOM from 'react-dom'
 
-import Button from 'react-bootstrap/Button'
-import Row from 'react-bootstrap/Row'
-import Col from 'react-bootstrap/Col'
 import Container from 'react-bootstrap/Container'
 
 import {PipelineTable} from '/components/pipeline/pipeline_table.jsx'
-import {PipelineEditor} from '/components/pipeline/pipeline_editor.jsx'
-import {get_csrf_token, pipeline_to_django_model, pipeline_from_django_model, get_app_context, get_current_user} from '/common_lib'
+import {get_csrf_token, pipeline_to_django_model, get_app_context, get_current_user} from '/common_lib'
 
 class Pipelines extends React.Component {
     state = {
         pipelines: [],
     };
 
-    constructor(props) {
-        super();
-        this.thePipelineEditorRef = React.createRef();
-    }
 
     load_pipelines = () =>  {
         fetch("/api/Pipelines/")
@@ -37,7 +29,8 @@ class Pipelines extends React.Component {
         )
     }
 
-    onPausePipeline = (pipeline_id) => {
+    onPause = (pipeline_id) => {
+        // called when user want to pause a pipeline
         fetch(`/api/Pipelines/${pipeline_id}/`, {
             method: 'patch',
             headers: {
@@ -55,7 +48,8 @@ class Pipelines extends React.Component {
             )
     }
 
-    onUnpausePipeline = (pipeline_id) => {
+    onUnpause = (pipeline_id) => {
+        // called when user want to unpause a pipeline
         fetch(`/api/Pipelines/${pipeline_id}/`, {
             method: 'patch',
             headers: {
@@ -78,7 +72,7 @@ class Pipelines extends React.Component {
     }
 
     // called when PipelineEditor saved a pipeline in memory
-    onPipelineSaved = (mode, pipeline) => {
+    onSave = (mode, pipeline) => {
         const to_post = pipeline_to_django_model(pipeline);
         if (mode == "new") {
             fetch('/api/Pipelines/', {
@@ -141,45 +135,17 @@ class Pipelines extends React.Component {
 
     render() {
         return (
-            <div>
-                <Container fluid>
-                    <Row>
-                        <Col>
-                            <h1 className="c-ib">Pipelines</h1>
-                            <Button
-                                disabled = {!this.props.current_user}
-                                size="sm"
-                                className="c-vc ml-2"
-                                onClick={() => {
-                                    this.thePipelineEditorRef.current.openDialog();
-                                }}
-                            >
-                                Create
-                            </Button>
-                        </Col>
-                    </Row>
-                    <Row>
-                        <Col>
-                            <PipelineTable
-                                pipelines={this.state.pipelines.map(pipeline_from_django_model)}
-                                allowEdit = {this.props.current_user}
-                                onPause = {this.onPausePipeline}
-                                onUnpause = {this.onUnpausePipeline}
-                                editPipeline={
-                                    pipeline => {
-                                        this.thePipelineEditorRef.current.openDialog(pipeline);
-                                    }
-                                }
-                            />
-                        </Col>
-                    </Row>
-                </Container>
-                <PipelineEditor
-                    ref={this.thePipelineEditorRef}
-                    onSave={this.onPipelineSaved}
+            <Container fluid>
+                <PipelineTable
+                    allowEdit={!!this.props.current_user}
+                    allowNew={!!this.props.current_user}
+                    pipelines={this.state.pipelines}
                     applications={this.props.applications}
+                    onPause={this.onPause}
+                    onUnpause={this.onUnpause}
+                    onSave={this.onSave}
                 />
-            </div>
+            </Container>
         );
     }
 }
