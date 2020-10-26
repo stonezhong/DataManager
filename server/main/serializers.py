@@ -186,8 +186,8 @@ class TimerSerializer(serializers.ModelSerializer):
             'id', 'name', 'description', 'author', 'team',
             'paused',
             'interval_unit', 'interval_amount',
-            'start_from', 'last_due',
-            'topic', 'context'
+            'start_from', 'end_at', 'last_due',
+            'topic', 'context', 'sys_context'
         ]
 
 class ScheduledEventSerializer(serializers.ModelSerializer):

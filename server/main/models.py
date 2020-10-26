@@ -459,21 +459,25 @@ class Timer(models.Model):
     interval_amount     = models.IntegerField(null=False)
 
     start_from          = models.DateTimeField(null=False)
+    end_at              = models.DateTimeField(null=True)
 
     # The last due we triggered
     last_due            = models.DateTimeField(null=True)
 
     # when an event is triggered, the topic and context will be copied to the ScheduledEvent
     topic               = models.CharField(max_length=1024, blank=True)
-    # A JSON object
+
+    # A JSON object, entered by user
     context             = models.TextField(blank=True)
 
+    # system level context, not entered by user
+    sys_context         = models.TextField(blank=True)
 
     # create a timer
     @classmethod
     def create(cls, requester, name, description, team, paused,
                interval_unit, interval_amount,
-               start_from, topic, context):
+               start_from, topic, context, sys_context, end_at=None):
 
         if not requester.is_authenticated:
             raise PermissionDeniedException()
@@ -489,11 +493,14 @@ class Timer(models.Model):
                       start_from = start_from,
                       last_due = None,
                       topic = topic,
-                      context = context)
+                      context = context,
+                      sys_context = sys_context,
+                      end_at = end_at
+                     )
         timer.save()
         return timer
 
-    def next_due(self, dryrun=True):
+    def next_due(self, dryrun=True, event_handler=None):
         # if dryrun is True, we only return the next due, but do not
         # write to db
 
@@ -516,16 +523,18 @@ class Timer(models.Model):
 
         self.save()
         se.save()
+        if event_handler:
+            event_handler(se)
         return due
 
     @classmethod
-    def produce_next_due(cls):
+    def produce_next_due(cls, topic, event_handler=None):
         # For now, we assume all the timer uses UTC timezone
         now = datetime.utcnow().replace(tzinfo=pytz.UTC)
 
         picked_timer = None
         picked_due = None
-        for timer in Timer.objects.filter(paused=False):
+        for timer in Timer.objects.filter(paused=False).filter(topic=topic):
             due = timer.next_due()
             if picked_due is None or due < picked_due:
                 picked_due = due
@@ -535,7 +544,7 @@ class Timer(models.Model):
             # no schedule event generated
             return False
 
-        picked_timer.next_due(dryrun=False)
+        picked_timer.next_due(dryrun=False, event_handler=event_handler)
         return True
 
 

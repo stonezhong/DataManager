@@ -18,4 +18,12 @@ class CreateTimerInput:
         )
         self.topic = data['topic']
         self.context = data['context']
+        self.sys_context = data['sys_context']
+        end_at = data['end_at']
+        if end_at:
+            self.end_at = datetime.strptime(
+                end_at, "%Y-%m-%d %H:%M:%S"
+            )
+        else:
+            self.end_at = None
         return self

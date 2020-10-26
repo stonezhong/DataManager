@@ -300,8 +300,8 @@ class TimerViewSet(viewsets.ModelViewSet):
     serializer_class = TimerSerializer
 
     filter_backends = [DjangoFilterBackend, OrderingFilter]
-    filterset_fields = []
-    ordering_fields = []
+    filterset_fields = ['topic']
+    ordering_fields = ['name']
 
     @transaction.atomic
     def create(self, request):
@@ -322,7 +322,9 @@ class TimerViewSet(viewsets.ModelViewSet):
             create_timer_input.interval_amount,
             create_timer_input.start_from,
             create_timer_input.topic,
-            create_timer_input.context
+            create_timer_input.context,
+            create_timer_input.sys_context,
+            end_at = create_timer_input.end_at
         )
         response = TimerSerializer(instance=timer, context={'request': request}).data
         return Response(response)

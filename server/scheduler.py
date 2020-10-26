@@ -1,11 +1,25 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
+import logging, logging.config
+from config import get_mordor_config_json_template, get_log_path
+
+# initializing the logging MUST come before import any other modules
+config = get_mordor_config_json_template(
+    "scheduler.json",
+    context={
+        "log_dir": get_log_path(),
+    }
+)
+logging.config.dictConfig(config['log_config'])
+logger = logging.getLogger(__name__)
+
 import json
 import jinja2
 import time
 from datetime import datetime
 import pytz
+from jinja2 import Template
 
 import os
 import django
@@ -13,7 +27,8 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'DataCatalog.settings')
 django.setup()
 
 # from django.db.models import Q
-from main.models import PipelineInstance, Dataset, DatasetInstance, Pipeline, PipelineGroup
+from main.models import PipelineInstance, Dataset, DatasetInstance, \
+    Pipeline, PipelineInstance, PipelineGroup, Timer
 import explorer.airflow_lib as airflow_lib
 
 ################################################################################
@@ -138,17 +153,74 @@ def handle_pipeline_instance_started(pi):
 
     raise Exception(f"Unrecognized status: {r}")
 
+def event_handler(scheduled_event):
+    logger.info("A ScheduledEvent is created!")
+
+    # Update scheduled_event context
+    # when scheduled_event is created, it's timer's context has been copied to the
+    # context field
+    template = Template(scheduled_event.context)
+    rendered_content = template.render({
+        "due": scheduled_event.due
+    })
+    scheduled_event.context = rendered_content
+    scheduled_event.save()
+
+    event_ctx = json.loads(scheduled_event.context)
+    category = event_ctx['pipeline']['category']
+
+    now = datetime.utcnow().replace(tzinfo=pytz.UTC)
+    # create pipeline group
+    pg = PipelineGroup(
+        name=f'{scheduled_event.timer.name}/{scheduled_event.due.strftime("%Y-%m-%d %H:%M:%S")}',
+        created_time = now,
+        category=category,
+        context=scheduled_event.context,
+        finished=False,
+    )
+    pg.save()
+
+
+    # Attach pipeline to it
+    for pipeline in Pipeline.objects.filter(
+        category=category
+    ).filter(retired=False):
+        pipeline_instance = PipelineInstance(
+            pipeline = pipeline,
+            group = pg,
+            context = pipeline.context,
+            status = PipelineInstance.CREATED_STATUS,
+            created_time = now
+        )
+        pipeline_instance.save()
+
+
+
+########################################################################################
+# Purpose
+#   Scan all timers and create new scheduled event if needed
+########################################################################################
+def create_pipeline_group_from_timers():
+    Timer.produce_next_due('pipeline', event_handler)
+
+########################################################################################
+# Purpose
+#   (1) For pending Airflow DAG run, sync it's status to db
+#   (2) Trigger a pipeline instance when needed
+#   (3) Create pipeline group when needed
+########################################################################################
 def main():
-    while True:
-        print("")
-        print("")
-        for pi in PipelineInstance.objects.filter(status=PipelineInstance.CREATED_STATUS):
-            handle_pipeline_instance_active(pi)
+    create_pipeline_group_from_timers()
+    # while True:
+    #     print("")
+    #     print("")
+    #     for pi in PipelineInstance.objects.filter(status=PipelineInstance.CREATED_STATUS):
+    #         handle_pipeline_instance_active(pi)
 
-        for pi in PipelineInstance.objects.filter(status=PipelineInstance.STARTED_STATUS):
-            handle_pipeline_instance_started(pi)
+    #     for pi in PipelineInstance.objects.filter(status=PipelineInstance.STARTED_STATUS):
+    #         handle_pipeline_instance_started(pi)
 
-        time.sleep(5)
+    #     time.sleep(5)
 
 
 if __name__ == '__main__':
