@@ -4,6 +4,8 @@ from datetime import datetime
 from jsonschema.exceptions import ValidationError
 
 def is_datetime_string(validator, value, instance, schema):
+    if instance is None:
+        return
     p = re.compile("^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$")
     if not p.match(instance):
         raise ValidationError(f"{instance} does not match the datetime pattern")
@@ -16,12 +18,18 @@ def is_datetime_string(validator, value, instance, schema):
     if "max" in value and dt > value['max']:
         raise ValidationError(f"maxium value should be {value['max']}, actual value is {dt}")
 
+
 types = {
     "datetime_string": {
         "type": "string",
         "is_datetime_string": {
         }
-    }
+    },
+    "nullable_datetime_string": {
+        "type": ["string", "null"],
+        "is_datetime_string": {
+        }
+    },
 }
 
 models = {
@@ -161,17 +169,26 @@ models = {
                 "minimum": 1
             },
             "start_from": {
-                "type": "string",
-                "is_datetime_string": {
-                }
+                "$ref": f"#/types/datetime_string"
             },
             "topic": {
                 "type": "string"
             },
             "context": {
                 "type": "string"
+            },
+            "sys_context": {
+                "type": "string"
+            },
+            "end_at": {
+                "$ref": f"#/types/nullable_datetime_string"
             }
-        }
+        },
+        "additionalProperties": False,
+        "required": [
+            "name", "description", "team", "paused", "interval_unit", "interval_amount", "start_from",
+            "topic", "context", "sys_context", "end_at"
+        ]
     }
 }
 

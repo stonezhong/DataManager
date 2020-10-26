@@ -13,6 +13,34 @@ import * as Icon from 'react-bootstrap-icons'
 
 const _ = require('lodash');
 
+function timer_native_to_ui(native_timer) {
+    // this is a timer for pipeline
+    const ui_timer = _.cloneDeep(native_timer);
+    if (ui_timer.end_at === null) {
+        ui_timer.end_at = '';
+    }
+    if (ui_timer.sys_context) {
+        const sys_context = JSON.parse(ui_timer.sys_context);
+        ui_timer._category = sys_context.category || "";
+        delete ui_timer.sys_context;
+    }
+    return ui_timer;
+}
+
+function timer_ui_to_native(ui_timer) {
+    const native_timer = _.cloneDeep(ui_timer);
+
+    delete native_timer._category;
+    native_timer.sys_context = JSON.stringify({
+        'category': ui_timer._category
+    });
+
+    if (native_timer.end_at === '') {
+        native_timer.end_at = null;
+    }
+    return native_timer;
+}
+
 /*********************************************************************************
  * Purpose: edit or view a timer, or create a new timer
  * TODO: pagination
@@ -32,8 +60,10 @@ export class TimerEditor extends React.Component {
             interval_unit: "DAY",
             interval_amount: 1,
             start_from: '2020-01-01 00:00:00',
-            topic: '',
-            context: '{}'
+            topic: 'pipeline',
+            context: '{}',
+            _category: '',
+            end_at: '',
         }
     };
 
@@ -48,17 +78,17 @@ export class TimerEditor extends React.Component {
     };
 
     onSave = () => {
-        const timer = _.cloneDeep(this.state.timer);
+        const native_timer = timer_ui_to_native(this.state.timer);
         const mode = this.state.mode;
-        this.setState({show: false}, () => {this.props.onSave(mode, timer)} );
+        this.setState({show: false}, () => {this.props.onSave(mode, native_timer)} );
     };
 
-    openDialog = (mode, timer) => {
+    openDialog = (mode, ui_timer) => {
         if (mode === "view" || mode === "edit") {
             this.setState({
                 show: true,
                 mode: mode,
-                timer: _.cloneDeep(timer)
+                timer: _.cloneDeep(ui_timer)
             })
         } else if (mode === "new") {
             this.setState({
@@ -83,6 +113,15 @@ export class TimerEditor extends React.Component {
             // wrong parameter
             console.assert(false, "mode must be edit, view or new");
         }
+    };
+
+    canSave = () => {
+        return (
+            !!this.state.timer.name &&
+            !!this.state.timer.team &&
+            !!this.state.timer._category &&
+            !!this.state.timer.start_from
+        );
     };
 
     render() {
@@ -155,17 +194,17 @@ export class TimerEditor extends React.Component {
                                     />
                                 </Col>
                             </Form.Group>
-                            <Form.Group as={Row} controlId="topic">
-                                <Form.Label column sm={2}>Topic</Form.Label>
+                            <Form.Group as={Row} controlId="category">
+                                <Form.Label column sm={2}>Category</Form.Label>
                                 <Col sm={10}>
                                     <Form.Control
                                         disabled = {this.state.mode==='view'}
-                                        value={this.state.timer.topic}
+                                        value={this.state.timer._category}
                                         onChange={(event) => {
                                             const v = event.target.value;
                                             this.setState(
                                                 state => {
-                                                    state.timer.topic = v;
+                                                    state.timer._category = v;
                                                     return state;
                                                 }
                                             )
@@ -234,7 +273,6 @@ export class TimerEditor extends React.Component {
                                     </Form.Group>
                                 </Col>
                             </Row>
-
                             <Row>
                                 <Col>
                                     <Form.Group as={Row} controlId="interval">
@@ -277,6 +315,8 @@ export class TimerEditor extends React.Component {
                                         </Col>
                                     </Form.Group>
                                 </Col>
+                            </Row>
+                            <Row>
                                 <Col>
                                     <Form.Group as={Row} controlId="start_from">
                                         <Form.Label column sm={2}>Start</Form.Label>
@@ -297,12 +337,41 @@ export class TimerEditor extends React.Component {
                                         </Col>
                                     </Form.Group>
                                 </Col>
+                                <Col>
+                                    <Form.Group as={Row} controlId="end_at">
+                                        <Form.Label column sm={2}>End</Form.Label>
+                                        <Col sm={10}>
+                                            <Form.Control
+                                                disabled = {this.state.mode==='view'}
+                                                value={this.state.timer.end_at}
+                                                onChange={(event) => {
+                                                    const v = event.target.value;
+                                                    this.setState(
+                                                        state => {
+                                                            state.timer.end_at = v;
+                                                            return state;
+                                                        }
+                                                    )
+                                                }}
+                                            />
+                                        </Col>
+                                    </Form.Group>
+                                </Col>
                             </Row>
                         </Form>
                     </Container>
                 </Modal.Body>
                 <Modal.Footer>
-                    {(this.state.mode === "edit" || this.state.mode === "new") && <Button variant="primary" onClick={this.onSave}>Save changes</Button>}
+                    {
+                        (this.state.mode === "edit" || this.state.mode === "new") &&
+                        <Button
+                            variant="primary"
+                            onClick={this.onSave}
+                            disabled={!this.canSave()}
+                        >
+                            Save changes
+                        </Button>
+                    }
                     <Button variant="secondary" onClick={this.onClose}>Close</Button>
                 </Modal.Footer>
             </Modal>
@@ -351,7 +420,7 @@ export class TimerTable extends React.Component {
                             <th data-role='icons'></th>
                             <th data-role='name'>Name</th>
                             <th data-role='paused'>Paused</th>
-                            <th data-role='topic'>Topic</th>
+                            <th data-role='category'>Category</th>
                             <th data-role='author'>Author</th>
                             <th data-role='team'>Team</th>
                             <th data-role='interval'>Interval</th>
@@ -360,9 +429,10 @@ export class TimerTable extends React.Component {
                     </thead>
                     <tbody>
                     {
-                        this.props.timers.map((timer) => {
+                        this.props.timers.map(timer_native_to_ui).map(ui_timer => {
+                            console.log(ui_timer);
                             return (
-                                <tr key={timer.id}>
+                                <tr key={ui_timer.id}>
                                     <td>
                                         <Button
                                             variant="secondary"
@@ -370,7 +440,7 @@ export class TimerTable extends React.Component {
                                             onClick={
                                                 event => {
                                                     this.theTimerEditorRef.current.openDialog(
-                                                        this.props.allowEdit?"edit":"view", timer
+                                                        this.props.allowEdit?"edit":"view", ui_timer
                                                     )
                                                 }
                                             }
@@ -378,13 +448,13 @@ export class TimerTable extends React.Component {
                                             { this.props.allowEdit?<Icon.Pencil />:<Icon.Info />}
                                         </Button>
                                     </td>
-                                    <td>{timer.name}</td>
-                                    <td>{timer.paused?"yes":"no"}</td>
-                                    <td>{timer.topic}</td>
-                                    <td>{timer.author}</td>
-                                    <td>{timer.team}</td>
-                                    <td>{timer.interval_amount} {timer.interval_unit}</td>
-                                    <td>{timer.start_from}</td>
+                                    <td>{ui_timer.name}</td>
+                                    <td>{ui_timer.paused?"yes":"no"}</td>
+                                    <td>{ui_timer._category}</td>
+                                    <td>{ui_timer.author}</td>
+                                    <td>{ui_timer.team}</td>
+                                    <td>{ui_timer.interval_amount} {ui_timer.interval_unit}</td>
+                                    <td>{ui_timer.start_from}</td>
                                 </tr>
                             )
                         })

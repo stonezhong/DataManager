@@ -25,7 +25,9 @@ class SchedulersPage extends React.Component {
                 interval_amount : timer.interval_amount,
                 start_from      : timer.start_from,
                 topic           : timer.topic,
-                context         : timer.context
+                context         : timer.context,
+                sys_context     : timer.sys_context,
+                end_at          : timer.end_at,
             }
 
             fetch('/api/Timers/', {
@@ -50,8 +52,10 @@ class SchedulersPage extends React.Component {
                 interval_unit   : timer.interval_unit,
                 interval_amount : timer.interval_amount,
                 start_from      : timer.start_from,
+                end_at          : timer.end_at,
                 topic           : timer.topic,
-                context         : timer.context
+                context         : timer.context,
+                sys_context     : timer.sys_context,
             }
 
             fetch(`/api/Timers/${timer.id}/`, {
@@ -72,7 +76,8 @@ class SchedulersPage extends React.Component {
     };
 
     load_timers() {
-        fetch("/api/Timers/")
+        // we only show pipeline related timers
+        fetch("/api/Timers/?topic=pipeline")
         .then(res => res.json())
         .then(
             (result) => {
