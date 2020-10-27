@@ -252,6 +252,7 @@ export class SequentialTaskEditor extends React.Component {
                                     <Form.Group controlId="task-args">
                                         <Form.Label>Task Arguments</Form.Label>
                                         <Form.Control
+                                            className="monofont"
                                             value={this.state.task.args}
                                             disabled = {this.state.mode==='view'}
                                             onChange={(event) => {

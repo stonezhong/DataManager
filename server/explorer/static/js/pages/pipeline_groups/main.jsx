@@ -42,6 +42,7 @@ class PipelineGroupsPage extends React.Component {
         } else if (mode === "edit") {
             const to_patch = {
                 context     : pipeline_group.context,
+                finished    : pipeline_group.finished,
             }
             fetch(`/api/PipelineGroups/${pipeline_group.id}/`, {
                 method: 'patch',

@@ -149,7 +149,7 @@ class PipelineGroupDetailsSerializer(serializers.ModelSerializer):
         model = PipelineGroup
         fields = [
             'url',
-            'id', 'name', 'created_time', 'category', 'context', 'finished',
+            'id', 'name', 'created_time', 'category', 'context', 'finished', 'manual',
             'pis'
         ]
 
