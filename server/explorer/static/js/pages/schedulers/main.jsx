@@ -26,7 +26,7 @@ class SchedulersPage extends React.Component {
                 start_from      : timer.start_from,
                 topic           : timer.topic,
                 context         : timer.context,
-                sys_context     : timer.sys_context,
+                category        : timer.category,
                 end_at          : timer.end_at,
             }
 
@@ -55,7 +55,7 @@ class SchedulersPage extends React.Component {
                 end_at          : timer.end_at,
                 topic           : timer.topic,
                 context         : timer.context,
-                sys_context     : timer.sys_context,
+                category        : timer.category,
             }
 
             fetch(`/api/Timers/${timer.id}/`, {

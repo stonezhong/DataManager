@@ -26,7 +26,8 @@ export class PipelineGroupEditor extends React.Component {
             created_time: '2020-01-01 00:00:00',
             category: '',
             context: '{}',
-            finished: false
+            finished: false,
+            manual: true,
         }
     };
 
