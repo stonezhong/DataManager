@@ -24,6 +24,10 @@ import {PipelineGroupEditor} from '/components/pipeline_group/pipeline_group_edi
 export class PipelineGroupTable extends React.Component {
     thePipelineGroupEditorRef = React.createRef();
 
+    canEdit = pipeline_group => {
+        return this.props.allowEdit && pipeline_group.manual && !pipeline_group.finished;
+    };
+
     render() {
         return (
             <div>
@@ -66,11 +70,11 @@ export class PipelineGroupTable extends React.Component {
                                             size="sm"
                                             onClick={event => {
                                                 this.thePipelineGroupEditorRef.current.openDialog(
-                                                    this.props.allowEdit?"edit":"view", pipeline_group
+                                                    this.canEdit(pipeline_group)?"edit":"view", pipeline_group
                                                 )
                                             }}
                                         >
-                                            { this.props.allowEdit?<Icon.Pencil />:<Icon.Info />}
+                                            { this.canEdit(pipeline_group)?<Icon.Pencil />:<Icon.Info /> }
                                         </Button>
                                     </td>
                                     <td><a href={`execution?id=${pipeline_group.id}`}>{pipeline_group.name}</a></td>

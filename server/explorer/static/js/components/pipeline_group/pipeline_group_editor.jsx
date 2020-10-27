@@ -28,6 +28,7 @@ export class PipelineGroupEditor extends React.Component {
             context: '{}',
             finished: false,
             manual: true,
+            _finished: false,
         }
     };
 
@@ -39,6 +40,8 @@ export class PipelineGroupEditor extends React.Component {
 
     onSave = () => {
         const savedPipelineGroup = _.cloneDeep(this.state.pipeline_group);
+        savedPipelineGroup.finished = savedPipelineGroup._finished;
+        delete savedPipelineGroup._finished;
         const mode = this.state.mode;
         this.setState({show: false}, () => {this.props.onSave(mode, savedPipelineGroup)});
 
@@ -46,10 +49,12 @@ export class PipelineGroupEditor extends React.Component {
 
     openDialog = (mode, pipeline_group) => {
         if (mode == "view" || mode == "edit") {
-            this.setState({
+            const ui_pipeline_group = _.cloneDeep(pipeline_group);
+            ui_pipeline_group._finished = pipeline_group.finished;
+                this.setState({
                 mode: mode,
                 show: true,
-                pipeline_group: pipeline_group
+                pipeline_group: ui_pipeline_group
             })
         } else if (mode == "new") {
             this.setState({
@@ -63,6 +68,23 @@ export class PipelineGroupEditor extends React.Component {
 
     onClose = () => {
         this.setState({show: false});
+    };
+
+    canEditFinish = () => {
+        if (this.state.mode === 'view' || this.state.mode === "new") {
+            // you cannot edit it in "view" mode
+            // in new mode, it should always be "unfinished", still not editable
+            return false;
+        }
+        if (this.state.pipeline_group.finished) {
+            // you cannot change it since it is finished
+            return false;
+        }
+        if (!this.state.pipeline_group.manual) {
+            // you cannot change the finish status for an auto generated pipeline group
+            return false;
+        }
+        return true;
     };
 
     render() {
@@ -89,7 +111,7 @@ export class PipelineGroupEditor extends React.Component {
                                         <Form.Label>Name</Form.Label>
                                         <Form.Control
                                             value={this.state.pipeline_group.name}
-                                            disabled={this.state.mode != "new"}
+                                            disabled={this.state.mode !== "new"}
                                             onChange={(event) => {
                                                 const v = event.target.value;
                                                 this.setState( state => {
@@ -105,38 +127,28 @@ export class PipelineGroupEditor extends React.Component {
                                 <Col xs={4}>
                                     <Form.Group controlId="pipeline-group-created-time">
                                         <Form.Label>Created Time</Form.Label>
-                                        <Form.Control
-                                            className={this.state.mode=="new"?"d-none":"d-block"}
-                                            value={this.state.pipeline_group.created_time}
-                                            disabled={true}
-                                            onChange={(event) => {
-                                                const v = event.target.value;
-                                                this.setState( state => {
-                                                    state.pipeline_group.created_time = v;
-                                                    return state;
-                                                });
-                                            }}
-                                        />
-                                        <Form.Control
-                                            className={this.state.mode!="new"?"d-none":"d-block"}
-                                            value="current time"
-                                            disabled={true}
-                                        />
+                                            <Form.Control
+                                                value={
+                                                    (this.state.mode==="new")?"current time":this.state.pipeline_group.created_time
+                                                }
+                                                disabled={true}
+                                            /> :
                                     </Form.Group>
-
                                 </Col>
                                 <Col xs={4}>
                                     <Form.Group controlId="pipeline-group-finished">
                                         <Form.Label>Finished</Form.Label>
-                                        <Form.Control
-                                            value={this.state.pipeline_group.finished?"Yes":"No"}
-                                            disabled={true}
+                                        <Form.Check type="checkbox"
+                                            disabled = {!this.canEditFinish()}
+                                            checked={this.state.pipeline_group._finished}
                                             onChange={(event) => {
-                                                const v = event.target.value;
-                                                this.setState( state => {
-                                                    state.pipeline_group.finished = v;
-                                                    return state;
-                                                });
+                                                const v = event.target.checked;
+                                                this.setState(
+                                                    state => {
+                                                        state.pipeline_group._finished = v;
+                                                        return state;
+                                                    }
+                                                )
                                             }}
                                         />
                                     </Form.Group>
@@ -146,7 +158,7 @@ export class PipelineGroupEditor extends React.Component {
                                         <Form.Label>Category</Form.Label>
                                         <Form.Control
                                             value={this.state.pipeline_group.category}
-                                            disabled={this.state.mode != "new"}
+                                            disabled={this.state.mode !== "new"}
                                             onChange={(event) => {
                                                 const v = event.target.value;
                                                 this.setState( state => {
@@ -163,7 +175,8 @@ export class PipelineGroupEditor extends React.Component {
                                     <Form.Group controlId="pipeline-group-context">
                                         <Form.Label>Context</Form.Label>
                                         <Form.Control as="textarea" rows="5"
-                                            disabled={this.state.mode == "view"}
+                                            className="monofont"
+                                            disabled={this.state.mode === "view"}
                                             value={this.state.pipeline_group.context}
                                             onChange={(event) => {
                                                 const v = event.target.value;

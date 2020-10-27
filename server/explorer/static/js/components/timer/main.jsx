@@ -206,6 +206,7 @@ export class TimerEditor extends React.Component {
                                 <Form.Label column sm={2}>Context</Form.Label>
                                 <Col sm={10}>
                                     <Form.Control as="textarea" rows={3}
+                                        className="monofont"
                                         disabled = {this.state.mode==='view'}
                                         value={this.state.timer.context}
                                         onChange={(event) => {

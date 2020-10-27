@@ -109,6 +109,15 @@ class PipelineGroupPage extends React.Component {
         )
     };
 
+    showEdit = () => {
+        // on show Edit button and Attach button for pipeline group manually created
+        // and not yet finished
+        if (!this.state.pipeline_group) {
+            return false;
+        }
+        return this.state.pipeline_group.manual && !this.state.pipeline_group.finished;
+    };
+
     render() {
         return (
             <div>
@@ -119,6 +128,7 @@ class PipelineGroupPage extends React.Component {
                                 <Col>
                                     <h1 className="c-ib">Execution</h1>
                                     {
+                                        this.showEdit() &&
                                         <div className="c-vc c-ib ml-2">
                                             <Button
                                                 variant="primary"

@@ -21,6 +21,9 @@ body {
 .c-tc-icon2 {
   width: 100px; }
 
+textarea.monofont {
+  font-family: monospace; }
+
 table.timer-table th[data-role='icons'] {
   width: 40px; }
 
