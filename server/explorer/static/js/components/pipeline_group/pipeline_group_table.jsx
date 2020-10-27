@@ -51,6 +51,7 @@ export class PipelineGroupTable extends React.Component {
                             <th>Name</th>
                             <th>Created Time</th>
                             <th>Category</th>
+                            <th>Manual</th>
                             <th>Finished</th>
                         </tr>
                     </thead>
@@ -75,6 +76,7 @@ export class PipelineGroupTable extends React.Component {
                                     <td><a href={`execution?id=${pipeline_group.id}`}>{pipeline_group.name}</a></td>
                                     <td>{pipeline_group.created_time}</td>
                                     <td>{pipeline_group.category}</td>
+                                    <td>{pipeline_group.manual?"Yes":"No"}</td>
                                     <td>{pipeline_group.finished?"Yes":"No"}</td>
                                 </tr>
                             )

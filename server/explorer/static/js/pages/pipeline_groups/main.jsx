@@ -23,6 +23,7 @@ class PipelineGroupsPage extends React.Component {
                 category    : pipeline_group.category,
                 context     : pipeline_group.context,
                 finished    : pipeline_group.finished,
+                manual      : true,
             };
             fetch('/api/PipelineGroups/', {
                 method: 'post',

@@ -134,7 +134,7 @@ class PipelineGroupSerializer(serializers.ModelSerializer):
         model = PipelineGroup
         fields = [
             'url',
-            'id', 'name', 'created_time', 'category', 'context', 'finished'
+            'id', 'name', 'created_time', 'category', 'context', 'finished', 'manual',
         ]
 
 class PipelineGroupDetailsSerializer(serializers.ModelSerializer):
@@ -187,7 +187,7 @@ class TimerSerializer(serializers.ModelSerializer):
             'paused',
             'interval_unit', 'interval_amount',
             'start_from', 'end_at', 'last_due',
-            'topic', 'context', 'sys_context'
+            'topic', 'context', 'category'
         ]
 
 class ScheduledEventSerializer(serializers.ModelSerializer):
@@ -204,5 +204,5 @@ class ScheduledEventSerializer(serializers.ModelSerializer):
         model = ScheduledEvent
         fields = [
             'url',
-            'id', 'timer', 'due', 'acked', 'topic', 'context'
+            'id', 'timer', 'due', 'acked', 'topic', 'context', 'category'
         ]

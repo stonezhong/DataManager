@@ -306,6 +306,7 @@ class PipelineGroup(models.Model):
     category            = models.CharField(max_length=255, blank=False)                            # required
     context             = models.TextField(blank=False)
     finished            = models.BooleanField(null=False)
+    manual              = models.BooleanField(null=False)  # is this manually created?
 
     # attach bunch of pipelines to this pipeline group
     def attach(self, pipeline_ids):
@@ -470,14 +471,14 @@ class Timer(models.Model):
     # A JSON object, entered by user
     context             = models.TextField(blank=True)
 
-    # system level context, not entered by user
-    sys_context         = models.TextField(blank=True)
+    # matters only when the topic is "pipeline"
+    category            = models.CharField(max_length=255, blank=True)
 
     # create a timer
     @classmethod
     def create(cls, requester, name, description, team, paused,
                interval_unit, interval_amount,
-               start_from, topic, context, sys_context, end_at=None):
+               start_from, topic, context, category="", end_at=None):
 
         if not requester.is_authenticated:
             raise PermissionDeniedException()
@@ -494,7 +495,7 @@ class Timer(models.Model):
                       last_due = None,
                       topic = topic,
                       context = context,
-                      sys_context = sys_context,
+                      category = category,
                       end_at = end_at
                      )
         timer.save()
@@ -514,11 +515,12 @@ class Timer(models.Model):
         self.last_due = due
 
         se = ScheduledEvent(
-            timer = self,
-            due = due,
-            acked = False,
-            topic = self.topic,
-            context = self.context
+            timer       = self,
+            due         = due,
+            acked       = False,
+            topic       = self.topic,
+            context     = self.context,
+            category    = self.category,
         )
 
         self.save()
@@ -560,3 +562,6 @@ class ScheduledEvent(models.Model):
     acked               = models.BooleanField(null=False)
     topic               = models.CharField(max_length=1024, blank=True)
     context             = models.TextField(blank=True)
+
+    # matters only when the topic is "pipeline"
+    category            = models.CharField(max_length=255, blank=True)

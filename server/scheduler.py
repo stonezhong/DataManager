@@ -27,6 +27,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'DataCatalog.settings')
 django.setup()
 
 # from django.db.models import Q
+from django.db import transaction
 from main.models import PipelineInstance, Dataset, DatasetInstance, \
     Pipeline, PipelineInstance, PipelineGroup, Timer
 import explorer.airflow_lib as airflow_lib
@@ -81,7 +82,9 @@ def is_dataset_instance_ready(di_path):
 # (1) The pipeline it belongs to is not paused
 # (2) The pipeline group it associated is not finished
 # (3) The required dataset instance it depend on are all present
-def handle_pipeline_instance_active(pi):
+# This function should not fail, it can log error instead
+@transaction.atomic
+def handle_pipeline_instance_created(pi):
     print(f"handle pipeline {pi.id} in created status")
     group_ctx = json.loads(pi.group.context)
     pipeline_ctx = json.loads(pi.pipeline.context)
@@ -125,6 +128,7 @@ def handle_pipeline_instance_active(pi):
 
 # For pipeline instance in "started" status, let's pull it's
 # airflow status so it will switch to finished or failed
+@transaction.atomic
 def handle_pipeline_instance_started(pi):
     print(f"handle pipeline {pi.id} in started status")
     ctx = json.loads(pi.context)
@@ -164,31 +168,31 @@ def event_handler(scheduled_event):
         "due": scheduled_event.due
     })
     scheduled_event.context = rendered_content
+    scheduled_event.acked = True
     scheduled_event.save()
-
-    event_ctx = json.loads(scheduled_event.context)
-    category = event_ctx['pipeline']['category']
 
     now = datetime.utcnow().replace(tzinfo=pytz.UTC)
     # create pipeline group
     pg = PipelineGroup(
         name=f'{scheduled_event.timer.name}/{scheduled_event.due.strftime("%Y-%m-%d %H:%M:%S")}',
         created_time = now,
-        category=category,
+        category=scheduled_event.category,
         context=scheduled_event.context,
         finished=False,
+        manual=False,
     )
     pg.save()
 
-
     # Attach pipeline to it
     for pipeline in Pipeline.objects.filter(
-        category=category
+        category=scheduled_event.category
     ).filter(retired=False):
+        # yes, we will attach paused pipeline, but they won't trigger
+        # until the pipeline is unpaused
         pipeline_instance = PipelineInstance(
             pipeline = pipeline,
             group = pg,
-            context = pipeline.context,
+            context = "{}", # placeholder
             status = PipelineInstance.CREATED_STATUS,
             created_time = now
         )
@@ -196,12 +200,47 @@ def event_handler(scheduled_event):
 
 
 
+
 ########################################################################################
 # Purpose
 #   Scan all timers and create new scheduled event if needed
 ########################################################################################
+@transaction.atomic
 def create_pipeline_group_from_timers():
     Timer.produce_next_due('pipeline', event_handler)
+
+########################################################################################
+# Purpose
+#   Scan all pipeline instances
+#   (1) for pi in "created" status, check if we can launch it
+#   (2) for po in "started" status, check if we can move it to "finished" or "failed" status
+########################################################################################
+def update_pipeline_instances():
+    for pi in PipelineInstance.objects.filter(status=PipelineInstance.CREATED_STATUS):
+        handle_pipeline_instance_created(pi)
+
+    for pi in PipelineInstance.objects.filter(status=PipelineInstance.STARTED_STATUS):
+        handle_pipeline_instance_started(pi)
+
+########################################################################################
+# Purpose
+#   Set a pipeline group into finished status if all pipeline instances are finished
+########################################################################################
+@transaction.atomic
+def finish_pipeline_group(pg):
+    for pi in PipelineInstance.objects.filter(group=pg):
+        if pi.status in (
+            PipelineInstance.CREATED_STATUS,
+            PipelineInstance.STARTED_STATUS,
+            PipelineInstance.FAILED_STATUS,
+        ):
+            return
+        pg.finished = True
+        pg.save()
+
+def finish_pipeline_groups():
+    for pg in PipelineGroup.objects.filter(finished=False).filter(manual=False):
+        finish_pipeline_group(pg)
 
 ########################################################################################
 # Purpose
@@ -210,17 +249,15 @@ def create_pipeline_group_from_timers():
 #   (3) Create pipeline group when needed
 ########################################################################################
 def main():
-    create_pipeline_group_from_timers()
-    # while True:
-    #     print("")
-    #     print("")
-    #     for pi in PipelineInstance.objects.filter(status=PipelineInstance.CREATED_STATUS):
-    #         handle_pipeline_instance_active(pi)
+    try:
+        while True:
+            create_pipeline_group_from_timers()
+            update_pipeline_instances()
+            finish_pipeline_groups()
+            time.sleep(5)
+    except KeyboardInterrupt:
+        print("Bye!")
 
-    #     for pi in PipelineInstance.objects.filter(status=PipelineInstance.STARTED_STATUS):
-    #         handle_pipeline_instance_started(pi)
-
-    #     time.sleep(5)
 
 
 if __name__ == '__main__':

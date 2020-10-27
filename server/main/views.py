@@ -323,8 +323,8 @@ class TimerViewSet(viewsets.ModelViewSet):
             create_timer_input.start_from,
             create_timer_input.topic,
             create_timer_input.context,
-            create_timer_input.sys_context,
-            end_at = create_timer_input.end_at
+            category = create_timer_input.category,
+            end_at   = create_timer_input.end_at
         )
         response = TimerSerializer(instance=timer, context={'request': request}).data
         return Response(response)

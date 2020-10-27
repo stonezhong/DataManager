@@ -19,22 +19,12 @@ function timer_native_to_ui(native_timer) {
     if (ui_timer.end_at === null) {
         ui_timer.end_at = '';
     }
-    if (ui_timer.sys_context) {
-        const sys_context = JSON.parse(ui_timer.sys_context);
-        ui_timer._category = sys_context.category || "";
-        delete ui_timer.sys_context;
-    }
     return ui_timer;
 }
 
 function timer_ui_to_native(ui_timer) {
+    // this is a timer for pipeline
     const native_timer = _.cloneDeep(ui_timer);
-
-    delete native_timer._category;
-    native_timer.sys_context = JSON.stringify({
-        'category': ui_timer._category
-    });
-
     if (native_timer.end_at === '') {
         native_timer.end_at = null;
     }
@@ -62,7 +52,7 @@ export class TimerEditor extends React.Component {
             start_from: '2020-01-01 00:00:00',
             topic: 'pipeline',
             context: '{}',
-            _category: '',
+            category: '',
             end_at: '',
         }
     };
@@ -119,7 +109,7 @@ export class TimerEditor extends React.Component {
         return (
             !!this.state.timer.name &&
             !!this.state.timer.team &&
-            !!this.state.timer._category &&
+            !!this.state.timer.category &&
             !!this.state.timer.start_from
         );
     };
@@ -199,12 +189,12 @@ export class TimerEditor extends React.Component {
                                 <Col sm={10}>
                                     <Form.Control
                                         disabled = {this.state.mode==='view'}
-                                        value={this.state.timer._category}
+                                        value={this.state.timer.category}
                                         onChange={(event) => {
                                             const v = event.target.value;
                                             this.setState(
                                                 state => {
-                                                    state.timer._category = v;
+                                                    state.timer.category = v;
                                                     return state;
                                                 }
                                             )
@@ -430,7 +420,6 @@ export class TimerTable extends React.Component {
                     <tbody>
                     {
                         this.props.timers.map(timer_native_to_ui).map(ui_timer => {
-                            console.log(ui_timer);
                             return (
                                 <tr key={ui_timer.id}>
                                     <td>
@@ -450,7 +439,7 @@ export class TimerTable extends React.Component {
                                     </td>
                                     <td>{ui_timer.name}</td>
                                     <td>{ui_timer.paused?"yes":"no"}</td>
-                                    <td>{ui_timer._category}</td>
+                                    <td>{ui_timer.category}</td>
                                     <td>{ui_timer.author}</td>
                                     <td>{ui_timer.team}</td>
                                     <td>{ui_timer.interval_amount} {ui_timer.interval_unit}</td>

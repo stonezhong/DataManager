@@ -177,7 +177,7 @@ models = {
             "context": {
                 "type": "string"
             },
-            "sys_context": {
+            "category": {
                 "type": "string"
             },
             "end_at": {
@@ -187,7 +187,7 @@ models = {
         "additionalProperties": False,
         "required": [
             "name", "description", "team", "paused", "interval_unit", "interval_amount", "start_from",
-            "topic", "context", "sys_context", "end_at"
+            "topic", "context", "category", "end_at"
         ]
     }
 }
