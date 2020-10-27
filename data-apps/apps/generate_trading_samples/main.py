@@ -21,7 +21,7 @@ def print_json(title, payload):
     print(f"\n{json.dumps(payload, indent=4, separators=(',', ': '))}")
     print("------------------------------------------")
 
-def register_dataset_instance(input_args, df):
+def register_dataset_instance(input_args, market, df):
     dc_config = input_args['dc_config']
     pipeline_group_context = input_args['pipeline_group_context']
     dt = pipeline_group_context['dt']
@@ -37,7 +37,7 @@ def register_dataset_instance(input_args, df):
         'tradings', '1.0', 1,
         f"/{dt}", [{
             'type': 'parquet',
-            'location': f'hdfs:///data/tradings/{dt}.parquet'
+            'location': f'hdfs:///data/tradings/{dt}/{market}.parquet'
         }],
         data_time,
         row_count = df.count()
@@ -57,9 +57,12 @@ def main(spark, input_args):
     dt = pipeline_group_context['dt']
     print(f"dt = {dt}")
 
+    app_args = json.loads(input_args['app_args'])
+    market = app_args['market']
+
     random.seed()
 
-    Trade = Row("type", "symbol", "amount", "price", "commission")
+    Trade = Row("market", "type", "symbol", "amount", "price", "commission")
 
     trades = []
     for i in range(0, 1000):
@@ -70,11 +73,13 @@ def main(spark, input_args):
         price = round(STOCK_LIST[symbol]*rate, 2)
         commission = round(amount / 100.0 + 9.0, 2)
 
-        trade = Trade(type, symbol, amount, price, commission)
+        trade = Trade(market, type, symbol, amount, price, commission)
         trades.append(trade)
 
     df = spark.createDataFrame(trades)
-    df.write.mode("overwrite").parquet(f"/data/tradings/{dt}.parquet")
+    df.write.mode("overwrite").parquet(f"/data/tradings/{dt}/{market}.parquet")
 
-    register_dataset_instance(input_args, df)
+    print(f"Writing to /data/tradings/{dt}/{market}.parquet")
+
+    register_dataset_instance(input_args, market, df)
     print("Done")
