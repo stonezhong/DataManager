@@ -152,72 +152,85 @@ dag = DAG(
     schedule_interval = None
 )
 
+class ExecuteTask:
+    def __init__(self, task_ctx):
+        self.task_ctx = task_ctx
 
-def execute_task(ds, task_ctx, **kwargs):
-    # task_ctx is json stored in context field in pipeline model
+    def __call__(self, ds, **kwargs):
+        # task_ctx is json stored in context field in pipeline model
 
-    # for each dag run, user will pass in a pipeline group
-    config = kwargs['dag_run'].conf
-    print_json("Runtime config", config)
-    print_json("task context", task_ctx)
+        # for each dag run, user will pass in a pipeline group
+        config = kwargs['dag_run'].conf
+        print_json("Runtime config", config)
+        print_json("task context", self.task_ctx)
 
-    pipeline_instance_id = config['pipeline_instance_id']
-    pipeline_group_context = get_pipeline_group_context(pipeline_instance_id)
-    print_json("pipeline group context context", pipeline_group_context)
+        pipeline_instance_id = config['pipeline_instance_id']
+        pipeline_group_context = get_pipeline_group_context(pipeline_instance_id)
+        print_json("pipeline group context context", pipeline_group_context)
 
-    dc_config = load_config("dc_config.json")
-    spark_env = load_config("spark_env.json")
+        dc_config = load_config("dc_config.json")
+        spark_env = load_config("spark_env.json")
 
-    if task_ctx['type'] == 'other':
-        args = {
-            "pipeline_group_context": pipeline_group_context,
-            "app_args": task_ctx['args'],
-            "dc_config": dc_config,
-        }
-        appLocation = get_application_location(task_ctx['application_id'])
-    else:
-        execute_sql_app = spark_env['apps']['execute_sql']
-        args = {
-            "pipeline_group_context": pipeline_group_context,
-            "app_args": {
-                "steps": task_ctx['steps'],
-            },
-            "dc_config": dc_config,
-        }
-        appLocation = execute_sql_app['appLocation']
-
-
-    livy_cfg = load_config("livy.json")
-    job_submitter = LivyJobSubmitter({
-        "service_url": livy_cfg['livy']['service_url'],
-        "username"   : livy_cfg['livy']['username'],
-        "password"   : livy_cfg['livy']['password'],
-        "bridge"     : livy_cfg['bridge']['hostname'],
-        "stage_dir"  : livy_cfg['bridge']['stage_dir'],
-        "run_dir"    : spark_env['run_dir'],
-    })
-
-    # we always uses python3
-    job_submitter.run(appLocation, options={
-        "conf": {
-            'spark.yarn.appMasterEnv.PYSPARK_PYTHON': 'python3',
-            'spark.executorEnv.PYSPARK_PYTHON': 'python3'
-        }
-    }, args=args)
-    print("Done")
+        if self.task_ctx['type'] == 'other':
+            args = {
+                "pipeline_group_context": pipeline_group_context,
+                "app_args": self.task_ctx['args'],
+                "dc_config": dc_config,
+            }
+            appLocation = get_application_location(self.task_ctx['application_id'])
+        elif self.task_ctx['type'] == 'dummy':
+            print("Dummy task")
+            print("Done")
+            return
+        else:
+            execute_sql_app = spark_env['apps']['execute_sql']
+            args = {
+                "pipeline_group_context": pipeline_group_context,
+                "app_args": {
+                    "steps": self.task_ctx['steps'],
+                },
+                "dc_config": dc_config,
+            }
+            appLocation = execute_sql_app['appLocation']
 
 
-last_task = None
+        livy_cfg = load_config("livy.json")
+        job_submitter = LivyJobSubmitter({
+            "service_url": livy_cfg['livy']['service_url'],
+            "username"   : livy_cfg['livy']['username'],
+            "password"   : livy_cfg['livy']['password'],
+            "bridge"     : livy_cfg['bridge']['hostname'],
+            "stage_dir"  : livy_cfg['bridge']['stage_dir'],
+            "run_dir"    : spark_env['run_dir'],
+        })
+
+        # we always uses python3
+        job_submitter.run(appLocation, options={
+            "conf": {
+                'spark.yarn.appMasterEnv.PYSPARK_PYTHON': 'python3',
+                'spark.executorEnv.PYSPARK_PYTHON': 'python3'
+            }
+        }, args=args)
+        print("Done")
+
+task_dict = {}
+
+
 for task_ctx in pipeline_context['tasks']:
     job_task = PythonOperator(
         task_id = task_ctx['name'],
         provide_context = True,
-        python_callable = lambda ds, **kwargs: execute_task(ds, task_ctx, **kwargs),
+        python_callable = ExecuteTask(task_ctx),
         dag=dag,
     )
-    if last_task is not None:
-        last_task >> job_task
-    last_task = job_task
+    task_dict[task_ctx['name']] = job_task
+
+# wire dependencies
+for dependency in pipeline_context['dependencies']:
+    src_task = task_dict[dependency['src']]
+    dst_task = task_dict[dependency['dst']]
+    src_task << dst_task
+
 
 if dag_version < pipeline_version:
     update_pipeline_version(pipeline_id, pipeline_version)

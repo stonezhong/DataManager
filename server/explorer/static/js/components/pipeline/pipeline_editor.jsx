@@ -9,7 +9,11 @@ import Table from 'react-bootstrap/Table'
 import Modal from 'react-bootstrap/Modal'
 
 import * as Icon from 'react-bootstrap-icons'
+
+import { v4 as uuidv4 } from 'uuid';
+
 import {SequentialTaskEditor} from './task_editor.jsx'
+
 
 const _ = require("lodash");
 
@@ -36,7 +40,11 @@ export class PipelineEditor extends React.Component {
             dag_id      : '',                // for external pipeline
             requiredDSIs: [],          // required dataset instances
             tasks       : [],
-            _toAddAssertPath: ''
+            dependencies: [],          // e.g. [{id: 1, src:'foo', dst: 'bar'},... ], means foo depend on bar
+            _toAddAssertPath: '',
+            _srcDepTaskName: '',
+            _dstDepTaskName: '',
+
         };
     };
 
@@ -54,6 +62,8 @@ export class PipelineEditor extends React.Component {
         const pipeline = _.cloneDeep(this.state.pipeline);
         const mode = this.state.mode;
         delete pipeline._toAddAssertPath;
+        delete pipeline._srcDepTaskName;
+        delete pipeline._dstDepTaskName;
         this.setState({show: false}, () => {this.props.onSave(mode, pipeline)});
     };
 
@@ -81,6 +91,11 @@ export class PipelineEditor extends React.Component {
         if (mode === "view" || mode === "edit") {
             const myPipeline = _.cloneDeep(pipeline);
             myPipeline._toAddAssertPath = '';
+            myPipeline._srcDepTaskName = '';
+            myPipeline._dstDepTaskName = '';
+            if (!('dependencies' in myPipeline)) {
+                myPipeline.dependencies = [];
+            }
             this.setState({
                 show: true,
                 mode: mode,
@@ -103,6 +118,10 @@ export class PipelineEditor extends React.Component {
         this.setState(state => {
             const new_tasks = state.pipeline.tasks.filter(t => t.name != task.name);
             state.pipeline.tasks = new_tasks;
+            const new_dependencies = state.pipeline.dependencies.filter(
+                t => (t.src!==task.name)&&(t.dst!==task.name)
+            )
+            state.pipeline.dependencies = new_dependencies;
             return state;
         });
     };
@@ -409,6 +428,121 @@ export class PipelineEditor extends React.Component {
                                         </Table>
                                     </Col>
                                 </Row>
+                            }
+                            {
+                                (this.state.pipeline.type==="sequential") &&
+                                <Row>
+                                    <Col>
+                                        <h2>Dependency</h2>
+                                        <Table hover bordered size="sm">
+                                            <thead className="thead-dark">
+                                                <tr>
+                                                    <th className="c-tc-icon2"></th>
+                                                    <th>Source Task</th>
+                                                    <th></th>
+                                                    <th>Destination Task</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {
+                                                    this.state.pipeline.dependencies.map(dep =>
+                                                        <tr key={dep.id}>
+                                                            <td>
+                                                                <Button
+                                                                    disabled = {this.state.mode==='view'}
+                                                                    variant="secondary"
+                                                                    size="sm"
+                                                                    onClick={ event => {
+                                                                        this.setState(state => {
+                                                                            _.remove(state.pipeline.dependencies, i => i.id === dep.id);
+                                                                            return state;
+                                                                        });
+                                                                    }}
+                                                                >
+                                                                    <Icon.X />
+                                                                </Button>
+                                                            </td>
+                                                            <td>{dep.src}</td>
+                                                            <td>{"==>"}</td>
+                                                            <td>{dep.dst}</td>
+                                                        </tr>
+                                                    )
+                                                }
+                                                <tr>
+                                                    <td>
+                                                        <Button
+                                                            variant="primary"
+                                                            size="sm"
+                                                            disabled={
+                                                                (this.state.pipeline._srcDepTaskName === '') ||
+                                                                (this.state.pipeline._dstDepTaskName === '') ||
+                                                                (this.state.pipeline._srcDepTaskName === this.state.pipeline._dstDepTaskName)
+                                                            }
+                                                            onClick={ event => {
+                                                                this.setState(state => {
+                                                                    const dep = {
+                                                                        id: uuidv4(),
+                                                                        src: state.pipeline._srcDepTaskName,
+                                                                        dst: state.pipeline._dstDepTaskName
+                                                                    };
+                                                                    state.pipeline._srcDepTaskName = '';
+                                                                    state.pipeline._dstDepTaskName = '';
+                                                                    state.pipeline.dependencies.push(dep);
+                                                                    return state;
+                                                                });
+                                                            }}
+                                                        >
+                                                            Add
+                                                        </Button>
+                                                    </td>
+                                                    <td>
+                                                        <Form.Control
+                                                            as="select"
+                                                            disabled = {this.state.mode==='view'}
+                                                            value={this.state.pipeline._srcDepTaskName}
+                                                            onChange={event => {
+                                                                const v = event.target.value;
+                                                                this.setState(state => {
+                                                                    state.pipeline._srcDepTaskName = v;
+                                                                    return state;
+                                                                });
+                                                            }}
+                                                        >
+                                                            <option key="" value="">------</option>
+                                                            {this.state.pipeline.tasks.map(task =>
+                                                                <option key={task.name} value={task.name}>{task.name}</option>
+                                                            )}
+                                                        </Form.Control>
+                                                    </td>
+                                                    <td>
+                                                        depend on
+                                                    </td>
+                                                    <td>
+                                                        <Form.Control
+                                                            as="select"
+                                                            disabled = {this.state.mode==='view'}
+                                                            value={this.state.pipeline._dstDepTaskName}
+                                                            onChange={event => {
+                                                                const v = event.target.value;
+                                                                this.setState(state => {
+                                                                    state.pipeline._dstDepTaskName = v;
+                                                                    return state;
+                                                                });
+                                                            }}
+                                                        >
+                                                            <option key="" value="">------</option>
+                                                            {this.state.pipeline.tasks.map(task =>
+                                                                <option key={task.name} value={task.name}>{task.name}</option>
+                                                            )}
+                                                        </Form.Control>
+                                                    </td>
+                                                </tr>
+
+                                            </tbody>
+                                        </Table>
+                                    </Col>
+                                </Row>
+
                             }
                             {
                                 (this.state.pipeline.type==="external") &&

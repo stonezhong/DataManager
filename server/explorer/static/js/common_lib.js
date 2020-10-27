@@ -64,6 +64,7 @@ export function pipeline_to_django_model(pipeline) {
         dag_id      : pipeline.dag_id,
         requiredDSIs: pipeline.requiredDSIs,
         tasks       : pipeline.tasks,
+        dependencies: pipeline.dependencies,
     };
 
     const to_post = {
@@ -94,6 +95,7 @@ export function pipeline_from_django_model(pipeline) {
         description: pipeline.description,
         type: context.type,
         tasks: context.tasks,
+        dependencies: context.dependencies,
         requiredDSIs: context.requiredDSIs,
         dag_id: context.dag_id,
         author: pipeline.author,

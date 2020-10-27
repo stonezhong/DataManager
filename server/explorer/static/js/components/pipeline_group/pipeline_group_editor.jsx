@@ -132,7 +132,7 @@ export class PipelineGroupEditor extends React.Component {
                                                     (this.state.mode==="new")?"current time":this.state.pipeline_group.created_time
                                                 }
                                                 disabled={true}
-                                            /> :
+                                            />
                                     </Form.Group>
                                 </Col>
                                 <Col xs={4}>

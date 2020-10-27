@@ -197,6 +197,20 @@ export class SequentialTaskEditor extends React.Component {
                                 <Form.Check
                                     name="task-type"
                                     inline
+                                    label="dummy"
+                                    type="radio"
+                                    disabled = {this.state.mode==='view'}
+                                    checked={this.state.task.type=="dummy"}
+                                    onChange={() => {
+                                        this.setState(state => {
+                                            state.task.type = "dummy";
+                                            return state;
+                                        })
+                                    }}
+                                />
+                                <Form.Check
+                                    name="task-type"
+                                    inline
                                     label="other"
                                     type="radio"
                                     disabled = {this.state.mode==='view'}
