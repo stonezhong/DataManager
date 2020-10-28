@@ -7,5 +7,7 @@
     "bridge": {
         "hostname": "spnode1",
         "stage_dir": "/root/.stage"
-    }
+    },
+    "deploy_base": "hdfs:///etl/apps",
+    "run_dir": "hdfs:///etl/runs"
 }

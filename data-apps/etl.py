@@ -3,45 +3,45 @@
 
 import argparse
 import json
+import glob
+import os
 
 from spark_etl import Application
 from spark_etl.deployers import HDFSDeployer
 from spark_etl.job_submitters.livy_job_submitter import LivyJobSubmitter
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+def get_current_version(app_name):
+    with open(os.path.join(BASE_DIR, ".builds", app_name, "manifest.json"), "r") as f:
+        return json.load(f)['version']
+
 # Example
 #
+# Please make sure config.json has the right config before run etl.py
+#
 # Build
-# ./etl.py -a build --app-dir ./apps/execute_sql --build-dir ./apps/execute_sql/build
+# ./etl.py -a build --app-name dummy
 #
 # Deploy to HDFS
-# ./etl.py -a deploy --build-dir ./apps/execute_sql/build --deploy-dir hdfs:///etl/apps/execute_sql --config-dir config.json
+# ./etl.py -a deploy --app-name dummy
 #
 # Run the application
-# ./etl.py -a run --deploy-dir hdfs:///etl/apps/execute_sql --version 1.0.0.0 --run-dir hdfs:///etl/runs --config-dir config.json --run-args ./run_args.json
-#
+# ./etl.py -a run --app-name dummy
+# You can use "--version 1.0.0.0" to override the current version
+# You can use "--run-args ./run_args.json" to specify the arguments
 # To see the yarn log, do "yarn logs -applicationId <Application ID>" on the bridge
+#
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "-a", "--action", required=True, choices=['build', 'deploy', 'run']
     )
     parser.add_argument(
-         "--config-dir", help="Configuration directory"
-    )
-    parser.add_argument(
-        "--app-dir", help="Application directory"
-    )
-    parser.add_argument(
-        "--build-dir", help="Build directory"
-    )
-    parser.add_argument(
-        "--deploy-dir", help="Deployment directory"
+        "--app-name", help="Application name"
     )
     parser.add_argument(
         "--version", help="Application version"
-    )
-    parser.add_argument(
-        "--run-dir", help="Run directory"
     )
     parser.add_argument(
         "--run-args", help="Arguments for run, a filename to a json"
@@ -63,41 +63,76 @@ def get_config(args):
 
 # build an application
 def do_build(args):
-    app = Application(args.app_dir)
-    app.build(args.build_dir)
+    print(f"Building application: {args.app_name}")
+    app_dir     = os.path.join(BASE_DIR, "apps", args.app_name)
+    build_dir   = os.path.join(BASE_DIR, ".builds", args.app_name)
+
+    # some necessary cleanup
+    os.makedirs(build_dir, exist_ok=True)
+    for f in glob.glob(f'{build_dir}/*'):
+        os.remove(f)
+
+    app = Application(app_dir)
+    app.build(build_dir)
+    print("Build application: done!")
 
 
 def do_deploy(args):
-    config = get_config(args)
+    print(f"Deploy application: {args.app_name}")
+    with open(os.path.join(BASE_DIR, "config.json"), "r") as f:
+        config = json.load(f)
+
+    app_dir     = os.path.join(BASE_DIR, "apps", args.app_name)
+    build_dir   = os.path.join(BASE_DIR, ".builds", args.app_name)
+    deploy_dir  = f"{config['deploy_base']}/{args.app_name}"
+    print(f"deploy to {deploy_dir}")
+
     deployer = HDFSDeployer({
         "bridge"   : config['bridge']['hostname'],
         "stage_dir": config['bridge']['stage_dir'],
     })
-    deployer.deploy(args.build_dir, args.deploy_dir)
+    deployer.deploy(build_dir, deploy_dir)
+    print("Deploy application: done")
 
 
 def do_run(args):
-    config = get_config(args)
+    print(f"Run application: {args.app_name}")
+    if args.version:
+        version = args.version
+    else:
+        version = get_current_version(args.app_name)
+
+    print(f"version = {version}")
+
+    with open(os.path.join(BASE_DIR, "config.json"), "r") as f:
+        config = json.load(f)
+
     job_submitter = LivyJobSubmitter({
-        "service_url": config['livy']['service_url'],
-        "username": config['livy']['username'],
-        "password": config['livy']['password'],
-        "bridge": config['bridge']['hostname'],
-        "stage_dir": config['bridge']['stage_dir'],
-        "run_dir": args.run_dir,
+        "service_url"   : config['livy']['service_url'],
+        "username"      : config['livy']['username'],
+        "password"      : config['livy']['password'],
+        "bridge"        : config['bridge']['hostname'],
+        "stage_dir"     : config['bridge']['stage_dir'],
+        "run_dir"       : config['run_dir']
     })
+
     run_args = args.run_args
     if run_args is None:
         run_args_value = {}
     else:
         with open(run_args, "r") as f:
             run_args_value = json.load(f)
-    job_submitter.run(f"{args.deploy_dir}/{args.version}", options={
+
+    deploy_dir  = f"{config['deploy_base']}/{args.app_name}"
+    ret = job_submitter.run(f"{deploy_dir}/{version}", options={
         "conf": {
             'spark.yarn.appMasterEnv.PYSPARK_PYTHON': 'python3',
             'spark.executorEnv.PYSPARK_PYTHON': 'python3'
         }
     }, args=run_args_value)
+    print("Run application: done!")
+    print(f"return = {ret}")
+
 
 if __name__ == '__main__':
     main()
