@@ -65,4 +65,4 @@ Here is an example:
 # run
 `./etl.py -a run --app-name <application_name> --run_args <json_filename>`
 - runs the application
-- the content of the json_filename will be passwd to application as runtime arguments
+- the content of the json_filename will be passed to application as runtime arguments
