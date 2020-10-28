@@ -57,7 +57,7 @@ def main(spark, input_args):
     dt = pipeline_group_context['dt']
     print(f"dt = {dt}")
 
-    app_args = json.loads(input_args['app_args'])
+    app_args = input_args['app_args']
     market = app_args['market']
 
     random.seed()

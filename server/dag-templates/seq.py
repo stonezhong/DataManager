@@ -174,7 +174,7 @@ class ExecuteTask:
         if self.task_ctx['type'] == 'other':
             args = {
                 "pipeline_group_context": pipeline_group_context,
-                "app_args": self.task_ctx['args'],
+                "app_args": JSON.loads(self.task_ctx['args']),
                 "dc_config": dc_config,
             }
             appLocation = get_application_location(self.task_ctx['application_id'])
