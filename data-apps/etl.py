@@ -38,7 +38,7 @@ def main():
         "-a", "--action", required=True, choices=['build', 'deploy', 'run']
     )
     parser.add_argument(
-        "--app-name", help="Application name"
+        "-p", "--app-name", help="Application name"
     )
     parser.add_argument(
         "--version", help="Application version"
