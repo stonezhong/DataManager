@@ -7,11 +7,14 @@ import Row from 'react-bootstrap/Row'
 import Container from 'react-bootstrap/Container'
 
 import {DatasetInstanceTable} from '/components/dataset/dataset_instance_table.jsx'
+import {TopMessage} from '/components/top_message/main.jsx'
 
 import {get_app_context, get_current_user} from '/common_lib'
 
 
 class DatasetPage extends React.Component {
+    theTopMessageRef = React.createRef();
+
     state = {
         dataset_instances: [],
     };
@@ -22,11 +25,15 @@ class DatasetPage extends React.Component {
             .then(result => {
                 this.setState({dataset_instances: result})
             })
+            .catch(() => {
+                this.theTopMessageRef.current.show("danger", "Unable to list assets!");
+            })
     }
 
     render() {
         return (
             <Container fluid>
+                <TopMessage ref={this.theTopMessageRef} />
                 <Row>
                     <Col>
                         <h1>Dataset - {this.props.dataset.name}</h1>
