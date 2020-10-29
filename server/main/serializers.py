@@ -69,7 +69,7 @@ class DatasetInstanceSerializer(serializers.ModelSerializer):
         fields = [
             'url',
             'id', 'dataset', 'parent_instance', 'name', 'path',
-            'publish_time', 'deleted_time', 'data_time', 'revision', 'row_count',
+            'publish_time', 'deleted_time', 'data_time', 'revision', 'row_count', 'loader',
             'locations'
         ]
 

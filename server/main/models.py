@@ -162,6 +162,9 @@ class DatasetInstance(models.Model):
     deleted_time        = models.DateTimeField(null=True)                                          # NULLable, when not NULL, mean it is deleted
     revision            = models.IntegerField()
     row_count           = models.BigIntegerField(null=True)
+    # Ff loader is true, then this instance is virtual, the loeader will need to load this table
+    # loader field is a JSON object that contains loader name and loader args
+    loader              = models.TextField(null=True)
 
     class Meta:
         unique_together = [
@@ -172,7 +175,7 @@ class DatasetInstance(models.Model):
         ]
 
     @classmethod
-    def create(cls, requester, dataset, parent_instance, name, row_count, publish_time, data_time, locations):
+    def create(cls, requester, dataset, parent_instance, name, row_count, publish_time, data_time, locations, loader=None):
         if not requester.is_authenticated:
             raise PermissionDeniedException()
 
@@ -218,6 +221,7 @@ class DatasetInstance(models.Model):
             parent_instance = parent_instance,
             name = name,
             row_count = row_count,
+            loader = loader,
             path = instance_path + "/" + name,
             publish_time = publish_time,
             data_time = data_time,

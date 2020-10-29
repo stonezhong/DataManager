@@ -80,6 +80,9 @@ models = {
             "row_count": {
                 "type": "integer"
             },
+            "loader": {
+                "type": ["string", "null"]
+            },
             "locations": {
                 "type": "array",
                 "items": {
@@ -97,8 +100,7 @@ models = {
                     },
                     "required": ["type", "location"],
                     "additionalProperties": False,
-                },
-                "minItems": 1
+                }
             }
         },
         "additionalProperties": False,

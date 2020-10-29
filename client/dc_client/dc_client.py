@@ -24,7 +24,7 @@ class DataCatalogClient(object):
         self.session = requests.Session()
         if auth is not None:
             self.session.auth = auth
-    
+
     def get_dataset(self, name, major_version, minor_version=None):
         """Get dataset.
 
@@ -35,12 +35,12 @@ class DataCatalogClient(object):
         major_version: str
             The major version of the dataset.
         minor_version: integer
-            Optional. If present, we will get dataset that match the minor_version, 
+            Optional. If present, we will get dataset that match the minor_version,
             otherwise, we will get the dataset with the highest minor_version.
         """
-        
+
         url = "{}/Datasets/".format(self.url_base)
-        params = { 
+        params = {
             'name': name,
             'major_version': major_version,
         }
@@ -55,14 +55,14 @@ class DataCatalogClient(object):
             params.update({
                 "minor_version": minor_version
             })
-        
+
         r = self.session.get(url=url, params = params)
         r.raise_for_status()
 
         d = r.json()
         if d:
             return d[0]
-        
+
         return None
 
     def create_dataset(self, name, major_version, minor_version, description, team):
@@ -82,14 +82,14 @@ class DataCatalogClient(object):
             The team who own the dataset.
         """
         url = "{}/Datasets/".format(self.url_base)
-        data = { 
+        data = {
             'name': name,
             'major_version': major_version,
             'minor_version': minor_version,
             'description': description,
             'team': team
         }
-        
+
         r = self.session.post(url=url, json = data)
         r.raise_for_status()
         return r.json()
@@ -146,12 +146,12 @@ class DataCatalogClient(object):
             r.raise_for_status()
             ret = r.json()
             parent_instance_id = ret['id']
-        
+
         _update_locations(ret['locations'])
         return ret
 
 
-    def create_dataset_instance(self, name, major_version, minor_version, path, locations, data_time, row_count=None):
+    def create_dataset_instance(self, name, major_version, minor_version, path, locations, data_time, row_count=None, loader=None):
         """Create a dataset instance.
 
         Parameters
@@ -178,7 +178,7 @@ class DataCatalogClient(object):
         dataset = self.get_dataset(name, major_version, minor_version)
         if dataset is None:
             raise Exception("dataset not found")
-        
+
         if not path.startswith('/'):
             raise Exception("path must be absolute")
         if path.endswith('/'):
@@ -197,7 +197,7 @@ class DataCatalogClient(object):
         else:
             new_path = '/' + '/'.join(di_names[:-1])
             parent_instance = self.get_dataset_instance(name, major_version, minor_version, new_path)
-        
+
         url = "{}/DatasetInstances/".format(self.url_base)
         data = {
             'dataset_id': dataset['id'],
@@ -205,10 +205,11 @@ class DataCatalogClient(object):
             'name': di_names[-1],
             'data_time': data_time.strftime('%Y-%m-%d %H:%M:%S'),
             'row_count': row_count,
+            'loader': loader,
             'locations': locations
         }
         if row_count is None:
-            data.pop(row_count)
+            data.pop("row_count")
 
         r = self.session.post(url=url, json = data)
         r.raise_for_status()

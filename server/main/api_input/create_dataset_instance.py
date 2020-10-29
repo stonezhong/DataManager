@@ -15,7 +15,7 @@ class CreateDatasetInstanceInput:
     def from_json(cls, data):
         validate_model("create_dataset_instance", data)
         self = cls()
-        
+
         dataset_id = data["dataset_id"]
         dataset = Dataset.objects.filter(pk=data['dataset_id']).first()
         if dataset is None:
@@ -34,6 +34,8 @@ class CreateDatasetInstanceInput:
         self.name = data["name"]
         self.row_count = data.get("row_count")
 
+        self.loader = data.get("loader")
+
         if "publish_time" in data:
             publish_time = datetime.strptime(data["publish_time"], "%Y-%m-%d %H:%M:%S")
         else:
@@ -42,7 +44,7 @@ class CreateDatasetInstanceInput:
         self.publish_time = publish_time
 
         self.data_time = datetime.strptime(data["data_time"], "%Y-%m-%d %H:%M:%S")
-        
+
         locations = []
         for entry in data["locations"]:
             locations.append(cls._BriefLocation(
