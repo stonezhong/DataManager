@@ -1,6 +1,9 @@
 import json
 
 from pyspark.sql import SparkSession, SQLContext, Row
+from dc_client import DataCatalogClient
+
+from dlib import load_asset
 
 def print_json(title, payload):
     print(title)
@@ -17,5 +20,16 @@ def print_json(title, payload):
 ##################################################################
 def main(spark, input_args):
     print_json("input_args", input_args)
+
+    dc_config = input_args['dc_config']
+    dcc = DataCatalogClient(
+        url_base = dc_config['url_base'],
+        auth = (dc_config['username'], dc_config['password'])
+    )
+
+    # df = load_asset(spark, dcc, "tradings:1.0:1:/2020-10-06_NASDAQ")
+    df = load_asset(spark, dcc, "tradings:1.0:1:/2020-10-06")
+    df.show()
+
     print("Done")
     return {"status": "ok"}

@@ -110,7 +110,7 @@ def handle_pipeline_instance_created(pi):
         print("")
         return
 
-    print("ALL required asserts are ready!!")
+    print("ALL required assets are ready!!")
     print(f"triggering DAG {pi.pipeline.name}")
     r = airflow_lib.trigger_dag(
         pi.pipeline.name,
