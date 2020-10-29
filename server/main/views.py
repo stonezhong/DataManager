@@ -151,7 +151,8 @@ class DatasetInstanceViewSet(viewsets.ModelViewSet):
             cdii.row_count,
             cdii.publish_time,
             cdii.data_time,
-            cdii.locations
+            cdii.locations,
+            loader = cdii.loader,
         )
 
         response = DatasetInstanceSerializer(instance=di, context={'request': request}).data
