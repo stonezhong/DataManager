@@ -94,6 +94,9 @@ class DatasetsPage extends React.Component {
                     this.setState({datasets: result})
                 }
             )
+            .catch(() => {
+                this.theTopMessageRef.current.show("danger", "Unable to list datasets!");
+            })
     }
 
 
