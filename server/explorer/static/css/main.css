@@ -62,3 +62,12 @@ table.timer-table th[data-role='start'] {
 
 .dataset-table th[data-role='minor_version'] {
   width: 100px; }
+
+.dataset-schema-table th[data-role='type'] {
+  width: 120px; }
+
+.dataset-schema-table th[data-role='is_array'] {
+  width: 60px; }
+
+.dataset-schema-table th[data-role='nullable'] {
+  width: 75px; }

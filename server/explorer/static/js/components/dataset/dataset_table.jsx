@@ -8,6 +8,7 @@ import Form from 'react-bootstrap/Form'
 import * as Icon from 'react-bootstrap-icons'
 
 import {DatasetEditor} from './dataset_editor.jsx'
+import {SchemaViewer} from './schema_viewer.jsx'
 
 /*********************************************************************************
  * Purpose: Show list of datasets
@@ -26,6 +27,18 @@ import {DatasetEditor} from './dataset_editor.jsx'
  */
 export class DatasetTable extends React.Component {
     theDatasetEditorRef = React.createRef();
+    theSchemaViewerRef  = React.createRef();
+
+    get_schema = dataset => {
+        if (!dataset.schema) {
+            return null;
+        }
+        const schema_str = dataset.schema.trim();
+        if (!schema_str) {
+            return null;
+        }
+        return JSON.parse(schema_str);
+    };
 
     render() {
         return (
@@ -61,6 +74,7 @@ export class DatasetTable extends React.Component {
                         <tr>
                             <th className="c-tc-icon1"></th>
                             <th data-role='name'>Name</th>
+                            <th data-role='schema'>Schema</th>
                             <th data-role='author'>Author</th>
                             <th data-role='team'>Team</th>
                             <th data-role='publish_time'>Published</th>
@@ -88,6 +102,22 @@ export class DatasetTable extends React.Component {
                                         </Button>
                                     </td>
                                     <td><a href={`dataset?id=${dataset.id}`}>{dataset.name}</a></td>
+                                    <td>
+                                        {
+                                            this.get_schema(dataset) &&
+                                            <Button
+                                                variant="secondary"
+                                                size="sm"
+                                                onClick={event => {
+                                                    this.theSchemaViewerRef.current.openDialog(
+                                                        this.get_schema(dataset)
+                                                    )
+                                                }}
+                                            >
+                                                <Icon.Info />
+                                            </Button>
+                                        }
+                                    </td>
                                     <td>{dataset.author}</td>
                                     <td>{dataset.team}</td>
                                     <td>{dataset.publish_time}</td>
@@ -103,6 +133,9 @@ export class DatasetTable extends React.Component {
                 <DatasetEditor
                     ref={this.theDatasetEditorRef}
                     onSave={this.props.onSave}
+                />
+                <SchemaViewer
+                    ref={this.theSchemaViewerRef}
                 />
             </div>
         )

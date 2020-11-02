@@ -18,3 +18,15 @@
         width: 100px;
     }
 }
+
+.dataset-schema-table {
+    th[data-role='type'] {
+        width: 120px;
+    }
+    th[data-role='is_array'] {
+        width: 60px;
+    }
+    th[data-role='nullable'] {
+        width: 75px;
+    }
+}

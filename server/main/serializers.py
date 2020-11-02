@@ -25,7 +25,7 @@ class DatasetSerializer(serializers.ModelSerializer):
             'url',
             'id', 'name', 'major_version', 'minor_version',
             'publish_time', 'expiration_time', 'description',
-            'author', 'team'
+            'author', 'team', 'schema', 'sample_data'
         ]
 
 
