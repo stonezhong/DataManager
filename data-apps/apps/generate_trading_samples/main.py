@@ -5,6 +5,9 @@ import json
 from pyspark.sql import SparkSession, SQLContext, Row
 from dc_client import DataCatalogClient
 
+from dlib import load_asset, print_json, write_asset, register_dataset_instance
+
+
 STOCK_LIST = {
     'MSFT': 200.0,
     'INTC': 51.0,
@@ -15,33 +18,6 @@ STOCK_LIST = {
 }
 
 
-def print_json(title, payload):
-    print(title)
-    print("------------------------------------------")
-    print(f"\n{json.dumps(payload, indent=4, separators=(',', ': '))}")
-    print("------------------------------------------")
-
-def register_dataset_instance(input_args, market, df):
-    dc_config = input_args['dc_config']
-    pipeline_group_context = input_args['pipeline_group_context']
-    dt = pipeline_group_context['dt']
-
-    dcc = DataCatalogClient(
-        url_base = dc_config['url_base'],
-        auth = (dc_config['username'], dc_config['password'])
-    )
-
-
-    data_time = datetime.strptime(dt, "%Y-%m-%d")
-    dcc.create_dataset_instance(
-        'tradings', '1.0', 1,
-        f"/{dt}_{market}", [{
-            'type': 'parquet',
-            'location': f'hdfs:///data/tradings/{dt}/{market}.parquet'
-        }],
-        data_time,
-        row_count = df.count()
-    )
 
 ##################################################################
 # input_args
@@ -51,6 +27,13 @@ def register_dataset_instance(input_args, market, df):
 ##################################################################
 def main(spark, input_args):
     print("Generate sample trading data")
+
+    dc_config = input_args['dc_config']
+    dcc = DataCatalogClient(
+        url_base = dc_config['url_base'],
+        auth = (dc_config['username'], dc_config['password'])
+    )
+
     print_json("input_args", input_args)
 
     pipeline_group_context = input_args['pipeline_group_context']
@@ -80,7 +63,11 @@ def main(spark, input_args):
 
         print(f"Writing to /data/tradings/{dt}/{market}.parquet")
 
-        register_dataset_instance(input_args, market, df)
+        register_dataset_instance(
+            dcc, f'tradings:1.0:1:/{dt}_{market}',
+            'parquet',
+            f'hdfs:///data/tradings/{dt}/{market}.parquet',
+            df.count())
     else:
         # register the view after all the market are uploaded
         dc_config = input_args['dc_config']
@@ -102,8 +89,8 @@ def main(spark, input_args):
                 "name": "union",
                 "args": {
                     "dsi_paths": [
-                        "tradings:1.0:1:{dt}_NASDAQ",
-                        "tradings:1.0:1:{dt}_NYSE",
+                        f"tradings:1.0:1:/{dt}_NASDAQ",
+                        f"tradings:1.0:1:/{dt}_NYSE",
                     ]
                 }
             })

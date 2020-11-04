@@ -66,3 +66,24 @@ Here is an example:
 `./etl.py -a run --app-name <application_name> --run_args <json_filename>`
 - runs the application
 - the content of the json_filename will be passed to application as runtime arguments
+
+# Test app: generate_trading_samples
+```
+# generate nasdaq sample data
+
+# Generate sample stock for NASDAQ
+./etl.py -a run -p generate_trading_samples --run-args tests/generate_trading_samples_nasdaq.json
+
+# Generate sample stock for NYSE
+./etl.py -a run -p generate_trading_samples --run-args tests/generate_trading_samples_nyse.json
+
+# Generate a view that unions two exchange
+./etl.py -a run -p generate_trading_samples --run-args tests/generate_trading_samples.json
+
+```
+
+# Test app: execute_sql
+```
+# generate top 3 stocks by trading volumn, write to dataset top_picks
+./etl.py -a run -p execute_sql --run-args tests/execute_sql.json
+```

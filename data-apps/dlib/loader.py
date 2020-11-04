@@ -1,4 +1,5 @@
 import json
+from datetime import datetime
 
 from dc_client import DataCatalogClient
 
@@ -50,3 +51,29 @@ def load_asset(spark, dcc, dsi_path):
     loader_args = loader['args']
     loader_f = LOADERS[loader_name]
     return loader_f(spark, dcc, loader_args)
+
+def write_asset(spark, df, table, mode='overwrite'):
+    # table is compatible with DatasetLocation
+    table_type = table['type']
+    table_path = table['location']
+    # TODO: make coalesce configurable
+
+    if table_type == "json":
+        df.coalesce(1).write.mode(mode).format('json').save(table_path)
+    elif table_type == "parquet":
+        df.coalesce(1).write.mode(mode).format('parquet').save(table_path)
+    else:
+        raise Exception(f"Unrecognized table type: {table_type}")
+
+def register_dataset_instance(dcc, dsi_path, file_type, location, row_count):
+    dataset_name, major_version, minor_version, path = dsi_path.split(":")
+    dcc.create_dataset_instance(
+        dataset_name, major_version, int(minor_version),
+        path,
+        [{
+            'type': file_type,
+            'location': location
+        }],
+        datetime.utcnow(),
+        row_count = row_count
+    )
