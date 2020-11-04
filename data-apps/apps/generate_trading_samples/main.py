@@ -67,7 +67,7 @@ def main(spark, input_args):
             dcc, f'tradings:1.0:1:/{dt}_{market}',
             'parquet',
             f'hdfs:///data/tradings/{dt}/{market}.parquet',
-            df.count())
+            df)
     else:
         # register the view after all the market are uploaded
         dc_config = input_args['dc_config']

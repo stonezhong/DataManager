@@ -3,3 +3,4 @@ from .create_dataset_instance import CreateDatasetInstanceInput
 from .create_pipeline_input import CreatePipelineInput
 from .create_application_input import CreateApplicationInput
 from .create_timer_input import CreateTimerInput
+from .set_schema_and_sample_data_input import SetSchemaAndSampleDataInput
