@@ -24,7 +24,9 @@ from .serializers import DatasetSerializer, DatasetInstanceSerializer, \
     PipelineInstanceSerializer, ApplicationSerializer, PipelineGroupDetailsSerializer, \
     TimerSerializer, ScheduledEventSerializer
 from .api_input import CreateDatasetInput, CreateDatasetInstanceInput, \
-    CreatePipelineInput, CreateApplicationInput, CreateTimerInput
+    CreatePipelineInput, CreateApplicationInput, CreateTimerInput, \
+    SetSchemaAndSampleDataInput
+
 import explorer.airflow_lib as airflow_lib
 
 class DatasetViewSet(viewsets.ModelViewSet):
@@ -91,6 +93,23 @@ class DatasetViewSet(viewsets.ModelViewSet):
             create_dataset_input.publish_time,
             create_dataset_input.description,
             create_dataset_input.team
+        )
+        response = DatasetSerializer(instance=ds, context={'request': request}).data
+        return Response(response)
+
+    @action(detail=True, methods=['post'])
+    @transaction.atomic
+    def set_schema_and_sample_data(self, request, pk=None):
+        """
+        Update schema and/or sample data
+        """
+        ds = Dataset.objects.get(pk=pk)
+        data = request.data
+        ssasd_input = SetSchemaAndSampleDataInput.from_json(data)
+        ds.set_schema_and_sample_data(
+            request.user,
+            ssasd_input.schema,
+            ssasd_input.sample_data
         )
         response = DatasetSerializer(instance=ds, context={'request': request}).data
         return Response(response)

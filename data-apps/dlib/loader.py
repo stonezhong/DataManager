@@ -65,8 +65,15 @@ def write_asset(spark, df, table, mode='overwrite'):
     else:
         raise Exception(f"Unrecognized table type: {table_type}")
 
-def register_dataset_instance(dcc, dsi_path, file_type, location, row_count):
+##############################################################################
+# Register dataset instance
+# - it will create dataset if not exist, user need to fill in description latter
+##############################################################################
+def register_dataset_instance(dcc, dsi_path, file_type, location, df):
     dataset_name, major_version, minor_version, path = dsi_path.split(":")
+    ds = dcc.get_dataset(dataset_name, major_version, int(minor_version))
+    if ds is None:
+        ds = dcc.create_dataset(dataset_name, major_version, int(minor_version), "-- Placeholder --", "trading")
     dcc.create_dataset_instance(
         dataset_name, major_version, int(minor_version),
         path,
@@ -75,5 +82,10 @@ def register_dataset_instance(dcc, dsi_path, file_type, location, row_count):
             'location': location
         }],
         datetime.utcnow(),
-        row_count = row_count
+        row_count = df.count()
+    )
+    dcc.set_dataset_schema_and_sample_data(
+        ds['id'],
+        json.dumps(df.schema.jsonValue()),
+        ""  # no sample data for now
     )

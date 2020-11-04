@@ -191,6 +191,21 @@ models = {
             "name", "description", "team", "paused", "interval_unit", "interval_amount", "start_from",
             "topic", "context", "category", "end_at"
         ]
+    },
+    "set_schema_and_sample_data_input": {
+        "type": "object",
+        "properties": {
+            "schema": {
+                "type": "string"
+            },
+            "sample_data": {
+                "type": "string"
+            },
+        },
+        "additionalProperties": False,
+        "required": [
+            "schema"
+        ]
     }
 }
 

@@ -60,7 +60,7 @@ def execute_step(spark, step, dcc, app_args, pipeline_group_context):
             register_dsi_full_path,
             output['type'],
             location,
-            df.count(),
+            df,
         )
     else:
         print(f"register output: won't")

@@ -94,6 +94,29 @@ class DataCatalogClient(object):
         r.raise_for_status()
         return r.json()
 
+    def set_dataset_schema_and_sample_data(self, id, schema, sample_data=""):
+        """set dataset schema.
+
+        If dataset already have schema, and new schema is different it raise exception
+        If dataset does not have schema, it sets the schema
+
+        Parameters
+        ----------
+        id: str
+            The dataset ID.
+        schema: str
+            The schema of the dataset
+        """
+        url = "{}/Datasets/{}/set_schema_and_sample_data/".format(self.url_base, id, )
+        data = {
+            'schema': schema,
+            'sample_data': sample_data,
+        }
+
+        r = self.session.post(url=url, json = data)
+        r.raise_for_status()
+        return r.json()
+
 
     def delete_dataset(self, id):
         """Data a dataset by id.
