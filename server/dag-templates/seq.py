@@ -206,7 +206,6 @@ class ExecuteTask:
 
         spark_etl_cfg = load_config("spark_etl.json")
         job_submitter = get_job_submitter(spark_etl_cfg['job_submitter'])
-        # we always uses python3
         job_submitter.run(
             appLocation,
             options=spark_etl_cfg.get("job_run_options", {}),

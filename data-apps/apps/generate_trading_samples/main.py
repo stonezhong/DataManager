@@ -42,6 +42,7 @@ def main(spark, input_args):
 
     app_args = input_args['app_args']
     market = app_args.get('market')
+    data_root = app_args.get("data_root")
 
     if market:
         random.seed()
@@ -59,14 +60,15 @@ def main(spark, input_args):
             trades.append(trade)
 
         df = spark.createDataFrame(trades)
-        df.write.mode("overwrite").parquet(f"/data/tradings/{dt}/{market}.parquet")
+        file_to_write = f"{data_root}/tradings/{dt}/{market}.parquet"
+        df.write.mode("overwrite").parquet(file_to_write)
 
-        print(f"Writing to /data/tradings/{dt}/{market}.parquet")
+        print(f"Writing to {file_to_write}")
 
         register_dataset_instance(
             dcc, f'tradings:1.0:1:/{dt}_{market}',
             'parquet',
-            f'hdfs:///data/tradings/{dt}/{market}.parquet',
+            file_to_write,
             df)
     else:
         # register the view after all the market are uploaded
