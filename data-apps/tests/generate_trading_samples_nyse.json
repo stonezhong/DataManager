@@ -7,6 +7,6 @@
         "username": "stonezhong",
         "password": "iamrich"
     },
-    "app_args": {"market": "NYSE"}
+    "app_args": {"market": "NYSE", "data_root": "hdfs:///data"}
 }
 
