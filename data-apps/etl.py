@@ -5,16 +5,34 @@ import argparse
 import json
 import glob
 import os
+import importlib
 
 from spark_etl import Application
-from spark_etl.deployers import HDFSDeployer
-from spark_etl.job_submitters.livy_job_submitter import LivyJobSubmitter
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 def get_current_version(app_name):
     with open(os.path.join(BASE_DIR, ".builds", app_name, "manifest.json"), "r") as f:
         return json.load(f)['version']
+
+def get_deployer(deployer_config):
+    class_name  = deployer_config['class']
+    module      = importlib.import_module('.'.join(class_name.split(".")[:-1]))
+    klass       = getattr(module, class_name.split('.')[-1])
+
+    args    = deployer_config.get("args", [])
+    kwargs  = deployer_config.get("kwargs", {})
+    return klass(*args, **kwargs)
+
+def get_job_submitter(job_submitter_config):
+    class_name  = job_submitter_config['class']
+    module      = importlib.import_module('.'.join(class_name.split(".")[:-1]))
+    klass       = getattr(module, class_name.split('.')[-1])
+
+    args    = job_submitter_config.get("args", [])
+    kwargs  = job_submitter_config.get("kwargs", {})
+    return klass(*args, **kwargs)
+
 
 # Example
 #
@@ -23,7 +41,7 @@ def get_current_version(app_name):
 # Build
 # ./etl.py -a build --app-name dummy
 #
-# Deploy to HDFS
+# Deploy
 # ./etl.py -a deploy --app-name dummy
 #
 # Run the application
@@ -39,6 +57,9 @@ def main():
     )
     parser.add_argument(
         "-p", "--app-name", help="Application name"
+    )
+    parser.add_argument(
+        "-c", "--config_filename", help="Config filename"
     )
     parser.add_argument(
         "--version", help="Application version"
@@ -57,7 +78,8 @@ def main():
     return
 
 def get_config(args):
-    with open(args.config_dir, "r") as f:
+    config_filename = args.config_filename or os.path.join(BASE_DIR, "config.json")
+    with open(config_filename, "r") as f:
         return json.load(f)
 
 
@@ -79,18 +101,12 @@ def do_build(args):
 
 def do_deploy(args):
     print(f"Deploy application: {args.app_name}")
-    with open(os.path.join(BASE_DIR, "config.json"), "r") as f:
-        config = json.load(f)
 
-    app_dir     = os.path.join(BASE_DIR, "apps", args.app_name)
+    config = get_config(args)
+    deployer = get_deployer(config['deployer'])
+
     build_dir   = os.path.join(BASE_DIR, ".builds", args.app_name)
     deploy_dir  = f"{config['deploy_base']}/{args.app_name}"
-    print(f"deploy to {deploy_dir}")
-
-    deployer = HDFSDeployer({
-        "bridge"   : config['bridge']['hostname'],
-        "stage_dir": config['bridge']['stage_dir'],
-    })
     deployer.deploy(build_dir, deploy_dir)
     print("Deploy application: done")
 
@@ -104,17 +120,8 @@ def do_run(args):
 
     print(f"version = {version}")
 
-    with open(os.path.join(BASE_DIR, "config.json"), "r") as f:
-        config = json.load(f)
-
-    job_submitter = LivyJobSubmitter({
-        "service_url"   : config['livy']['service_url'],
-        "username"      : config['livy']['username'],
-        "password"      : config['livy']['password'],
-        "bridge"        : config['bridge']['hostname'],
-        "stage_dir"     : config['bridge']['stage_dir'],
-        "run_dir"       : config['run_dir']
-    })
+    config = get_config(args)
+    job_submitter = get_job_submitter(config['job_submitter'])
 
     run_args = args.run_args
     if run_args is None:
@@ -124,12 +131,11 @@ def do_run(args):
             run_args_value = json.load(f)
 
     deploy_dir  = f"{config['deploy_base']}/{args.app_name}"
-    ret = job_submitter.run(f"{deploy_dir}/{version}", options={
-        "conf": {
-            'spark.yarn.appMasterEnv.PYSPARK_PYTHON': 'python3',
-            'spark.executorEnv.PYSPARK_PYTHON': 'python3'
-        }
-    }, args=run_args_value)
+    ret = job_submitter.run(
+        f"{deploy_dir}/{version}",
+        options=config.get("job_run_options", {}),
+        args=run_args_value
+    )
     print("Run application: done!")
     print(f"return = {ret}")
 

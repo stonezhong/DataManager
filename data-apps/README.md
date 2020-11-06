@@ -32,27 +32,10 @@ pip install -r requirements.txt
 - You need to enter this virtual environment when you run etl.py latter.
 
 ## update your `config.json`
-Here is an example:
-- livy section is about your livy endpoint, we need it to submit spark job
-- bridge: we will scp files to bridge and run hdfs command to copy files to HDFS for deployment
-- deploy_base: the location built artifacts will be deployed
-- run_dir: the place to store runtime information for the spark job
-- You should be able to ssh to the bridge machine without password, you may need to config you `~/.ssh/config` file
-```
-{
-    "livy": {
-        "service_url": "http://10.0.0.18:60008/",
-        "username": "root",
-        "password": "changeme"
-    },
-    "bridge": {
-        "hostname": "spnode1",
-        "stage_dir": "/root/.stage"
-    },
-    "deploy_base": "hdfs:///etl/apps",
-    "run_dir": "hdfs:///etl/runs"
-}
-```
+- If you are using spark cluster, see `config_hdfs.json`
+- If you want to use local pyspark, see `config_local.json`
+- You need to copy one of the above file to `config.json`
+- If you are using local pyspark, you also need to install JRE 1.8 and `pyspark` package
 </details>
 
 # build

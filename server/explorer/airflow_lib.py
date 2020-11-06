@@ -66,28 +66,37 @@ def unpause_dag(dag_id):
 
 
 def trigger_dag(dag_id, config):
-    url = f"{AIRFLOW_API_BASE_URL}/dags/{dag_id}/dag_runs"
-    config_str = json.dumps({
-        "conf": config
-    })
-    r = requests.post(
-        url,
-        headers={
-            'Cache-Control': 'no-cache',
-            'Content-Type': 'application/json',
-        },
-        data = config_str,
-    )
+    for retry in range(0, 12):
+        url = f"{AIRFLOW_API_BASE_URL}/dags/{dag_id}/dag_runs"
+        config_str = json.dumps({
+            "conf": config
+        })
+        r = requests.post(
+            url,
+            headers={
+                'Cache-Control': 'no-cache',
+                'Content-Type': 'application/json',
+            },
+            data = config_str,
+        )
+        # when the DAG is just created, sometime airflow return HTTP 400
+        # let's sleep for 5 seconds and and retry
+        if r.status_code == 400:
+            time.sleep(5)
+            continue
 
-    r.raise_for_status()
+        # we still surface unknown exceptions
+        r.raise_for_status()
 
-    # sample response
-    # {
-    #   "execution_date": "2020-09-28T15:31:40+00:00",
-    #   "message": "Created <DagRun stock-min-max @ 2020-09-28 15:31:40+00:00: manual__2020-09-28T15:31:40+00:00, externally triggered: True>",
-    #   "run_id": "manual__2020-09-28T15:31:40+00:00"
-    # }
-    return r.json()
+        # sample response
+        # {
+        #   "execution_date": "2020-09-28T15:31:40+00:00",
+        #   "message": "Created <DagRun stock-min-max @ 2020-09-28 15:31:40+00:00: manual__2020-09-28T15:31:40+00:00, externally triggered: True>",
+        #   "run_id": "manual__2020-09-28T15:31:40+00:00"
+        # }
+        return r.json()
+
+    raise Exception(f"Unable to trigger dag {dag_id} after too many retries")
 
 
 def get_dag_run_status(dag_id, run_id):

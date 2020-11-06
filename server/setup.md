@@ -199,7 +199,9 @@ auth_backend = airflow.api.auth.backend.default
 
 ```
 pip install Jinja2==2.11.2
-pip install spark-etl==0.0.6
+pip install spark-etl==0.0.8     # or latest version
+pip install pyspark              # conditional, only if you want to test local spark
+                                 # in that case, you also need Java 1.8 to install
 ```
 </details>
 

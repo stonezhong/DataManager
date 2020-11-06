@@ -9,6 +9,7 @@
 import os
 import json
 from datetime import datetime
+import importlib
 import subprocess
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
@@ -152,6 +153,15 @@ dag = DAG(
     schedule_interval = None
 )
 
+def get_job_submitter(job_submitter_config):
+    class_name  = job_submitter_config['class']
+    module      = importlib.import_module('.'.join(class_name.split(".")[:-1]))
+    klass       = getattr(module, class_name.split('.')[-1])
+
+    args    = job_submitter_config.get("args", [])
+    kwargs  = job_submitter_config.get("kwargs", {})
+    return klass(*args, **kwargs)
+
 class ExecuteTask:
     def __init__(self, task_ctx):
         self.task_ctx = task_ctx
@@ -174,7 +184,7 @@ class ExecuteTask:
         if self.task_ctx['type'] == 'other':
             args = {
                 "pipeline_group_context": pipeline_group_context,
-                "app_args": JSON.loads(self.task_ctx['args']),
+                "app_args": json.loads(self.task_ctx['args']),
                 "dc_config": dc_config,
             }
             appLocation = get_application_location(self.task_ctx['application_id'])
@@ -194,23 +204,13 @@ class ExecuteTask:
             appLocation = execute_sql_app['appLocation']
 
 
-        livy_cfg = load_config("livy.json")
-        job_submitter = LivyJobSubmitter({
-            "service_url": livy_cfg['livy']['service_url'],
-            "username"   : livy_cfg['livy']['username'],
-            "password"   : livy_cfg['livy']['password'],
-            "bridge"     : livy_cfg['bridge']['hostname'],
-            "stage_dir"  : livy_cfg['bridge']['stage_dir'],
-            "run_dir"    : spark_env['run_dir'],
-        })
-
+        spark_etl_cfg = load_config("spark_etl.json")
+        job_submitter = get_job_submitter(spark_etl_cfg['job_submitter'])
         # we always uses python3
-        job_submitter.run(appLocation, options={
-            "conf": {
-                'spark.yarn.appMasterEnv.PYSPARK_PYTHON': 'python3',
-                'spark.executorEnv.PYSPARK_PYTHON': 'python3'
-            }
-        }, args=args)
+        job_submitter.run(
+            appLocation,
+            options=spark_etl_cfg.get("job_run_options", {}),
+            args=args)
         print("Done")
 
 task_dict = {}
