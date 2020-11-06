@@ -48,7 +48,7 @@ class ApplicationsPage extends React.Component {
             const to_patch = {
                 description     : application.description,
                 team            : application.team,
-                location        : application.location,
+                app_location    : application.app_location,
                 retired         : application.retired,
             }
             fetch(`/api/Applications/${application.id}/`, {
