@@ -254,7 +254,7 @@ export class PipelineEditor extends React.Component {
                                 this.state.pipeline.requiredDSIs &&
                                 <Row>
                                     <Col>
-                                        <h2>Required assers</h2>
+                                        <h2>Required assets</h2>
                                         <Table hover bordered  size="sm" >
                                             <thead className="thead-dark">
                                                 <tr>

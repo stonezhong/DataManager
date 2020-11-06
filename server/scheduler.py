@@ -40,19 +40,8 @@ import explorer.airflow_lib as airflow_lib
 
 def is_dataset_instance_ready(di_path):
     # di_path is in format: name:major_version:minor_version/path
-    # example: trading_version:1.0:1/2020-09-23
-    p = di_path.find('/')
-    if p < 0:
-        raise Exception(f"{di_path} is not a valid dataset instance path")
-
-    p1 = di_path[:p]
-    p2 = di_path[p:]
-
-    segs = p1.split(':')
-    if len(segs)!=3:
-        raise Exception(f"{di_path} is not a valid dataset instance path")
-
-    dataset_name, major_version, minor_version = segs
+    # example: trading_version:1.0:1:/2020-09-23
+    dataset_name, major_version, minor_version, path = di_path.split(":")
 
     try:
         minor_version = int(minor_version)
@@ -68,7 +57,7 @@ def is_dataset_instance_ready(di_path):
     ds = dss[0]
 
     # ignore the deleted instance
-    diss = DatasetInstance.objects.filter(path=p2, deleted_time=None)
+    diss = DatasetInstance.objects.filter(path=path, deleted_time=None)
 
     if len(diss) == 0:
         return False
