@@ -20,5 +20,8 @@
     },
     "notebook": {
         "home": "/root/notebooks"
+    },
+    "airflow": {
+        "base_url": "http://localhost:8080"
     }
 }
