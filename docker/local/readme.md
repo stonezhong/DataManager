@@ -1,15 +1,16 @@
 # Steps to test Data Manager using spark-local
 
-## Step 1: run a MySQL server:
+## Step 1: setup a MySQL server 8.x:
 - You can change the password if needed.
 
 ```
 docker run \
     --name mysql \
+    -p 3306:3306/tcp \
     -e MYSQL_ROOT_PASSWORD=foo -d mysql:latest
 ```
 
-- create a SQL user
+- create a SQL user, you can use different password if needed
 ```
 docker exec -it mysql mysql --host localhost --user=root --password=foo
 CREATE USER 'dm'@'%' IDENTIFIED WITH mysql_native_password BY 'foo';
@@ -20,18 +21,15 @@ FLUSH PRIVILEGES;
 ```
 
 
-
-## Checkout Data Manager source code
+## Step 2: run the docker container
 ```
-mkdir ~/test
-cd ~/test
-git clone git@github.com:stonezhong/DataManager.git
-```
-
-## run it in docker
-```
+# port 8080 is for airflow
+# port 8888 is for Data Manager
+# port 8787 is for jupyterlab
 docker run -d --name dm \
-    -v ~/test/DataManager:/root/DataManager \
+    -p 8080:8080/tcp \
+    -p 8888:8888/tcp \
+    -p 8787:8787/tcp \
     stonezhong/dm
 ```
 
