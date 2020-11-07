@@ -384,6 +384,23 @@ def main():
     setup_data_app(config)
     setup_jupyter(config)
 
+    print("")
+    print("Please logff and then login")
+    print("")
+
+    print("To start airflow, do:")
+    print("./start-airflow.sh")
+    print("")
+
+    print("To start DataManager, do:")
+    print("./start-django.sh")
+    print("")
+
+    print("To start jupyterlab, do:")
+    print("./start-jupyter.sh")
+    print("")
+
+
 def loader():
     # we need to be launched form virtual environment
     venv = os.environ.get("VIRTUAL_ENV")
@@ -397,7 +414,7 @@ def loader():
                 "mysqlclient==2.0.1"
             ])
         subprocess.call([
-            "source /root/.venvs/setup/bin/activate; ./setup-local.py;"
+            "source /root/.venvs/setup/bin/activate; ./initialize.py;"
         ], shell=True)
 
 
