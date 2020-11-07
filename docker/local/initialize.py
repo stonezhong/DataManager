@@ -228,7 +228,8 @@ def setup_dm_server(config):
 
     django_cfg = {
         "SECRET_KEY": config['django']['SECRET_KEY'],
-        "ALLOW_ANONYMOUS_READ": True
+        "ALLOW_ANONYMOUS_READ": True,
+        "airflow": config['airflow']
     }
     with open(os.path.join(config_dir, "django.json"), "wt") as f:
         json.dump(django_cfg, f)
