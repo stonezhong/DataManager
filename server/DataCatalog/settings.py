@@ -161,8 +161,13 @@ REST_FRAMEWORK = {
 # Data Manager Specific Settings  #
 ###################################
 
-# The URL for web client to access airflow
-AIRFLOW_BASE_URL = "http://lab04.deepspace.local:60010"   # do not ending with slash
+###################################################################################
+# For external user to access airflow, the url could be different, it depends
+# on how your proxy (such as nginx) is configured and port mapping config
+# Let's make it configurable
+# AIRFLOW_BASE_URL = "http://lab04.deepspace.local:60010"   # do not ending with slash
+###################################################################################
+AIRFLOW_BASE_URL = __DJANGO_CONFIG['airflow']['base_url']
 
 # AIRFLOW Virtual Environment Location
 AIRFLOW_VENV = "/root/.venvs/airflow"
