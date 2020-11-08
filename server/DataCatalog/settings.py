@@ -16,19 +16,19 @@ import json
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+from config import get_mordor_config_json_template, get_log_path, get_mordor_config
 
-def __load_mordor_config(name):
-    file_path = os.path.join(os.path.expandvars("$ENV_HOME"),
-                             "configs",
-                             os.path.basename(os.path.split(BASE_DIR)[0]),
-                             name)
-    with open(file_path, "r") as config_f:
-        data = json.load(config_f)
-        return data
+__DJANGO_CONFIG   = get_mordor_config_json_template(
+    "django.json",
+    context = {
+        "log_dir": get_log_path()
+    }
+)
+__DB_CONFIG       = get_mordor_config_json_template("db.json")
 
-__DJANGO_CONFIG   = __load_mordor_config("django.json")
-__DB_CONFIG       = __load_mordor_config("db.json")
-
+# config logging
+import logging.config
+logging.config.dictConfig(__DJANGO_CONFIG['log_config'])
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.1/howto/deployment/checklist/
