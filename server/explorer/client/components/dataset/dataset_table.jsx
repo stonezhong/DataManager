@@ -10,6 +10,8 @@ import * as Icon from 'react-bootstrap-icons'
 import {DatasetEditor} from './dataset_editor.jsx'
 import {SchemaViewer} from './schema_viewer.jsx'
 
+import './dataset.scss'
+
 /*********************************************************************************
  * Purpose: Show list of datasets
  * TODO: pagination

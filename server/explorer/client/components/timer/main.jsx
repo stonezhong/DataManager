@@ -11,6 +11,8 @@ import InputGroup from 'react-bootstrap/InputGroup'
 
 import * as Icon from 'react-bootstrap-icons'
 
+import "./timer.scss"
+
 const _ = require('lodash');
 
 function timer_native_to_ui(native_timer) {

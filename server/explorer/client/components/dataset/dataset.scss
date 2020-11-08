@@ -1,4 +1,7 @@
 .dataset-table {
+    th[data-role='schema'] {
+        width: 40px;
+    }
     th[data-role='author'] {
         width: 120px;
     }
