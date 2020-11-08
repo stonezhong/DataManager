@@ -10,19 +10,19 @@ module.exports = {
     },
     resolve: {
         roots: [
-            path.resolve('./explorer/static/js'),
+            path.resolve('./explorer/client'),
         ],
     },
     entry: {
-        "datasets"          : './explorer/static/js/pages/datasets/main.jsx',
-        "dataset"           : './explorer/static/js/pages/dataset/main.jsx',
-        "pipelines"         : './explorer/static/js/pages/pipelines/main.jsx',
-        "pipeline"          : './explorer/static/js/pages/pipeline/main.jsx',
-        "pipeline_groups"   : './explorer/static/js/pages/pipeline_groups/main.jsx',
-        "pipeline_group"    : './explorer/static/js/pages/pipeline_group/main.jsx',
-        "applications"      : './explorer/static/js/pages/applications/main.jsx',
-        "schedulers"        : './explorer/static/js/pages/schedulers/main.jsx',
-        "test"              : './explorer/static/js/pages/test/main.jsx',
+        "datasets"          : '/pages/datasets/main.jsx',
+        "dataset"           : '/pages/dataset/main.jsx',
+        "pipelines"         : '/pages/pipelines/main.jsx',
+        "pipeline"          : '/pages/pipeline/main.jsx',
+        "pipeline_groups"   : '/pages/pipeline_groups/main.jsx',
+        "pipeline_group"    : '/pages/pipeline_group/main.jsx',
+        "applications"      : '/pages/applications/main.jsx',
+        "schedulers"        : '/pages/schedulers/main.jsx',
+        "test"              : '/pages/test/main.jsx',
     },
     output: {
         path: path.resolve("explorer", "static", "js-bundle"),
@@ -39,6 +39,14 @@ module.exports = {
                     }
                 ],
             },
+            {
+                test: /\.css$/,
+                loader: 'style-loader',
+            },
+            {
+                test: /\.css$/,
+                loader: 'css-loader',
+            }
         ]
     },
     devtool: '#inline-source-map'
