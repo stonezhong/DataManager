@@ -11,6 +11,7 @@ config = get_mordor_config_json_template(
         "log_dir": get_log_path(),
     }
 )
+# TODO: how to avoid 2nd initializing of logging in settings.py?
 logging.config.dictConfig(config['log_config'])
 logger = logging.getLogger(__name__)
 

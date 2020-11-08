@@ -63,9 +63,6 @@ def datasets(request):
             'scripts':[
                 '/static/js-bundle/datasets.js'
             ],
-            'csses': [
-                '/static/css/pages/datasets.css'
-            ],
             'nav_item_role': 'datasets',
             'app_config': get_app_config()
         }
