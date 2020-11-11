@@ -12,6 +12,8 @@ import InputGroup from 'react-bootstrap/InputGroup'
 import * as Icon from 'react-bootstrap-icons'
 
 import "./timer.scss"
+import {is_json_string, is_valid_datetime} from '/common_lib.js'
+import {AlertBox} from '/components/alert/alert.jsx'
 
 const _ = require('lodash');
 
@@ -43,6 +45,8 @@ function timer_ui_to_native(ui_timer) {
  *
  */
 export class TimerEditor extends React.Component {
+    theAlertBoxRef  = React.createRef();
+
     initTimerValue = () => {
         return {
             name: '',
@@ -70,6 +74,19 @@ export class TimerEditor extends React.Component {
     };
 
     onSave = () => {
+        if (!is_json_string(this.state.timer.context)) {
+            this.theAlertBoxRef.current.show("Context must be a JSON string");
+            return
+        }
+        if (!is_valid_datetime(this.state.timer.start_from, allow_empty=false)) {
+            this.theAlertBoxRef.current.show("Start MUST be in format YYYY-MM-DD HH:MM:SS, for example: 2020-10-03 00:00:00");
+            return
+        }
+        if (!is_valid_datetime(this.state.timer.start_from, allow_empty=true)) {
+            this.theAlertBoxRef.current.show("End MUST be in format YYYY-MM-DD HH:MM:SS, for example: 2020-10-03 00:00:00");
+            return
+        }
+
         const native_timer = timer_ui_to_native(this.state.timer);
         const mode = this.state.mode;
         this.setState({show: false}, () => {this.props.onSave(mode, native_timer)} );
@@ -130,6 +147,7 @@ export class TimerEditor extends React.Component {
                 </Modal.Header>
                 <Modal.Body>
                     <Container fluid className="pb-2 mb-2">
+                        <AlertBox ref={this.theAlertBoxRef}/>
                         <Form>
                             <Form.Group as={Row} controlId="name">
                                 <Form.Label column sm={2}>Name</Form.Label>

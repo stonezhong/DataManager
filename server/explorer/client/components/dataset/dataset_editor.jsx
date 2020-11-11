@@ -7,7 +7,8 @@ import Col from 'react-bootstrap/Col'
 import Form from 'react-bootstrap/Form'
 import Modal from 'react-bootstrap/Modal'
 
-import {null_2_empty_str} from '/common_lib'
+import {null_2_empty_str, is_valid_datetime} from '/common_lib'
+import {AlertBox} from '/components/alert/alert.jsx'
 
 const _ = require("lodash");
 
@@ -21,6 +22,8 @@ const _ = require("lodash");
  */
 
 export class DatasetEditor extends React.Component {
+    theAlertBoxRef  = React.createRef();
+
     initDatasetValue = () => {
         return {
             name: '',
@@ -43,6 +46,11 @@ export class DatasetEditor extends React.Component {
     };
 
     onSave = () => {
+        if (!is_valid_datetime(this.state.dataset.expiration_time, allow_empty=true)) {
+            this.theAlertBoxRef.current.show("Expire MUST be in format YYYY-MM-DD HH:MM:SS, for example: 2020-10-03 00:00:00");
+            return
+        }
+
         const dataset = _.cloneDeep(this.state.dataset);
         const mode = this.state.mode;
         this.setState({show: false}, () => {this.props.onSave(mode, dataset)});
@@ -97,6 +105,7 @@ export class DatasetEditor extends React.Component {
                 </Modal.Header>
                 <Modal.Body>
                     <Container fluid className="pb-2 mb-2">
+                        <AlertBox ref={this.theAlertBoxRef}/>
                         <Form>
                             <Form.Group as={Row} controlId="name">
                                 <Form.Label column sm={2}>Name</Form.Label>

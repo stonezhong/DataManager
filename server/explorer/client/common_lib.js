@@ -116,3 +116,22 @@ export function empty_str_2_null(v) {
     const vv = _.trim(v);
     return vv?vv:null;
 }
+
+export function is_json_string(s) {
+    try {
+        const a = JSON.parse(s);
+        return true
+    }
+    catch(error) {
+        return false;
+    }
+}
+
+export function is_valid_datetime(s, allow_empty=false) {
+    if (s === '') {
+        return allow_empty===true;
+    }
+
+    const dt_pattern = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/;
+    return !s.match(dt_pattern);
+}
