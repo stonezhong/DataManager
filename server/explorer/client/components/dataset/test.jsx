@@ -28,7 +28,7 @@ export class TestDatasetEditor extends React.Component {
                 <Button
                     className="mr-2"
                     onClick={() => {
-                        this.testDatasetEditorRef.current.openDialog();
+                        this.testDatasetEditorRef.current.openDialog("new");
                     }}
                 >
                     New Dataset
@@ -36,7 +36,7 @@ export class TestDatasetEditor extends React.Component {
                 <Button
                     className="mr-2"
                     onClick={() => {
-                        this.testDatasetEditorRef.current.openDialog({
+                        this.testDatasetEditorRef.current.openDialog("edit", {
                             name: "test data",
                             major_version: "2.1",
                             minor_version: 2,

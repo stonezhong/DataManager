@@ -41,7 +41,7 @@ export class TestTaskEditor extends React.Component {
                             description: 'blah...',
                             type: 'spark-sql',
                             appLocation: '',
-                            args: {},
+                            args: "{}",
                             steps: [
                                 {
                                     name: 'step 1',

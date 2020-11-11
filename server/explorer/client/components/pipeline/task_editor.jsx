@@ -10,6 +10,8 @@ import Modal from 'react-bootstrap/Modal'
 
 import * as Icon from 'react-bootstrap-icons'
 import {SQLStepEditor} from './sql_step_editor.jsx'
+import {is_json_string} from '/common_lib.js'
+import {AlertBox} from '/components/alert/alert.jsx'
 
 const _ = require('lodash');
 
@@ -24,6 +26,7 @@ const _ = require('lodash');
  */
 export class SequentialTaskEditor extends React.Component {
     theSQLEditorRef = React.createRef();
+    theAlertBoxRef  = React.createRef();
 
     initTaskValue = () => {
         return {
@@ -56,6 +59,10 @@ export class SequentialTaskEditor extends React.Component {
     };
 
     onSave = () => {
+        if (!is_json_string(this.state.task.args)) {
+            this.theAlertBoxRef.current.show("Task Arguments must be a JSON string");
+            return
+        }
         const task = _.cloneDeep(this.state.task);
         const mode = this.state.mode;
         this.setState({show: false}, () => {this.props.onSave(mode, task)});
@@ -140,6 +147,7 @@ export class SequentialTaskEditor extends React.Component {
                 </Modal.Header>
                 <Modal.Body>
                     <Container fluid className="pb-2 mb-2">
+                        <AlertBox ref={this.theAlertBoxRef}/>
                         <Row>
                             <Col>
                                 <Form.Group controlId="task-name">
