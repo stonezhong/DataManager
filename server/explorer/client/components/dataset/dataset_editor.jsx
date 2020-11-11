@@ -46,7 +46,7 @@ export class DatasetEditor extends React.Component {
     };
 
     onSave = () => {
-        if (!is_valid_datetime(this.state.dataset.expiration_time, allow_empty=true)) {
+        if (!is_valid_datetime(this.state.dataset.expiration_time, true)) {
             this.theAlertBoxRef.current.show("Expire MUST be in format YYYY-MM-DD HH:MM:SS, for example: 2020-10-03 00:00:00");
             return
         }

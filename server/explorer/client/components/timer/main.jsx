@@ -78,11 +78,11 @@ export class TimerEditor extends React.Component {
             this.theAlertBoxRef.current.show("Context must be a JSON string");
             return
         }
-        if (!is_valid_datetime(this.state.timer.start_from, allow_empty=false)) {
+        if (!is_valid_datetime(this.state.timer.start_from, false)) {
             this.theAlertBoxRef.current.show("Start MUST be in format YYYY-MM-DD HH:MM:SS, for example: 2020-10-03 00:00:00");
             return
         }
-        if (!is_valid_datetime(this.state.timer.start_from, allow_empty=true)) {
+        if (!is_valid_datetime(this.state.timer.start_from, true)) {
             this.theAlertBoxRef.current.show("End MUST be in format YYYY-MM-DD HH:MM:SS, for example: 2020-10-03 00:00:00");
             return
         }

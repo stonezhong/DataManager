@@ -133,5 +133,5 @@ export function is_valid_datetime(s, allow_empty=false) {
     }
 
     const dt_pattern = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/;
-    return !s.match(dt_pattern);
+    return s.match(dt_pattern);
 }
