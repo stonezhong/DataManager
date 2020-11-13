@@ -7,7 +7,7 @@ import Col from 'react-bootstrap/Col'
 import Form from 'react-bootstrap/Form'
 import Modal from 'react-bootstrap/Modal'
 
-import {null_2_empty_str, is_valid_datetime} from '/common_lib'
+import {is_valid_datetime} from '/common_lib'
 import {AlertBox} from '/components/alert/alert.jsx'
 
 const _ = require("lodash");
@@ -52,6 +52,9 @@ export class DatasetEditor extends React.Component {
         }
 
         const dataset = _.cloneDeep(this.state.dataset);
+        if (dataset.expiration_time === "") {
+            dataset.expiration_time = null;
+        }
         const mode = this.state.mode;
         this.setState({show: false}, () => {this.props.onSave(mode, dataset)});
     };
@@ -62,10 +65,15 @@ export class DatasetEditor extends React.Component {
 
     openDialog = (mode, dataset) => {
         if (mode === "view" || mode === "edit") {
+            const ui_dataset = _.cloneDeep(dataset);
+            if (ui_dataset.expiration_time === null) {
+                ui_dataset.expiration_time = "";
+            }
+
             this.setState({
                 show: true,
                 mode: mode,
-                dataset: _.cloneDeep(dataset)
+                dataset: ui_dataset
             })
         } else if (mode === "new") {
             this.setState({
@@ -202,7 +210,7 @@ export class DatasetEditor extends React.Component {
                                 <Col sm={10}>
                                     <Form.Control
                                         disabled = {this.state.mode==='new' || this.state.mode==='view'}
-                                        value={null_2_empty_str(this.state.dataset.expiration_time)}
+                                        value={this.state.dataset.expiration_time}
                                         onChange={(event) => {
                                             const v = event.target.value;
                                             this.setState(

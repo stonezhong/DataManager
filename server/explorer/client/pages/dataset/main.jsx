@@ -42,13 +42,12 @@ class DatasetPage extends React.Component {
                 </Row>
                 <Row>
                     <Col>
-                        <i>Published by { this.props.dataset.author } from { this.props.dataset.team } team at { this.props.dataset.publish_time }.</i>
+                        <div dangerouslySetInnerHTML={ {__html: this.props.dataset.description } }/>
                     </Col>
                 </Row>
                 <Row>
                     <Col>
-                        <h1>Description</h1>
-                        <div dangerouslySetInnerHTML={ {__html: this.props.dataset.description } }/>
+                        <i>Published by { this.props.dataset.author } from { this.props.dataset.team } team at { this.props.dataset.publish_time }.</i>
                     </Col>
                 </Row>
                 <DatasetInstanceTable dataset_instances={this.state.dataset_instances}/>
