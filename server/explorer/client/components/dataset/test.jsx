@@ -1,5 +1,6 @@
 import React from 'react'
 
+import Container from 'react-bootstrap/Container'
 import Button from 'react-bootstrap/Button'
 
 import {DatasetEditor} from './dataset_editor.jsx'
@@ -18,7 +19,7 @@ export class TestDatasetEditor extends React.Component {
 
     render() {
         return (
-            <div>
+            <Container fluid>
                 <h2>Test DatasetEditor</h2>
                 <DatasetEditor
                     ref={this.testDatasetEditorRef}
@@ -42,12 +43,13 @@ export class TestDatasetEditor extends React.Component {
                             minor_version: 2,
                             description: "Blah...",
                             team: "trading",
+                            expiration_time: null,
                         });
                     }}
                 >
                     Edit Dataset
                 </Button>
-            </div>
+            </Container>
         );
     }
 }

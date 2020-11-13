@@ -8,7 +8,6 @@ import {AlertBox} from './alert.jsx'
 export class TestAlertBox extends React.Component {
     testAlertBoxRef = React.createRef();
 
-
     render() {
         return (
             <Container fluid>
