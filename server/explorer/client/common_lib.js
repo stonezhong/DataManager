@@ -107,16 +107,6 @@ export function pipeline_from_django_model(pipeline) {
     return p;
 }
 
-export function null_2_empty_str(v) {
-    // if v is null, return empty string
-    return v?v:"";
-}
-
-export function empty_str_2_null(v) {
-    const vv = _.trim(v);
-    return vv?vv:null;
-}
-
 export function is_json_string(s) {
     try {
         const a = JSON.parse(s);
