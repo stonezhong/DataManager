@@ -2,6 +2,8 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 import $ from 'jquery'
 
+import Container from 'react-bootstrap/Container'
+
 import {get_app_context} from '/common_lib'
 import {TestTimerTable} from '/components/timer/test.jsx'
 import {TestApplicationEditor} from '/components/application/test.jsx'
@@ -14,50 +16,81 @@ import {TestSQLStepEditor} from '/components/pipeline/test_sql_step_editor.jsx'
 
 
 class TestPage extends React.Component {
+    components = {
+        SQLStepEditor: {
+            create: () => <TestSQLStepEditor />,
+            tested: ""
+        },
+        TaskEditor: {
+            create: () => <TestTaskEditor />,
+            tested: ""
+        },
+        PipelineEditor: {
+            create: () => <TestPipelineEditor />,
+            tested: ""
+        },
+        ApplicationEditor: {
+            create: () => <TestApplicationEditor />,
+            tested: ""
+        },
+        DatasetEditor: {
+            create: () => <TestDatasetEditor />,
+            tested: ""
+        },
+        PipelineGroupEditor: {
+            create: () => <TestPipelineGroupEditor />,
+            tested: ""
+        },
+        PipelineTable: {
+            create: () => <TestPipelineTable />,
+            tested: ""
+        },
+        TimerTable: {
+            create: () => <TestTimerTable />,
+            tested: ""
+        },
+    };
+
+    renderComponent = () => {
+        const component = this.components[this.props.component];
+        if (_.isUndefined(component)) {
+            return null;
+        }
+        return component.create();
+    };
+
     render() {
         return (
-            <div>
+            <Container fluid>
                 { !this.props.component &&
                     <div>
                         <h1>Main Test Page</h1>
-                        <ul>
-                            <li><a href="?component=SQLStepEditor">SQLStepEditor</a></li>
-                            <li><a href="?component=TaskEditor">TaskEditor</a></li>
-                            <li><a href="?component=PipelineEditor">PipelineEditor</a></li>
-                            <li><a href="?component=ApplicationEditor">ApplicationEditor</a></li>
-                            <li><a href="?component=DatasetEditor">DatasetEditor</a></li>
-                            <li><a href="?component=PipelineGroupEditor">PipelineGroupEditor</a></li>
-                            <li><a href="?component=PipelineTable">PipelineTable</a></li>
-                            <li><a href="?component=TimerTable">TimerTable</a></li>
-                        </ul>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <td style={{width: "300px"}}>Component</td>
+                                    <td style={{width: "200px"}}>Tested</td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {
+                                    _.map(this.components,
+                                        (value, component) => (
+                                            <tr key={component}>
+                                                <td><a href={`?component=${component}`}>{`${component}`}</a></td>
+                                                <td></td>
+                                            </tr>
+                                        )
+                                    )
+                                }
+                            </tbody>
+                        </table>
                     </div>
                 }
-                { this.props.component && <div><a href="?">Go back to Test Index</a></div> }
                 {
-                    this.props.component === "SQLStepEditor" && <TestSQLStepEditor />
+                    this.renderComponent()
                 }
-                {
-                    this.props.component === "TaskEditor" && <TestTaskEditor />
-                }
-                {
-                    this.props.component === "PipelineEditor" && <TestPipelineEditor />
-                }
-                {
-                    this.props.component === "ApplicationEditor" && <TestApplicationEditor />
-                }
-                {
-                    this.props.component === "DatasetEditor" && <TestDatasetEditor />
-                }
-                {
-                    this.props.component === "PipelineGroupEditor" && <TestPipelineGroupEditor />
-                }
-                {
-                    this.props.component === "PipelineTable" && <TestPipelineTable />
-                }
-                {
-                    this.props.component === "TimerTable" && <TestTimerTable />
-                }
-            </div>
+            </Container>
         )
     }
 }
