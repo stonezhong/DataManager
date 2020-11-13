@@ -23,6 +23,10 @@ class TestPage extends React.Component {
             create: () => <TestAlertBox />,
             tested: "2020-11-13"
         },
+        DatasetEditor: {
+            create: () => <TestDatasetEditor />,
+            tested: "2020-11-13"
+        },
         SQLStepEditor: {
             create: () => <TestSQLStepEditor />,
             tested: ""
@@ -37,10 +41,6 @@ class TestPage extends React.Component {
         },
         ApplicationEditor: {
             create: () => <TestApplicationEditor />,
-            tested: ""
-        },
-        DatasetEditor: {
-            create: () => <TestDatasetEditor />,
             tested: ""
         },
         PipelineGroupEditor: {
