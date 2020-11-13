@@ -5,6 +5,8 @@ import $ from 'jquery'
 import Container from 'react-bootstrap/Container'
 
 import {get_app_context} from '/common_lib'
+
+import {TestAlertBox} from '/components/alert/test.jsx'
 import {TestTimerTable} from '/components/timer/test.jsx'
 import {TestApplicationEditor} from '/components/application/test.jsx'
 import {TestDatasetEditor} from '/components/dataset/test.jsx'
@@ -17,6 +19,10 @@ import {TestSQLStepEditor} from '/components/pipeline/test_sql_step_editor.jsx'
 
 class TestPage extends React.Component {
     components = {
+        AlertBox: {
+            create: () => <TestAlertBox />,
+            tested: "2020-11-13"
+        },
         SQLStepEditor: {
             create: () => <TestSQLStepEditor />,
             tested: ""
@@ -77,7 +83,14 @@ class TestPage extends React.Component {
                                     _.map(this.components,
                                         (value, component) => (
                                             <tr key={component}>
-                                                <td><a href={`?component=${component}`}>{`${component}`}</a></td>
+                                                <td>
+                                                    <a
+                                                        href={`?component=${component}`}
+                                                        target="_blank"
+                                                    >
+                                                        {`${component}`}
+                                                    </a>
+                                                </td>
                                                 <td></td>
                                             </tr>
                                         )
