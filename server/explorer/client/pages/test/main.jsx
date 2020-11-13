@@ -91,7 +91,9 @@ class TestPage extends React.Component {
                                                         {`${component}`}
                                                     </a>
                                                 </td>
-                                                <td></td>
+                                                <td>
+                                                    {value.tested}
+                                                </td>
                                             </tr>
                                         )
                                     )
