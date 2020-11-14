@@ -6,7 +6,7 @@ import Col from 'react-bootstrap/Col'
 import Row from 'react-bootstrap/Row'
 import Container from 'react-bootstrap/Container'
 
-import {DatasetInstanceTable} from '/components/dataset/dataset_instance_table.jsx'
+import {DatasetInstanceTable} from '/components/business/dataset/dataset_instance_table.jsx'
 import {TopMessage} from '/components/generic/top_message/main.jsx'
 
 import {get_app_context, get_current_user} from '/common_lib'
