@@ -8,6 +8,7 @@ import {get_app_context} from '/common_lib'
 
 import {TestAlertBox}               from '/components/generic/alert/test.jsx'
 import {TestTopMessage}             from '/components/generic/top_message/test.jsx'
+import {TestDataTable}              from '/components/generic/datatable/test.jsx'
 
 import {TestDatasetEditor}          from '/components/business/dataset/test.jsx'
 import {TestTimerTable}             from '/components/business/timer/test.jsx'
@@ -28,6 +29,11 @@ class TestPage extends React.Component {
         },
         TopMessage: {
             create: () => <TestTopMessage />,
+            category: "generic",
+            tested: "2020-11-13"
+        },
+        DataTable: {
+            create: () => <TestDataTable />,
             category: "generic",
             tested: "2020-11-13"
         },
