@@ -8,7 +8,7 @@ const buildUrl = require('build-url');
 
 import {dt_2_utc_string, get_csrf_token, get_current_user} from '/common_lib'
 import {DatasetTable} from '/components/dataset/dataset_table.jsx'
-import {TopMessage} from '/components/top_message/main.jsx'
+import {TopMessage} from '/components/generic/top_message/main.jsx'
 
 class DatasetsPage extends React.Component {
     theTopMessageRef = React.createRef();

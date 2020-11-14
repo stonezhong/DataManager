@@ -7,6 +7,8 @@ import Container from 'react-bootstrap/Container'
 import {get_app_context} from '/common_lib'
 
 import {TestAlertBox}               from '/components/generic/alert/test.jsx'
+import {TestTopMessage}             from '/components/generic/top_message/test.jsx'
+
 import {TestTimerTable}             from '/components/timer/test.jsx'
 import {TestApplicationEditor}      from '/components/application/test.jsx'
 import {TestDatasetEditor}          from '/components/dataset/test.jsx'
@@ -21,6 +23,10 @@ class TestPage extends React.Component {
     components = {
         AlertBox: {
             create: () => <TestAlertBox />,
+            tested: "2020-11-13"
+        },
+        TopMessage: {
+            create: () => <TestTopMessage />,
             tested: "2020-11-13"
         },
         DatasetEditor: {
