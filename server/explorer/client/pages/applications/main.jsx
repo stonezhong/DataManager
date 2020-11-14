@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom'
 
 import Container from 'react-bootstrap/Container'
 
-import {ApplicationTable} from '/components/application/application_table.jsx'
+import {ApplicationTable} from '/components/business/application/application_table.jsx'
 import {TopMessage} from '/components/generic/top_message/main.jsx'
 
 import $ from 'jquery'

@@ -8,9 +8,9 @@ import Row from 'react-bootstrap/Row'
 import Container from 'react-bootstrap/Container'
 
 import {get_csrf_token, get_app_context, get_app_config, get_current_user} from '/common_lib'
-import {PipelineGroupEditor} from '/components/pipeline_group/pipeline_group_editor.jsx'
-import {PipelineSelector} from '/components/pipeline/pipeline_selector.jsx'
-import {PipelineInstanceTable} from '/components/pipeline_group/pipeline_instance_table.jsx'
+import {PipelineGroupEditor} from '/components/business/pipeline_group/pipeline_group_editor.jsx'
+import {PipelineSelector} from '/components/business/pipeline/pipeline_selector.jsx'
+import {PipelineInstanceTable} from '/components/business/pipeline_group/pipeline_instance_table.jsx'
 
 const _ = require("lodash");
 

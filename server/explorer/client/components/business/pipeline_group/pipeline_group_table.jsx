@@ -6,7 +6,7 @@ import Row from 'react-bootstrap/Row'
 import Table from 'react-bootstrap/Table'
 import * as Icon from 'react-bootstrap-icons'
 
-import {PipelineGroupEditor} from '/components/pipeline_group/pipeline_group_editor.jsx'
+import {PipelineGroupEditor} from '/components/business/pipeline_group/pipeline_group_editor.jsx'
 
 /*********************************************************************************
  * Purpose: Show list of pipeline groups (aka Executions)
