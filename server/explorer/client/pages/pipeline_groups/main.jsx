@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom'
 
 import Container from 'react-bootstrap/Container'
 
-import {PipelineGroupTable} from '/components/pipeline_group/pipeline_group_table.jsx'
+import {PipelineGroupTable} from '/components/business/pipeline_group/pipeline_group_table.jsx'
 
 import $ from 'jquery'
 

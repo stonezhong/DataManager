@@ -5,7 +5,7 @@ import ReactDOM from 'react-dom'
 
 import Container from 'react-bootstrap/Container'
 
-import {PipelineTable} from '/components/pipeline/pipeline_table.jsx'
+import {PipelineTable} from '/components/business/pipeline/pipeline_table.jsx'
 import {
     get_csrf_token, pipeline_to_django_model, pipeline_from_django_model,
     get_app_context, get_current_user, get_app_config

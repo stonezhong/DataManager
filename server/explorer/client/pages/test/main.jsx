@@ -11,12 +11,12 @@ import {TestTopMessage}             from '/components/generic/top_message/test.j
 
 import {TestDatasetEditor}          from '/components/business/dataset/test.jsx'
 import {TestTimerTable}             from '/components/business/timer/test.jsx'
-import {TestApplicationEditor}      from '/components/application/test.jsx'
-import {TestPipelineGroupEditor}    from '/components/pipeline_group/test.jsx'
-import {TestPipelineTable}          from '/components/pipeline/test_pipeline_table.jsx'
-import {TestPipelineEditor}         from '/components/pipeline/test_pipeline_editor.jsx'
-import {TestTaskEditor}             from '/components/pipeline/test_task_editor.jsx'
-import {TestSQLStepEditor}          from '/components/pipeline/test_sql_step_editor.jsx'
+import {TestApplicationEditor}      from '/components/business/application/test.jsx'
+import {TestPipelineGroupEditor}    from '/components/business/pipeline_group/test.jsx'
+import {TestPipelineTable}          from '/components/business/pipeline/test_pipeline_table.jsx'
+import {TestPipelineEditor}         from '/components/business/pipeline/test_pipeline_editor.jsx'
+import {TestTaskEditor}             from '/components/business/pipeline/test_task_editor.jsx'
+import {TestSQLStepEditor}          from '/components/business/pipeline/test_sql_step_editor.jsx'
 
 
 class TestPage extends React.Component {
