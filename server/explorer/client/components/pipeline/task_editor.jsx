@@ -11,7 +11,7 @@ import Modal from 'react-bootstrap/Modal'
 import * as Icon from 'react-bootstrap-icons'
 import {SQLStepEditor} from './sql_step_editor.jsx'
 import {is_json_string} from '/common_lib.js'
-import {AlertBox} from '/components/alert/alert.jsx'
+import {AlertBox} from '/components/generic/alert/alert.jsx'
 
 const _ = require('lodash');
 

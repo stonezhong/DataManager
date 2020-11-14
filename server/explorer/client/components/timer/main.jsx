@@ -13,7 +13,7 @@ import * as Icon from 'react-bootstrap-icons'
 
 import "./timer.scss"
 import {is_json_string, is_valid_datetime} from '/common_lib.js'
-import {AlertBox} from '/components/alert/alert.jsx'
+import {AlertBox} from '/components/generic/alert/alert.jsx'
 
 const _ = require('lodash');
 
