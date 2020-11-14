@@ -8,7 +8,7 @@ import Form from 'react-bootstrap/Form'
 import Modal from 'react-bootstrap/Modal'
 
 import {is_valid_datetime} from '/common_lib'
-import {AlertBox} from '/components/alert/alert.jsx'
+import {AlertBox} from '/components/generic/alert/alert.jsx'
 
 const _ = require("lodash");
 
