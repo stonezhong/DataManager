@@ -10,7 +10,7 @@ import {TestAlertBox}               from '/components/generic/alert/test.jsx'
 import {TestTopMessage}             from '/components/generic/top_message/test.jsx'
 
 import {TestDatasetEditor}          from '/components/business/dataset/test.jsx'
-import {TestTimerTable}             from '/components/timer/test.jsx'
+import {TestTimerTable}             from '/components/business/timer/test.jsx'
 import {TestApplicationEditor}      from '/components/application/test.jsx'
 import {TestPipelineGroupEditor}    from '/components/pipeline_group/test.jsx'
 import {TestPipelineTable}          from '/components/pipeline/test_pipeline_table.jsx'

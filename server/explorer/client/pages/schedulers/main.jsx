@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom'
 
 import Container from 'react-bootstrap/Container'
 
-import {TimerTable} from '/components/timer/main.jsx'
+import {TimerTable} from '/components/business/timer/main.jsx'
 
 import $ from 'jquery'
 
