@@ -149,6 +149,10 @@ export class DataTable extends React.Component {
         });
     };
 
+    refresh = () => {
+        this.nav_to(this.state.page);
+    };
+
     render() {
         return (
             <div className={this.props.className}>

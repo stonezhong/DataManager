@@ -116,6 +116,12 @@ export class DatasetTable extends React.Component {
         showExpired: this.props.initShowExpired
     }
 
+    onSave = (mode, dataset) => {
+        Promise.resolve(this.props.onSave(mode, dataset)).then(
+            this.theDataTableRef.current.refresh
+        );
+    };
+
 
     render() {
         return (
@@ -164,7 +170,7 @@ export class DatasetTable extends React.Component {
 
                 <DatasetEditor
                     ref={this.theDatasetEditorRef}
-                    onSave={this.props.onSave}
+                    onSave={this.onSave}
                 />
                 <SchemaViewer
                     ref={this.theSchemaViewerRef}
