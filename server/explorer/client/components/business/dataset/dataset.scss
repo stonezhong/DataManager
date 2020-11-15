@@ -21,11 +21,11 @@
                         width: 120px;
                         text-align: center;
                     }
-                    & > th[data-role='published'] {
+                    & > th[data-role='publish_time'] {
                         width: 180px;
                         text-align: center;
                     }
-                    & > th[data-role='expired'] {
+                    & > th[data-role='expiration_time'] {
                         width: 180px;
                         text-align: center;
                     }
@@ -54,10 +54,10 @@
                     & > td[data-role='team'] {
                         text-align: center;
                     }
-                    & > td[data-role='published'] {
+                    & > td[data-role='publish_time'] {
                         text-align: center;
                     }
-                    & > td[data-role='expired'] {
+                    & > td[data-role='expiration_time'] {
                         text-align: center;
                     }
                     & > td[data-role='major_version'] {

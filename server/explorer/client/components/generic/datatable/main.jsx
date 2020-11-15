@@ -61,16 +61,7 @@ export class DataTable extends React.Component {
     }
 
     componentDidMount() {
-        Promise.resolve(this.props.get_page(
-            this.state.page*this.props.page_size,
-            this.props.page_size
-        )).then(result => {
-            // result.page MUST be 0
-            this.setState({
-                page_count: Math.floor((result.count + this.props.page_size)/this.props.page_size),
-                rows: _.cloneDeep(result.results)
-            });
-        });
+        this.reset();
     }
 
     render_column_header = (column) => {
@@ -143,6 +134,19 @@ export class DataTable extends React.Component {
 
     nav_last = () => {
         this.nav_to(Math.max(0, this.state.page_count - 1));
+    };
+
+    reset = () => {
+        Promise.resolve(this.props.get_page(
+            0,
+            this.props.page_size
+        )).then(result => {
+            this.setState({
+                page_count: Math.floor((result.count + this.props.page_size)/this.props.page_size),
+                rows: _.cloneDeep(result.results),
+                page: 0,
+            });
+        });
     };
 
     render() {

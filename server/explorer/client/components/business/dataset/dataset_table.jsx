@@ -42,6 +42,7 @@ import './dataset.scss'
 export class DatasetTable extends React.Component {
     theDatasetEditorRef = React.createRef();
     theSchemaViewerRef  = React.createRef();
+    theDataTableRef     = React.createRef();
 
     get_schema = dataset => {
         if (!dataset.schema) {
@@ -91,16 +92,24 @@ export class DatasetTable extends React.Component {
         );
     };
 
+    render_name = dataset =>
+        <a href={`dataset?id=${dataset.id}`}>{dataset.name}</a>
+    ;
+
+    get_page = (offset, limit) => {
+        return this.props.get_page(offset, limit, {showExpired: this.state.showExpired});
+    };
+
     columns = {
-        tools:          {display: "", render_data: this.render_tools},
-        name:           {display: "Name"},
-        schema:         {display: "Schema", render_data: this.render_schema},
-        author:         {display: "Author"},
-        team:           {display: "Team"},
-        published:      {display: "Published"},
-        expired:        {display: "Expired"},
-        major_version:  {display: "Major Version"},
-        minor_version:  {display: "Minor Version"},
+        tools:              {display: "", render_data: this.render_tools},
+        name:               {display: "Name", render_data: this.render_name},
+        schema:             {display: "Schema", render_data: this.render_schema},
+        author:             {display: "Author"},
+        team:               {display: "Team"},
+        publish_time:       {display: "Published"},
+        expiration_time:    {display: "Expired"},
+        major_version:      {display: "Major Version"},
+        minor_version:      {display: "Minor Version"},
     };
 
     state = {
@@ -131,13 +140,17 @@ export class DatasetTable extends React.Component {
                                 className="ml-2"
                                 checked={this.state.showExpired}
                                 onChange={(event) => {
-                                    this.setState({showExpired: event.target.checked})
+                                    this.setState(
+                                        {showExpired: event.target.checked},
+                                        this.theDataTableRef.current.reset
+                                    )
                                 }}
                             />
                         </div>
                     </Col>
                 </Row>
                 <DataTable
+                    ref={this.theDataTableRef}
                     hover
                     bordered
                     className="dataset-table"
@@ -146,7 +159,7 @@ export class DatasetTable extends React.Component {
                     size = {this.props.size}
                     page_size={this.props.page_size}
                     fast_step_count={10}
-                    get_page={this.props.get_page}
+                    get_page={this.get_page}
                 />
 
                 <DatasetEditor

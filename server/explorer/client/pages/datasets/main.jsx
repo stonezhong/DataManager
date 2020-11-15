@@ -119,6 +119,9 @@ class DatasetsPage extends React.Component {
                 ordering: "-publish_time",
             }
         };
+        if (!filter.showExpired) {
+            buildArgs.queryParams.expiration_time__isnull="True"
+        }
         const url = buildUrl('', buildArgs);
         return fetch(url).then(res => res.json());
     };
