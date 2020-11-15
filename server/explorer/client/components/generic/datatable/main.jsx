@@ -17,6 +17,7 @@ import * as Icon from 'react-bootstrap-icons'
  *                  render_data(row), it either return a string or a component
  *
  *     id_column  : the primary key column, the value of this column MUST be unique
+ *     page_size  : max number of rows in each page.
  *
  *     get_page   : a function that will return the rows in current page
  *                  proto: get_page(page_number)
@@ -60,11 +61,14 @@ export class DataTable extends React.Component {
     }
 
     componentDidMount() {
-        Promise.resolve(this.props.get_page(this.state.page)).then(result => {
+        Promise.resolve(this.props.get_page(
+            this.state.page*this.props.page_size,
+            this.props.page_size
+        )).then(result => {
             // result.page MUST be 0
             this.setState({
-                page_count: result.page_count,
-                rows: _.cloneDeep(result.rows)
+                page_count: Math.floor((result.count + this.props.page_size)/this.props.page_size),
+                rows: _.cloneDeep(result.results)
             });
         });
     }
@@ -86,22 +90,40 @@ export class DataTable extends React.Component {
     };
 
     nav_to = page => {
-        Promise.resolve(this.props.get_page(page)).then(result => {
-            this.setState({
-                page_count: result.page_count,
-                rows: _.cloneDeep(result.rows),
-                page: result.page,
-            });
+        Promise.resolve(this.props.get_page(
+            page*this.props.page_size,
+            this.props.page_size
+        )).then(result => {
+            const page_count = Math.floor((result.count + this.props.page_size)/this.props.page_size);
+            if (page_count === 0) {
+                this.setState({
+                    page_count: 0,
+                    rows: [],
+                    page: 0
+                });
+                return;
+            }
+
+            if (page < page_count) {
+                this.setState({
+                    page_count: page_count,
+                    rows: _.cloneDeep(result.results),
+                    page: page
+                });
+                return;
+            }
+
+            // the page you want to nav to no longer exist, do nothing
         });
     };
 
     nav_forward = () => {
-        const new_page = this.state.page + 1;
+        const new_page = (this.state.page_count === 0)?0:Math.min(this.state.page_count-1, this.state.page + 1);
         this.nav_to(new_page);
     };
 
     nav_fforward = () => {
-        const new_page = this.state.page + this.props.fast_step_count;
+        const new_page = (this.state.page_count === 0)?0:Math.min(this.state.page_count-1, this.state.page + this.props.fast_step_count);
         this.nav_to(new_page);
     };
 
@@ -120,87 +142,97 @@ export class DataTable extends React.Component {
     };
 
     nav_last = () => {
-        this.nav_to(this.state.page_count - 1);
+        this.nav_to(Math.max(0, this.state.page_count - 1));
     };
 
     render() {
         return (
-            <div>
-                <ButtonGroup className="mb-2">
-                    <Button
-                        variant="secondary"
-                        onClick={this.nav_first}
-                    >
-                        <Icon.ChevronBarLeft />
-                    </Button>
-                    <Button
-                        variant="secondary"
-                        onClick={this.nav_fbackward}
-                    >
-                        <Icon.ChevronDoubleLeft />
-                    </Button>
-                    <Button
-                        variant="secondary"
-                        onClick={this.nav_backward}
-                    >
-                        <Icon.ChevronLeft />
-                    </Button>
-                    <Button variant="secondary" disabled>
-                        {this.state.page + 1} /
-                        {this.state.page_count}
-                    </Button>
-                    <Button
-                        variant="secondary"
-                        onClick={this.nav_forward}
-                    >
-                        <Icon.ChevronRight />
-                    </Button>
-                    <Button
-                        variant="secondary"
-                        onClick={this.nav_fforward}
-                    >
-                        <Icon.ChevronDoubleRight />
-                    </Button>
-                    <Button
-                        variant="secondary"
-                        onClick={this.nav_last}
-                    >
-                        <Icon.ChevronBarRight />
-                    </Button>
-                </ButtonGroup>
-
-                <Table {...this.get_table_props()}>
-                    <thead className="thead-dark">
-                        <tr>
+            <div className={this.props.className}>
+                <div>
+                    <Table {...this.get_table_props()}>
+                        <thead className="thead-dark">
+                            <tr>
+                                {
+                                    _.map(
+                                        this.props.columns,
+                                        (column, column_id) =>
+                                        <th key={column_id} data-role={column_id}>
+                                            {this.render_column_header(column)}
+                                        </th>
+                                    )
+                                }
+                            </tr>
+                        </thead>
+                        <tbody>
                             {
-                                _.map(
-                                    this.props.columns,
-                                    (column, column_id) =>
-                                    <th key={column_id} data-rolw={column_id}>
-                                        {this.render_column_header(column)}
-                                    </th>
+                                _.map(this.state.rows, row =>
+                                    <tr key={row[this.props.id_column]}>
+                                        {
+                                            _.map(
+                                                this.props.columns,
+                                                (column, column_id) =>
+                                                    <td key={column_id} data-role={column_id}>
+                                                        { this.render_data(row, column_id, column) }
+                                                    </td>
+                                            )
+                                        }
+                                    </tr>
                                 )
                             }
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {
-                            _.map(this.state.rows, row =>
-                                <tr key={row[this.props.id_column]}>
-                                    {
-                                        _.map(
-                                            this.props.columns,
-                                            (column, column_id) =>
-                                                <td key={column_id} data-rolw={column_id}>
-                                                    { this.render_data(row, column_id, column) }
-                                                </td>
-                                        )
-                                    }
-                                </tr>
-                            )
-                        }
-                    </tbody>
-                </Table>
+                        </tbody>
+                    </Table>
+                </div>
+                <center>
+                    <ButtonGroup className="mb-2">
+                        <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={this.nav_first}
+                        >
+                            <Icon.ChevronBarLeft />
+                        </Button>
+                        <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={this.nav_fbackward}
+                        >
+                            <Icon.ChevronDoubleLeft />
+                        </Button>
+                        <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={this.nav_backward}
+                        >
+                            <Icon.ChevronLeft />
+                        </Button>
+                        <Button variant="secondary" disabled size="sm">
+                            {this.state.page + 1} /
+                            {this.state.page_count}
+                        </Button>
+                        <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={this.nav_forward}
+                        >
+                            <Icon.ChevronRight />
+                        </Button>
+                        <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={this.nav_fforward}
+                        >
+                            <Icon.ChevronDoubleRight />
+                        </Button>
+                        <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={this.nav_last}
+                        >
+                            <Icon.ChevronBarRight />
+                        </Button>
+                    </ButtonGroup>
+
+                </center>
             </div>
         )
     }

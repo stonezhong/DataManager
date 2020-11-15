@@ -1,4 +1,12 @@
 .dataset-table {
+    & > div {
+        height: 580px;
+        overflow-y: auto;
+    }
+
+    th[data-role='tools'] {
+        width: 40px;
+    }
     th[data-role='schema'] {
         width: 40px;
     }
@@ -8,10 +16,10 @@
     th[data-role='team'] {
         width: 120px;
     }
-    th[data-role='publish_time'] {
+    th[data-role='published'] {
         width: 180px;
     }
-    th[data-role='expired_time'] {
+    th[data-role='expired'] {
         width: 180px;
     }
     th[data-role='major_version'] {
