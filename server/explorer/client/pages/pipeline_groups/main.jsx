@@ -68,7 +68,7 @@ class PipelineGroupsPage extends React.Component {
         .then(res => res.json())
         .then(
             (result) => {
-                this.setState({pipeline_groups: result})
+                this.setState({pipeline_groups: result.results})
             }
         )
     }

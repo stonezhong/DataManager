@@ -81,7 +81,7 @@ class SchedulersPage extends React.Component {
         .then(res => res.json())
         .then(
             (result) => {
-                this.setState({timers: result})
+                this.setState({timers: result.results})
             }
         )
     }
