@@ -13,6 +13,7 @@ from rest_framework.filters import OrderingFilter
 from django.http import Http404
 from django.conf import settings
 import os
+from django.http import JsonResponse
 
 import jinja2
 import json
@@ -28,6 +29,28 @@ from .api_input import CreateDatasetInput, CreateDatasetInstanceInput, \
     SetSchemaAndSampleDataInput
 
 import explorer.airflow_lib as airflow_lib
+
+def get_offset(request):
+    try:
+        offset_str = request.GET.get('offset', '0')
+        offset = int(offset_str)
+        return max(offset, 0)
+    except ValueError:
+        return 0
+
+# if limit is specified and valid, return it's value
+# otherwise, return as if limit is not set
+def get_limit(request):
+    try:
+        limit_str = request.GET.get('limit')
+        if limit_str is None:
+            return None
+        limit = int(limit_str)
+        if limit <= 0:
+            return None
+        return limit
+    except ValueError:
+        return None
 
 class DatasetViewSet(viewsets.ModelViewSet):
     queryset = Dataset.objects.all()
@@ -47,13 +70,23 @@ class DatasetViewSet(viewsets.ModelViewSet):
         Return all direct child dataset instances
         Deleted dataset instance is ignored.
         """
+        offset = get_offset(request)
+        limit  = get_limit(request)
         dataset = Dataset.objects.get(pk=pk)
         dataset_instances = dataset.get_children(request.user)
+        if limit is None:
+            dataset_instances_page = dataset_instances[offset:]
+        else:
+            dataset_instances_page = dataset_instances[offset:offset+limit]
         serializer = DatasetInstanceSerializer(
-            dataset_instances, many=True,
+            dataset_instances_page, many=True,
             context={'request': request}
         )
-        return Response(serializer.data)
+        # return JsonResponse({'count': len(dataset_instances), 'results': serializer.data})
+        return Response({
+            'count': len(dataset_instances),
+            'results': serializer.data
+        })
 
     @action(detail=True, methods=['get'])
     def child(self, request, pk=None):
