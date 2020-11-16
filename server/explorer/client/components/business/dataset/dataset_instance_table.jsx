@@ -8,6 +8,7 @@ import Container from 'react-bootstrap/Container'
 import Modal from 'react-bootstrap/Modal'
 
 import * as Icon from 'react-bootstrap-icons'
+import {DataTable} from '/components/generic/datatable/main.jsx'
 
 class LoaderViewer extends React.Component {
     state = {
@@ -70,69 +71,53 @@ class LoaderViewer extends React.Component {
  *
  */
 export class DatasetInstanceTable extends React.Component {
-    theLoaderViewerRef = React.createRef();
+    theLoaderViewerRef  = React.createRef();
+    theDataTableRef     = React.createRef();
+
+    render_locations = dataset_instance => (
+        <Table size="sm" borderless className="c-location-table">
+            <tbody>
+                {dataset_instance.locations.map((location)=>{
+                    return (
+                        <tr key={location.offset}>
+                            <td><small><code>{location.type}</code></small></td>
+                            <td><small><code>{location.location}</code></small></td>
+                            <td><small><code>{location.size}</code></small></td>
+                        </tr>
+                    )
+                })}
+            </tbody>
+        </Table>
+    );
+
+    get_page = (offset, limit) => {
+        return this.props.get_page(offset, limit);
+    };
+
+    columns = {
+        path:               {display: "Path"},
+        publish_time:       {display: "Publish Time"},
+        loader:             {display: "Loader", render_data: row => ""},
+        row_count:          {display: "Row Count"},
+        locations:          {display: "Locations", render_data: this.render_locations}
+    };
 
     render() {
         return (
             <Row>
                 <Col>
                     <h1>Assets</h1>
-                    <Table>
-                        <thead className="thead-dark">
-                            <tr>
-                                <th>Name</th>
-                                <th>Data Time</th>
-                                <th>Publish Time</th>
-                                <th>Loader</th>
-                                <th>Row Count</th>
-                                <th>Locations</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {this.props.dataset_instances.map((dataset_instance) => {
-                                return (
-                                    <tr key={dataset_instance.id}>
-                                        <td>{dataset_instance.name}</td>
-                                        <td>{dataset_instance.date_time}</td>
-                                        <td>{dataset_instance.publish_time}</td>
-                                        <td>
-                                            {
-                                                dataset_instance.loader && <Button
-                                                    variant="secondary"
-                                                    size="sm"
-                                                    variant="secondary"
-                                                    onClick={event => {
-                                                        this.theLoaderViewerRef.current.openDialog(
-                                                            dataset_instance.loader
-                                                        );
-                                                    }}
-                                                >
-                                                    <Icon.Info />
-                                                </Button>
-                                            }
-                                        </td>
-                                        <td>{dataset_instance.row_count}</td>
-                                        <td>
-
-                                        <Table size="sm" borderless className="c-location-table">
-                                            <tbody>
-                                                {dataset_instance.locations.map((location)=>{
-                                                    return (
-                                                        <tr key={location.offset}>
-                                                            <td><small><code>{location.type}</code></small></td>
-                                                            <td><small><code>{location.location}</code></small></td>
-                                                            <td><small><code>{location.size}</code></small></td>
-                                                        </tr>
-                                                    )
-                                                })}
-                                            </tbody>
-                                        </Table>
-                                        </td>
-                                    </tr>
-                                )
-                            })}
-                        </tbody>
-                    </Table>
+                    <DataTable
+                        ref={this.theDataTableRef}
+                        hover
+                        bordered
+                        columns = {this.columns}
+                        id_column = "id"
+                        size = {this.props.size}
+                        page_size={this.props.page_size}
+                        fast_step_count={10}
+                        get_page={this.get_page}
+                    />
                     <LoaderViewer ref={this.theLoaderViewerRef}/>
                 </Col>
             </Row>
