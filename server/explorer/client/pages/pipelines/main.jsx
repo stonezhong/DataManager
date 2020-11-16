@@ -23,7 +23,7 @@ class PipelinesPage extends React.Component {
         .then(
             (result) => {
                 this.setState(
-                    {pipelines: result.map(pipeline => pipeline_from_django_model(pipeline))},
+                    {pipelines: result.results.map(pipeline => pipeline_from_django_model(pipeline))},
                     () => {
                         setTimeout(this.load_pipelines, 2000)
                     }

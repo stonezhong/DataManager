@@ -77,7 +77,7 @@ class ApplicationsPage extends React.Component {
         .then(res => res.json())
         .then(
             (result) => {
-                this.setState({applications: result})
+                this.setState({applications: result.results})
             }
         )
     }
