@@ -120,11 +120,13 @@ export class SQLStepEditor extends React.Component {
     render() {
         return (
             <Modal
+                dialogClassName="sql-step-editor"
                 show={this.state.show}
                 onHide={this.onClose}
                 backdrop="static"
                 size='xl'
                 scrollable
+                centered
             >
                 <Modal.Header closeButton>
                     <Modal.Title>{this.get_title()}</Modal.Title>
@@ -137,6 +139,7 @@ export class SQLStepEditor extends React.Component {
                                     <Form.Label column sm={2}>Name</Form.Label>
                                     <Col sm={10}>
                                         <Form.Control
+                                            size="sm"
                                             disabled = {this.state.mode==='edit'||this.state.mode==='view'}
                                             value={this.state.step.name}
                                             onChange={(event) => {
@@ -154,7 +157,7 @@ export class SQLStepEditor extends React.Component {
 
                         <Row>
                             <Col>
-                                <h3>Import Asserts</h3>
+                                <h4>Import Asserts</h4>
                                 <Table hover bordered variant="dark" size="sm">
                                     <thead>
                                         <tr>
@@ -212,6 +215,7 @@ export class SQLStepEditor extends React.Component {
                                             </td>
                                             <td>
                                                 <Form.Control id="task_step_alias_to_add"
+                                                    size="sm"
                                                     value={this.state.step._toAddAlias}
                                                     onChange={(event) => {
                                                         const v = event.target.value;
@@ -224,6 +228,7 @@ export class SQLStepEditor extends React.Component {
                                             </td>
                                             <td>
                                                 <Form.Control id="task_step_dsi_name_to_add"
+                                                    size="sm"
                                                     value={this.state.step._toAddAssertPath}
                                                     onChange={(event) => {
                                                         const v = event.target.value;
@@ -246,6 +251,7 @@ export class SQLStepEditor extends React.Component {
                                 <Form.Group controlId="sql-step-sql">
                                     <Form.Label>SQL Statement</Form.Label>
                                     <Form.Control as="textarea" rows="5"
+                                        size="sm"
                                         className="monofont"
                                         disabled = {this.state.mode==='view'}
                                         value={this.state.step.sql}
@@ -266,6 +272,7 @@ export class SQLStepEditor extends React.Component {
                                     <Form.Label column sm={4}>Output alias</Form.Label>
                                     <Col sm={8}>
                                         <Form.Control
+                                            size="sm"
                                             disabled = {this.state.mode==='view'}
                                             value={this.state.step.alias}
                                             onChange={(event) => {
@@ -284,6 +291,7 @@ export class SQLStepEditor extends React.Component {
                                     <Form.Label column sm={4}>Write Output</Form.Label>
                                     <Col sm={8}>
                                         <Form.Check
+                                            size="sm"
                                             className="c-vc"
                                             type="checkbox"
                                             disabled = {this.state.mode==="view"}
@@ -314,6 +322,7 @@ export class SQLStepEditor extends React.Component {
                                                     <Form.Label column sm={3}>Location</Form.Label>
                                                     <Col sm={9}>
                                                         <Form.Control
+                                                            size="sm"
                                                             disabled = {this.state.mode==='view'}
                                                             value={this.state.step.output.location}
                                                             onChange={(event) => {
@@ -332,6 +341,7 @@ export class SQLStepEditor extends React.Component {
                                                     <Form.Label column sm={3}>Asset Path</Form.Label>
                                                     <Col sm={9}>
                                                         <Form.Control
+                                                            size="sm"
                                                             disabled = {this.state.mode==='view'}
                                                             value={this.state.step.output.register_dataset_instance}
                                                             onChange={(event) => {
@@ -352,6 +362,7 @@ export class SQLStepEditor extends React.Component {
                                                     <Form.Label column sm={3}>Type</Form.Label>
                                                     <Col sm={9}>
                                                         <Form.Control
+                                                            size="sm"
                                                             as="select"
                                                             disabled = {this.state.mode==='view'}
                                                             value={this.state.step.output.type}
@@ -374,6 +385,7 @@ export class SQLStepEditor extends React.Component {
                                                     <Form.Label column sm={3}>Write Mode</Form.Label>
                                                     <Col sm={9}>
                                                         <Form.Control
+                                                            size="sm"
                                                             as="select"
                                                             disabled = {this.state.mode==='view'}
                                                             value={this.state.step.output.write_mode}
@@ -407,13 +419,14 @@ export class SQLStepEditor extends React.Component {
                         ) &&
                         <Button
                             variant="primary"
+                            size="sm"
                             onClick={this.onSave}
                             disabled={!this.canSave()}
                         >
                             Save changes
                         </Button>
                     }
-                    <Button variant="secondary" onClick={this.onClose} className={"btn-rounded"}>Close</Button>
+                    <Button variant="secondary" size="sm" onClick={this.onClose} className={"btn-rounded"}>Close</Button>
                 </Modal.Footer>
             </Modal>
         );
