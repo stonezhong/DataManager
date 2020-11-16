@@ -10,6 +10,8 @@ import Modal from 'react-bootstrap/Modal'
 import * as Icon from 'react-bootstrap-icons'
 import {DataTable} from '/components/generic/datatable/main.jsx'
 
+import './dataset.scss'
+
 class LoaderViewer extends React.Component {
     state = {
         show: false,
@@ -90,6 +92,21 @@ export class DatasetInstanceTable extends React.Component {
         </Table>
     );
 
+    render_loader = dataset_instance => (
+        dataset_instance.loader && <Button
+            variant="secondary"
+            size="sm"
+            variant="secondary"
+            onClick={event => {
+                this.theLoaderViewerRef.current.openDialog(
+                    dataset_instance.loader
+                );
+            }}
+        >
+            <Icon.Info />
+        </Button>
+    );
+
     get_page = (offset, limit) => {
         return this.props.get_page(offset, limit);
     };
@@ -97,7 +114,7 @@ export class DatasetInstanceTable extends React.Component {
     columns = {
         path:               {display: "Path"},
         publish_time:       {display: "Publish Time"},
-        loader:             {display: "Loader", render_data: row => ""},
+        loader:             {display: "Loader", render_data: this.render_loader},
         row_count:          {display: "Row Count"},
         locations:          {display: "Locations", render_data: this.render_locations}
     };
@@ -106,11 +123,11 @@ export class DatasetInstanceTable extends React.Component {
         return (
             <Row>
                 <Col>
-                    <h1>Assets</h1>
                     <DataTable
                         ref={this.theDataTableRef}
                         hover
                         bordered
+                        className="dataset-instance-table"
                         columns = {this.columns}
                         id_column = "id"
                         size = {this.props.size}

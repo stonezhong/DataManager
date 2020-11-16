@@ -83,3 +83,53 @@
         width: 75px;
     }
 }
+
+.dataset-instance-table {
+    & > div {
+        height: 680px;
+        overflow-y: auto;
+
+        & > table {
+            & > thead {
+                & > tr {
+                    & > th[data-role='path'] {
+                        text-align: center;
+                    }
+                    & > th[data-role='publish_time'] {
+                        width: 180px;
+                        text-align: center;
+                    }
+                    & > th[data-role='loader'] {
+                        width: 76px;
+                        text-align: center;
+                    }
+                    & > th[data-role='row_count'] {
+                        width: 120px;
+                        text-align: center;
+                    }
+                    & > th[data-role='locations'] {
+                        width: 800px;
+                        text-align: center;
+                    }
+                }
+            }
+            & > tbody {
+                & > tr {
+                    & > td {
+                        height: 40px;
+                        vertical-align: middle;
+                    }
+                    & > td[data-role='publish_time'] {
+                        text-align: center;
+                    }
+                    & > td[data-role='loader'] {
+                        text-align: center;
+                    }
+                    & > td[data-role='row_count'] {
+                        text-align: center;
+                    }
+                }
+            }
+        }
+    }
+}
