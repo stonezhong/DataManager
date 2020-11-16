@@ -54,6 +54,7 @@ class LoaderViewer extends React.Component {
                     <Button
                         variant="secondary"
                         onClick={this.onClose}
+                        size="sm"
                     >
                         Close
                     </Button>

@@ -205,7 +205,7 @@ export class SchemaViewer extends React.Component {
                 </Modal.Body>
 
                 <Modal.Footer>
-                    <Button variant="secondary" onClick={this.onClose}>Close</Button>
+                    <Button variant="secondary" size="sm" onClick={this.onClose}>Close</Button>
                 </Modal.Footer>
             </Modal>
         );
