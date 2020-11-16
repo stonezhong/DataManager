@@ -64,7 +64,7 @@ class DatasetDescriptionDialog extends React.Component {
                     </Container>
                 </Modal.Body>
                 <Modal.Footer>
-                    <Button variant="secondary" onClick={this.onClose}>Close</Button>
+                    <Button variant="secondary" size="sm" onClick={this.onClose}>Close</Button>
                 </Modal.Footer>
             </Modal>
         );
