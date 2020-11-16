@@ -187,6 +187,7 @@ export class PipelineEditor extends React.Component {
                                     <Form.Group controlId="pipeline-name">
                                         <Form.Label>Name</Form.Label>
                                         <Form.Control
+                                            size="sm"
                                             disabled = {this.state.mode==='edit' || this.state.mode==='view'}
                                             value={this.state.pipeline.name}
                                             onChange={(event) => {
@@ -203,6 +204,7 @@ export class PipelineEditor extends React.Component {
                                     <Form.Group controlId="pipeline-team">
                                         <Form.Label>Team</Form.Label>
                                         <Form.Control
+                                            size="sm"
                                             disabled = {this.state.mode==='view'}
                                             value={this.state.pipeline.team}
                                             onChange={(event) => {
@@ -219,6 +221,7 @@ export class PipelineEditor extends React.Component {
                                     <Form.Group controlId="pipeline-category">
                                         <Form.Label>Category</Form.Label>
                                         <Form.Control
+                                            size="sm"
                                             disabled = {this.state.mode==='view'}
                                             value={this.state.pipeline.category}
                                             onChange={(event) => {
@@ -237,6 +240,7 @@ export class PipelineEditor extends React.Component {
                                     <Form.Group controlId="pipeline-description">
                                         <Form.Label>Description</Form.Label>
                                         <Form.Control as="textarea" rows="3"
+                                            size="sm"
                                             disabled = {this.state.mode==='view'}
                                             value={this.state.pipeline.description}
                                             onChange={(event) => {
@@ -254,7 +258,7 @@ export class PipelineEditor extends React.Component {
                                 this.state.pipeline.requiredDSIs &&
                                 <Row>
                                     <Col>
-                                        <h2>Required assets</h2>
+                                        <h4>Required assets</h4>
                                         <Table hover bordered  size="sm" >
                                             <thead className="thead-dark">
                                                 <tr>
@@ -309,6 +313,7 @@ export class PipelineEditor extends React.Component {
                                                         </td>
                                                         <td>
                                                             <Form.Control id="requiredDSI_to_add"
+                                                                size="sm"
                                                                 value={this.state.pipeline._toAddAssertPath}
                                                                 onChange={(event) => {
                                                                     const v = event.target.value;
@@ -330,6 +335,7 @@ export class PipelineEditor extends React.Component {
                                 <Col>
                                     <Form.Label className="pr-2" >Type</Form.Label>
                                     <Form.Check
+                                        size="sm"
                                         disabled = {this.state.mode==='view'}
                                         name="pipeline-type"
                                         inline
@@ -344,6 +350,7 @@ export class PipelineEditor extends React.Component {
                                         }}
                                     />
                                     <Form.Check
+                                        size="sm"
                                         disabled = {this.state.mode==='view'}
                                         name="pipeline-type"
                                         inline
@@ -363,7 +370,7 @@ export class PipelineEditor extends React.Component {
                                 (this.state.pipeline.type==="sequential") &&
                                 <Row>
                                     <Col>
-                                        <h2 className="c-ib">Tasks</h2>
+                                        <h4 className="c-ib">Tasks</h4>
                                         <Button
                                             disabled = {this.state.mode==='view'}
                                             className="c-vc ml-2"
@@ -433,7 +440,7 @@ export class PipelineEditor extends React.Component {
                                 (this.state.pipeline.type==="sequential") &&
                                 <Row>
                                     <Col>
-                                        <h2>Dependency</h2>
+                                        <h4>Dependency</h4>
                                         <Table hover bordered size="sm">
                                             <thead className="thead-dark">
                                                 <tr>
@@ -498,6 +505,7 @@ export class PipelineEditor extends React.Component {
                                                     <td>
                                                         <Form.Control
                                                             as="select"
+                                                            size="sm"
                                                             disabled = {this.state.mode==='view'}
                                                             value={this.state.pipeline._srcDepTaskName}
                                                             onChange={event => {
@@ -508,18 +516,19 @@ export class PipelineEditor extends React.Component {
                                                                 });
                                                             }}
                                                         >
-                                                            <option key="" value="">------</option>
+                                                            <option key="" value="">--- Please Select Task ---</option>
                                                             {this.state.pipeline.tasks.map(task =>
                                                                 <option key={task.name} value={task.name}>{task.name}</option>
                                                             )}
                                                         </Form.Control>
                                                     </td>
                                                     <td>
-                                                        depend on
+                                                        <center>depend on</center>
                                                     </td>
                                                     <td>
                                                         <Form.Control
                                                             as="select"
+                                                            size="sm"
                                                             disabled = {this.state.mode==='view'}
                                                             value={this.state.pipeline._dstDepTaskName}
                                                             onChange={event => {
@@ -530,7 +539,7 @@ export class PipelineEditor extends React.Component {
                                                                 });
                                                             }}
                                                         >
-                                                            <option key="" value="">------</option>
+                                                            <option key="" value="">--- Please Select Task ---</option>
                                                             {this.state.pipeline.tasks.map(task =>
                                                                 <option key={task.name} value={task.name}>{task.name}</option>
                                                             )}
@@ -589,6 +598,7 @@ export class PipelineEditor extends React.Component {
                             this.state.mode === "new"
                         ) &&
                         <Button
+                            size="sm"
                             variant="primary"
                             onClick={this.onSave}
                             disabled={!this.canSave()}
@@ -596,7 +606,7 @@ export class PipelineEditor extends React.Component {
                             Save changes
                         </Button>
                     }
-                    <Button variant="secondary" onClick={this.onClose}>Close</Button>
+                    <Button variant="secondary" size="sm" onClick={this.onClose}>Close</Button>
                 </Modal.Footer>
             </Modal>
         );

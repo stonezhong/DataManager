@@ -13,6 +13,8 @@ import {SQLStepEditor} from './sql_step_editor.jsx'
 import {is_json_string} from '/common_lib.js'
 import {AlertBox} from '/components/generic/alert/alert.jsx'
 
+import './pipeline.scss'
+
 const _ = require('lodash');
 
 /*********************************************************************************
@@ -136,11 +138,13 @@ export class SequentialTaskEditor extends React.Component {
     render() {
         return (
             <Modal
+                dialogClassName="task-editor"
                 show={this.state.show}
                 onHide={this.onClose}
                 backdrop="static"
                 size='lg'
                 scrollable
+                centered
             >
                 <Modal.Header closeButton>
                     <Modal.Title>{this.get_title()}</Modal.Title>
@@ -153,6 +157,7 @@ export class SequentialTaskEditor extends React.Component {
                                 <Form.Group controlId="task-name">
                                     <Form.Label>Name</Form.Label>
                                     <Form.Control
+                                        size="sm"
                                         disabled = {this.state.mode==='edit' || this.state.mode==='view'}
                                         value={this.state.task.name}
                                         onChange={(event) => {
@@ -171,6 +176,7 @@ export class SequentialTaskEditor extends React.Component {
                                 <Form.Group controlId="task-description">
                                     <Form.Label>Description</Form.Label>
                                     <Form.Control
+                                        size="sm"
                                         disabled = {this.state.mode==='view'}
                                         value={this.state.task.description}
                                         onChange={(event) => {
@@ -296,7 +302,7 @@ export class SequentialTaskEditor extends React.Component {
                             (this.state.task.type === "spark-sql") &&
                             <Row>
                                 <Col>
-                                    <h2 className="c-ib">Steps</h2>
+                                    <h4 className="c-ib">Steps</h4>
                                     <Button
                                         disabled = {this.state.mode==='view'}
                                         className="c-vc ml-2"
@@ -391,11 +397,12 @@ export class SequentialTaskEditor extends React.Component {
                         <Button variant="primary"
                             onClick={this.onSave}
                             disabled={!this.canSave()}
+                            size="sm"
                         >
                             Save changes
                         </Button>
                     }
-                    <Button variant="secondary" onClick={this.onClose}>Close</Button>
+                    <Button variant="secondary" size="sm" onClick={this.onClose}>Close</Button>
                 </Modal.Footer>
             </Modal>
         );

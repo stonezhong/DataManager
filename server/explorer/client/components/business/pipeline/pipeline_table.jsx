@@ -54,7 +54,7 @@ export class PipelineTable extends React.Component {
                     </Col>
                 </Row>
 
-                <Table hover>
+                <Table hover size="sm">
                     <thead className="thead-dark">
                         <tr>
                             <th className="c-tc-icon1"></th>

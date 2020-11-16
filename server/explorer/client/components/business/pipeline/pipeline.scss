@@ -1,0 +1,12 @@
+div.task-editor {
+    & > div.modal-content {
+        background-color: rgb(240, 240, 240);
+    }
+}
+
+div.sql-step-editor {
+    & > div.modal-content {
+        background-color: rgb(240, 240, 240);
+        width: 120%;
+    }
+}
