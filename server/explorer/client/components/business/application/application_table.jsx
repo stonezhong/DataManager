@@ -8,6 +8,7 @@ import * as Icon from 'react-bootstrap-icons'
 
 import {ApplicationEditor} from './application_editor.jsx'
 import {DataTable} from '/components/generic/datatable/main.jsx'
+import {SimpleDialogBox} from '/components/generic/dialogbox/simple.jsx'
 
 import "./application.scss"
 
@@ -27,6 +28,7 @@ import "./application.scss"
 export class ApplicationTable extends React.Component {
     theApplicationEditorRef = React.createRef();
     theDataTableRef     = React.createRef();
+    theDialogBoxRef     = React.createRef();
 
     get_page = (offset, limit) => {
         return this.props.get_page(offset, limit, {});
@@ -43,13 +45,30 @@ export class ApplicationTable extends React.Component {
             }}
         >
             { this.props.allowEdit?<Icon.Pencil />:<Icon.Info />}
-        </Button>
+        </Button>;
 
-
+    render_name = application => {
+        return (
+            <a
+                href="#"
+                onClick={
+                    event => {
+                        event.preventDefault();
+                        this.theDialogBoxRef.current.openDialog(
+                            application.name,
+                            <code>{application.description}</code>
+                        )
+                    }
+                }
+            >
+                {application.name}
+            </a>
+        );
+    };
 
     columns = {
         tools:              {display: "", render_data: this.render_tools},
-        name:               {display: "Name"},
+        name:               {display: "Name", render_data: this.render_name},
         author:             {display: "Author"},
         team:               {display: "Team"},
         retired:            {display: "Retired", render_data: application => application.retired?"Yes":"No"},
@@ -96,6 +115,12 @@ export class ApplicationTable extends React.Component {
                 <ApplicationEditor
                     ref={this.theApplicationEditorRef}
                     onSave={this.onSave}
+                />
+                <SimpleDialogBox
+                    ref={this.theDialogBoxRef}
+                    backdrop="static"
+                    size='lg'
+                    scrollable
                 />
             </div>
         )
