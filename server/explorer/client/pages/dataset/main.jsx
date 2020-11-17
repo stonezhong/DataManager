@@ -79,17 +79,6 @@ class DatasetPage extends React.Component {
         dataset_instances: [],
     };
 
-    // componentDidMount() {
-    //     fetch(`/api/Datasets/${this.props.dataset.id}/children/`)
-    //         .then(res => res.json())
-    //         .then(result => {
-    //             this.setState({dataset_instances: result})
-    //         })
-    //         .catch(() => {
-    //             this.theTopMessageRef.current.show("danger", "Unable to list assets!");
-    //         })
-    // }
-
     get_page = (offset, limit, filter={}) => {
         const buildArgs = {
             path: `/api/Datasets/${this.props.dataset.id}/children/`,
