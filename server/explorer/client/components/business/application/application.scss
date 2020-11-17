@@ -1,0 +1,45 @@
+.application-table {
+    & > div {
+        height: 680px;
+        overflow-y: auto;
+
+        & > table {
+            & > thead {
+                & > tr {
+                    & > th[data-role='tools'] {
+                        width: 40px;
+                    }
+                    & > th[data-role='author'] {
+                        width: 120px;
+                        text-align: center;
+                    }
+                    & > th[data-role='team'] {
+                        width: 120px;
+                        text-align: center;
+                    }
+                    & > th[data-role='retired'] {
+                        width: 120px;
+                        text-align: center;
+                    }
+                }
+            }
+            & > tbody {
+                & > tr {
+                    & > td {
+                        height: 40px;
+                        vertical-align: middle;
+                    }
+                    & > td[data-role='author'] {
+                        text-align: center;
+                    }
+                    & > td[data-role='team'] {
+                        text-align: center;
+                    }
+                    & > td[data-role='retired'] {
+                        text-align: center;
+                    }
+                }
+            }
+        }
+    }
+}
