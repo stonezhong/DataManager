@@ -7,6 +7,9 @@ import Table from 'react-bootstrap/Table'
 import * as Icon from 'react-bootstrap-icons'
 
 import {ApplicationEditor} from './application_editor.jsx'
+import {DataTable} from '/components/generic/datatable/main.jsx'
+
+import "./application.scss"
 
 /*********************************************************************************
  * Purpose: Show list of applications
@@ -23,6 +26,40 @@ import {ApplicationEditor} from './application_editor.jsx'
  */
 export class ApplicationTable extends React.Component {
     theApplicationEditorRef = React.createRef();
+    theDataTableRef     = React.createRef();
+
+    get_page = (offset, limit) => {
+        return this.props.get_page(offset, limit, {});
+    };
+
+    render_tools = application =>
+        <Button
+            variant="secondary"
+            size="sm"
+            onClick={event => {
+                this.theApplicationEditorRef.current.openDialog(
+                    this.props.allowEdit?"edit":"view", application
+                )
+            }}
+        >
+            { this.props.allowEdit?<Icon.Pencil />:<Icon.Info />}
+        </Button>
+
+
+
+    columns = {
+        tools:              {display: "", render_data: this.render_tools},
+        name:               {display: "Name"},
+        author:             {display: "Author"},
+        team:               {display: "Team"},
+        retired:            {display: "Retired", render_data: application => application.retired?"Yes":"No"},
+    };
+
+    onSave = (mode, dataset) => {
+        Promise.resolve(this.props.onSave(mode, dataset)).then(
+            this.theDataTableRef.current.refresh
+        );
+    };
 
     render() {
         return (
@@ -44,47 +81,21 @@ export class ApplicationTable extends React.Component {
                     </Col>
                 </Row>
 
-                <Table hover>
-                    <thead className="thead-dark">
-                        <tr>
-                            <th className="c-tc-icon1"></th>
-                            <th>Name</th>
-                            <th>Author</th>
-                            <th>Team</th>
-                            <th>Retired</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    {
-                        this.props.applications.map((application) => {
-                            return (
-                                <tr key={application.id}>
-                                    <td>
-                                        <Button
-                                            variant="secondary"
-                                            size="sm"
-                                            onClick={event => {
-                                                this.theApplicationEditorRef.current.openDialog(
-                                                    this.props.allowEdit?"edit":"view", application
-                                                )
-                                            }}
-                                        >
-                                            { this.props.allowEdit?<Icon.Pencil />:<Icon.Info />}
-                                        </Button>
-                                    </td>
-                                    <td>{application.name}</td>
-                                    <td>{application.author}</td>
-                                    <td>{application.team}</td>
-                                    <td>{application.retired?"Yes":"No"}</td>
-                                </tr>
-                            )
-                        })
-                    }
-                    </tbody>
-                </Table>
+                <DataTable
+                    ref={this.theDataTableRef}
+                    hover
+                    bordered
+                    className="application-table"
+                    columns = {this.columns}
+                    id_column = "id"
+                    size = {this.props.size}
+                    page_size={this.props.page_size}
+                    fast_step_count={10}
+                    get_page={this.get_page}
+                />
                 <ApplicationEditor
                     ref={this.theApplicationEditorRef}
-                    onSave={this.props.onSave}
+                    onSave={this.onSave}
                 />
             </div>
         )

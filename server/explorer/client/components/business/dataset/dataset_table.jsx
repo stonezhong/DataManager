@@ -74,23 +74,20 @@ export class DatasetTable extends React.Component {
         );
     };
 
-    render_tools = dataset => {
-        return (
-            <Button
-                variant="secondary"
-                size="sm"
-                onClick={
-                    event => {
-                        this.theDatasetEditorRef.current.openDialog(
-                            this.props.allowEdit?"edit":"view", dataset
-                        )
-                    }
+    render_tools = dataset =>
+        <Button
+            variant="secondary"
+            size="sm"
+            onClick={
+                event => {
+                    this.theDatasetEditorRef.current.openDialog(
+                        this.props.allowEdit?"edit":"view", dataset
+                    )
                 }
-            >
-                { this.props.allowEdit?<Icon.Pencil />:<Icon.Info />}
-            </Button>
-        );
-    };
+            }
+        >
+            { this.props.allowEdit?<Icon.Pencil />:<Icon.Info />}
+        </Button>;
 
     render_name = dataset =>
         <a href={`dataset?id=${dataset.id}`}>{dataset.name}</a>
