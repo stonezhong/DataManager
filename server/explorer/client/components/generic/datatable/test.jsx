@@ -16,7 +16,7 @@ export class TestDataTable extends React.Component {
         low:    {display: "Low"},
         open:   {display: "Open"},
         close:  {display: "Close"},
-    }
+    };
 
     symbol_at = idx => {
         var out = [];
@@ -29,32 +29,32 @@ export class TestDataTable extends React.Component {
         return _.reverse(out).join('');
     };
 
-    get_page = page_number => {
+    generate_rows = count => {
         const rows = [];
-        const page_count = 20;
-        if (page_number < 0) {
-            throw `page_number is negative: ${page_number}`;
-        }
-        const effective_page_number = Math.min(page_count-1, page_number);
-
-        for (var i = effective_page_number*100; i < effective_page_number*100 + 20; i ++) {
+        for (var i = 0; i <=count; i ++) {
+            const v = Math.random()*100;
             const row = {
                 symbol: this.symbol_at(i),
-                high: i + 100,
-                low: i + 99,
-                open: i + 99.1,
-                close: i + 99.2
+                high:   parseFloat((v * 1.1).toFixed(2)),
+                low:    parseFloat((v * 0.9).toFixed(2)),
+                open:   parseFloat(v.toFixed(2)),
+                close:  parseFloat((v*1.02).toFixed(2)),
             };
             rows.push(row);
         }
-        return {
-            page_count: page_count,
-            rows: rows,
-            page: effective_page_number
-        };
+        return rows;
     };
 
+    state = {
+        rows: this.generate_rows(200),
+    };
 
+    get_page = (offset, limit) => {
+        return {
+            count: this.state.rows.length,
+            results: this.state.rows.slice(offset, offset+limit)
+        }
+    };
 
     render() {
         return (
@@ -66,8 +66,8 @@ export class TestDataTable extends React.Component {
                     bordered
                     columns = {this.columns}
                     id_column = "symbol"
+                    page_size={15}
                     get_page = {this.get_page}
-                    render_data = {this.render_data}
                     fast_step_count={5}
                     ref={this.testDataTableRef}
                 />
