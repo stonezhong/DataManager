@@ -87,6 +87,7 @@ export function pipeline_to_django_model(pipeline) {
 
 export function pipeline_from_django_model(pipeline) {
     const context = JSON.parse(pipeline.context);
+
     const p = {
         id: pipeline.id,
         name: pipeline.name,
@@ -94,9 +95,9 @@ export function pipeline_from_django_model(pipeline) {
         category: pipeline.category,
         description: pipeline.description,
         type: context.type,
-        tasks: context.tasks,
-        dependencies: context.dependencies,
-        requiredDSIs: context.requiredDSIs,
+        tasks: context.tasks || [],
+        dependencies: context.dependencies || [],
+        requiredDSIs: context.requiredDSIs || [],
         dag_id: context.dag_id,
         author: pipeline.author,
         paused: pipeline.paused,
