@@ -114,9 +114,7 @@ export class DatasetTable extends React.Component {
     }
 
     onSave = (mode, dataset) => {
-        Promise.resolve(this.props.onSave(mode, dataset)).then(
-            this.theDataTableRef.current.refresh
-        );
+        return this.props.onSave(mode, dataset).then(this.theDataTableRef.current.refresh);
     };
 
 

@@ -20,7 +20,8 @@ const _ = require("lodash");
  *
  * Props
  *     onSave   : called when user hit "Save Changes", onSave(mode, dataset) is called.
- *                mode is either "new" or "edit"
+ *                mode is either "new" or "edit". On save must return a promise and the
+ *                promise must be resovled when save is done.
  *
  */
 

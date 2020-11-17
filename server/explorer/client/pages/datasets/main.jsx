@@ -38,11 +38,7 @@ class DatasetsPage extends React.Component {
                     'X-CSRFToken': get_csrf_token(),
                 },
                 body: JSON.stringify(to_post)
-            })
-                .then((res) => res.json())
-                .catch(() => {
-                    this.theTopMessageRef.current.show("danger", "Unable to save!");
-                })
+            }).then((res) => res.json())
         } else if (mode == 'edit') {
             // You can only change description and team
             const to_patch = {
@@ -50,6 +46,7 @@ class DatasetsPage extends React.Component {
                 team            : dataset.team,
                 expiration_time : (dataset.expiration_time==='')?null:dataset.expiration_time
             }
+
             return fetch(`/api/Datasets/${dataset.id}/`, {
                 method: 'patch',
                 headers: {
@@ -57,11 +54,7 @@ class DatasetsPage extends React.Component {
                     'X-CSRFToken': get_csrf_token(),
                 },
                 body: JSON.stringify(to_patch)
-            })
-                .then((res) => res.json())
-                .catch(() => {
-                    this.theTopMessageRef.current.show("danger", "Unable to save!");
-                })
+            }).then(res => res.json());
         }
     };
 
