@@ -31,7 +31,7 @@ export class DatasetEditor extends React.Component {
         return {
             name: '',
             major_version: "1.0",
-            minor_version: 1,
+            minor_version: "1",
             description: "",
             team: "",
             expiration_time: "",
@@ -58,12 +58,22 @@ export class DatasetEditor extends React.Component {
         if (dataset.expiration_time === "") {
             dataset.expiration_time = null;
         }
+        dataset.minor_version = parseInt(dataset.minor_version);
         const mode = this.state.mode;
-        this.setState({show: false}, () => {this.props.onSave(mode, dataset)});
+
+        this.props.onSave(mode, dataset).then(
+            this.onClose
+        ).catch(error => {
+            this.theAlertBoxRef.current.show(error.message);
+        });
     };
 
     canSave = () => {
-        return this.state.dataset.name && this.state.dataset.team;
+        // minor version must be natural number
+        if (!/^[1-9]\d*$/.test(this.state.dataset.minor_version)) {
+            return false;
+        }
+        return this.state.dataset.major_version && this.state.dataset.name && this.state.dataset.team;
     };
 
     openDialog = (mode, dataset) => {
@@ -72,6 +82,8 @@ export class DatasetEditor extends React.Component {
             if (ui_dataset.expiration_time === null) {
                 ui_dataset.expiration_time = "";
             }
+
+            ui_dataset.minor_version = ui_dataset.minor_version.toString();
 
             this.setState({
                 show: true,
