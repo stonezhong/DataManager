@@ -19,17 +19,14 @@ import * as Icon from 'react-bootstrap-icons'
  *     id_column  : the primary key column, the value of this column MUST be unique
  *     page_size  : max number of rows in each page.
  *
- *     get_page   : a function that will return the rows in current page
- *                  proto: get_page(page_number)
+ *     get_page   : a function that will return the rows for a range
+ *                  proto: get_page(offset, limit)
+ *                  offset start with 0, limit is the max number of rows to retrieve
  *                  return example:
  *                  {
- *                      page_count: 123,
- *                      page: 22,
- *                      rows: [...]
+ *                      count: 123,
+ *                      results: [row1, row2, ...]
  *                  }
- *                  Normally, page should be the same as page_number. But when the data
- *                  size changes and page exceeed the last page, return page could be different
- *                  than page_number.
  *
  *                  row can have extra attributes not in columns, but might be needed
  *                  for the render_data function.
