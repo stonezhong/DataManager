@@ -1,12 +1,16 @@
-div.task-editor {
-    & > div.modal-content {
-        background-color: rgb(240, 240, 240);
-    }
-}
+// div.task-editor {
+//     & > div.modal-content {
+//     }
+// }
 
 div.sql-step-editor {
     & > div.modal-content {
-        background-color: rgb(240, 240, 240);
         width: 120%;
+    }
+}
+
+div.pipeline-editor {
+    & > div.modal-content {
+        min-height: 650px;
     }
 }
