@@ -17,11 +17,18 @@ import * as Icon from 'react-bootstrap-icons'
 import Spinner from 'react-bootstrap/Spinner'
 
 import {PipelineEditor} from './pipeline_editor.jsx'
+import {DataTable} from '/components/generic/datatable/main.jsx'
+
+import {
+    pipeline_from_django_model,
+} from '/common_lib'
+
+import './pipeline.scss'
 
 /*************************************************************************
  * props
- *     pipelines   :    a list of pipelines
  *     applications:    list of all applications available. (needed when create pipline using app)
+ *     get_page    :    A function to get the page
  *     allowEdit   :    if True, user is allowed to edit pipeline.
  *     allowNew    :    if True, user is allowed to create new pipeline
  *     onSave      :    a callback, called with user want to save or edit
@@ -33,6 +40,107 @@ import {PipelineEditor} from './pipeline_editor.jsx'
  */
 export class PipelineTable extends React.Component {
     thePipelineEditorRef = React.createRef();
+    theDataTableRef      = React.createRef();
+
+    render_tools = pipeline => {
+        console.log(pipeline);
+        return (
+            <Button
+                variant="secondary"
+                size="sm"
+                variant="secondary"
+                onClick={event => {
+                    this.thePipelineEditorRef.current.openDialog(
+                        this.props.allowEdit?"edit":"view",
+                        pipeline_from_django_model(pipeline)
+                    );
+                }}
+            >
+                { this.props.allowEdit?<Icon.Pencil />:<Icon.Info />}
+            </Button>
+        );
+    };
+
+    render_type = pipeline => pipeline_from_django_model(pipeline).type;
+
+    render_airflow_dag = pipeline => {
+        const pipeline2 = pipeline_from_django_model(pipeline);
+        return (
+            <div>
+                {
+                    (pipeline.dag_version > 0) &&
+                    <a
+                        href={`${this.props.airflow_base_url}/admin/airflow/graph?dag_id=${pipeline2.name}&execution_date=`}
+                    >
+                        <img src="/static/images/airflow.jpeg" style={{height: "24px"}}/>
+                    </a>
+                }
+                {
+                    (pipeline.dag_version < pipeline.version) &&
+                    <Spinner animation="border" size="sm" className="ml-2"/>
+                }
+            </div>
+        );
+    };
+
+    render_paused = pipeline => {
+        const pipeline2 = pipeline_from_django_model(pipeline);
+        return (
+            <div>
+                {pipeline2.paused?"Yes":"No"}
+                {
+                    this.props.allowEdit &&
+                    <Button
+                        variant="secondary"
+                        size="sm"
+                        className="ml-2"
+                        onClick={event => {
+                            if (pipeline2.paused) {
+                                this.onUnpause(pipeline2.id);
+                            } else {
+                                this.onPause(pipeline2.id);
+                            }
+                        }}
+                    >
+                        {pipeline2.paused?"Unpause":"Pause"}
+                    </Button>
+                }
+            </div>
+        );
+    };
+
+    onPause = pipeline_id => {
+        this.props.onPause(
+            pipeline_id
+        ).then(this.theDataTableRef.current.refresh)
+    };
+
+    onUnpause = pipeline_id => {
+        this.props.onUnpause(
+            pipeline_id
+        ).then(this.theDataTableRef.current.refresh);
+    };
+
+    onSave = (mode, pipeline) => {
+        this.props.onSave(mode, pipeline).then(this.theDataTableRef.current.refresh);
+    };
+
+    get_page = (offset, limit) => {
+        return this.props.get_page(
+            offset, limit
+        );
+    };
+
+    columns = {
+        tools:              {display: "", render_data: this.render_tools},
+        name:               {display: "Name"},
+        type:               {display: "Type", render_data: this.render_type},
+        airflow_dag:        {display: "Airflow DAG", render_data: this.render_airflow_dag},
+        author:             {display: "Author"},
+        team:               {display: "Team"},
+        category:           {display: "Category"},
+        paused:             {display: "Paused", render_data: this.render_paused},
+    };
 
     render() {
         return (
@@ -54,88 +162,22 @@ export class PipelineTable extends React.Component {
                     </Col>
                 </Row>
 
-                <Table hover size="sm">
-                    <thead className="thead-dark">
-                        <tr>
-                            <th className="c-tc-icon1"></th>
-                            <th>Name</th>
-                            <th>Type</th>
-                            <th>Airflow DAG</th>
-                            <th>Author</th>
-                            <th>Team</th>
-                            <th>Category</th>
-                            <th>Paused</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    {
-                        this.props.pipelines.map((pipeline) => {
-                            return (
-                                <tr key={pipeline.id}>
-                                    <td  className="align-middle">
-                                        <Button
-                                            variant="secondary"
-                                            size="sm"
-                                            variant="secondary"
-                                            onClick={event => {
-                                                this.thePipelineEditorRef.current.openDialog(
-                                                    this.props.allowEdit?"edit":"view",
-                                                    pipeline
-                                                );
-                                            }}
-                                        >
-                                            { this.props.allowEdit?<Icon.Pencil />:<Icon.Info />}
-                                        </Button>
-                                    </td>
-                                    <td  className="align-middle"><a href={`pipeline?id=${pipeline.id}`}>{pipeline.name}</a></td>
-                                    <td  className="align-middle">{pipeline.type}</td>
-                                    <td  className="align-middle">
-                                        <a
-                                            href={`${this.props.airflow_base_url}/admin/airflow/graph?dag_id=${pipeline.name}&execution_date=`}
-                                            className={(pipeline.dag_version > 0)?"d-inline":"d-none"}
-                                        >
-                                            <img src="/static/images/airflow.jpeg" style={{height: "24px"}}/>
-                                        </a>
-                                        {
-                                            (() => {
-                                                if (pipeline.dag_version < pipeline.version) {
-                                                    return (<Spinner animation="border" size="sm" className="ml-2"/>);
-                                                }
-                                            })()
-                                        }
-                                    </td>
-                                    <td  className="align-middle">{pipeline.author}</td>
-                                    <td  className="align-middle">{pipeline.team}</td>
-                                    <td  className="align-middle">{pipeline.category}</td>
-                                    <td  className="align-middle">
-                                        {pipeline.paused?"Yes":"No"}
-                                        {
-                                            this.props.allowEdit &&
-                                            <Button
-                                                variant="secondary"
-                                                size="sm"
-                                                className="ml-2"
-                                                onClick={event => {
-                                                    if (pipeline.paused) {
-                                                        this.props.onUnpause(pipeline.id);
-                                                    } else {
-                                                        this.props.onPause(pipeline.id);
-                                                    }
-                                                }}
-                                            >
-                                                {pipeline.paused?"Unpause":"Pause"}
-                                            </Button>
-                                        }
-                                    </td>
-                                </tr>
-                            )
-                        })
-                    }
-                    </tbody>
-                </Table>
+                <DataTable
+                    ref={this.theDataTableRef}
+                    hover
+                    bordered
+                    className="pipeline-table"
+                    columns = {this.columns}
+                    id_column = "id"
+                    size = {this.props.size}
+                    page_size={this.props.page_size}
+                    fast_step_count={10}
+                    get_page={this.get_page}
+                />
+
                 <PipelineEditor
                     ref={this.thePipelineEditorRef}
-                    onSave={this.props.onSave}
+                    onSave={this.onSave}
                     applications={this.props.applications}
                 />
 

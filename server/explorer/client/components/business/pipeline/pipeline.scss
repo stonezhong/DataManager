@@ -14,3 +14,70 @@ div.pipeline-editor {
         min-height: 650px;
     }
 }
+
+.pipeline-table {
+    & > div {
+        height: 680px;
+        overflow-y: auto;
+
+        & > table {
+            & > thead {
+                & > tr {
+                    & > th[data-role='tools'] {
+                        width: 40px;
+                    }
+                    & > th[data-role='type'] {
+                        width: 100px;
+                        text-align: center;
+                    }
+                    & > th[data-role='airflow_dag'] {
+                        width: 120px;
+                        text-align: center;
+                    }
+                    & > th[data-role='author'] {
+                        width: 120px;
+                        text-align: center;
+                    }
+                    & > th[data-role='team'] {
+                        width: 120px;
+                        text-align: center;
+                    }
+                    & > th[data-role='category'] {
+                        width: 120px;
+                        text-align: center;
+                    }
+                    & > th[data-role='paused'] {
+                        width: 120px;
+                        text-align: center;
+                    }
+                }
+            }
+            & > tbody {
+                & > tr {
+                    & > td {
+                        height: 40px;
+                        vertical-align: middle;
+                    }
+                    & > td[data-role='type'] {
+                        text-align: center;
+                    }
+                    & > td[data-role='airflow_dag'] {
+                        text-align: center;
+                    }
+                    & > td[data-role='author'] {
+                        text-align: center;
+                    }
+                    & > td[data-role='team'] {
+                        text-align: center;
+                    }
+                    & > td[data-role='category'] {
+                        text-align: center;
+                    }
+                    & > td[data-role='paused'] {
+                        text-align: center;
+                    }
+                }
+            }
+        }
+    }
+}
