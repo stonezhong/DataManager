@@ -13,6 +13,8 @@ import {TestSimpleDialogBox}        from '/components/generic/dialogbox/test_sim
 import {TestDataTable}              from '/components/generic/datatable/test.jsx'
 
 import {TestDatasetEditor}          from '/components/business/dataset/test_dataset_editor.jsx'
+import {TestSchemaViewer}           from '/components/business/dataset/test_schema_viewer.jsx'
+
 import {TestTimerTable}             from '/components/business/timer/test.jsx'
 import {TestApplicationEditor}      from '/components/business/application/test.jsx'
 import {TestPipelineGroupEditor}    from '/components/business/pipeline_group/test.jsx'
@@ -65,13 +67,20 @@ class TestPage extends React.Component {
         {
             category    : "business",
             component   : "dataset",
+            classname   : "SchemaViewer",
+            create      : () => <TestSchemaViewer />,
+            tested: "2020-11-13"
+        },
+        {
+            category    : "business",
+            component   : "pipeline",
             classname   : "SQLStepEditor",
             create      : () => <TestSQLStepEditor />,
             tested: "??"
         },
         {
             category    : "business",
-            component   : "dataset",
+            component   : "pipeline",
             classname   : "TaskEditor",
             create      : () => <TestTaskEditor />,
             tested: "??"
@@ -121,6 +130,45 @@ class TestPage extends React.Component {
         return testClass.create();
     }
 
+    renderTableRow(idx) {
+        const testClass = this.testClasses[idx];
+        const componentGroupCouont = this.testClasses.filter(x => x.component === testClass.component).length;
+
+        if ((idx === 0) || (idx > 0 && this.testClasses[idx-1].component !== testClass.component)) {
+            // ret.push(
+            //     <tr key={`sep-${testClass.component}`}>
+            //         <td colSpan={4}></td>
+            //     </tr>
+            // );
+            return (
+                <tr key={testClass.classname}>
+                    <td rowSpan={componentGroupCouont}>{testClass.category}</td>
+                    <td rowSpan={componentGroupCouont}>{testClass.component}</td>
+                    <td>
+                        <a href={`?classname=${testClass.classname}`} target="_blank">
+                            {testClass.classname}
+                        </a>
+                    </td>
+                    <td>{testClass.tested}</td>
+                </tr>
+            );
+        } else {
+            return (
+                <tr key={testClass.classname}>
+                    <td>
+                        <a href={`?classname=${testClass.classname}`} target="_blank">
+                            {testClass.classname}
+                        </a>
+                    </td>
+                    <td>{testClass.tested}</td>
+                </tr>
+            );
+        }
+
+
+        return ret;
+    }
+
     renderTestList() {
         return (
             <div>
@@ -136,18 +184,7 @@ class TestPage extends React.Component {
                     </thead>
                     <tbody>
                         {
-                            this.testClasses.map(testClass => (
-                                <tr key={testClass.classname}>
-                                    <td>{testClass.category}</td>
-                                    <td>{testClass.component}</td>
-                                    <td>
-                                        <a href={`?classname=${testClass.classname}`} target="_blank">
-                                            {testClass.classname}
-                                        </a>
-                                    </td>
-                                    <td>{testClass.tested}</td>
-                                </tr>
-                            ))
+                            this.testClasses.map((testClass, idx) => this.renderTableRow(idx))
                         }
                     </tbody>
                 </Table>
