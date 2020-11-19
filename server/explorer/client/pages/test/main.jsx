@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom'
 import $ from 'jquery'
 
 import Container from 'react-bootstrap/Container'
+import Table from 'react-bootstrap/Table'
 
 import {get_app_context} from '/common_lib'
 
@@ -19,125 +20,139 @@ import {TestPipelineEditor}         from '/components/business/pipeline/test_pip
 import {TestTaskEditor}             from '/components/business/pipeline/test_task_editor.jsx'
 import {TestSQLStepEditor}          from '/components/business/pipeline/test_sql_step_editor.jsx'
 
+import "./test.scss"
+
+const _ = require("lodash");
 
 class TestPage extends React.Component {
-    components = {
-        AlertBox: {
-            create: () => <TestAlertBox />,
-            category: "generic",
+    testClasses = [
+        {
+            category    : "generic",
+            component   : "alert",
+            classname   : "AlertBox",
+            create      : () => <TestAlertBox />,
             tested: "2020-11-13"
         },
-        TopMessage: {
-            create: () => <TestTopMessage />,
-            category: "generic",
+        {
+            category    : "generic",
+            component   : "alert",
+            classname   : "TopMessage",
+            create      : () => <TestTopMessage />,
             tested: "2020-11-13"
         },
-        DataTable: {
-            create: () => <TestDataTable />,
-            category: "generic",
+        {
+            category    : "generic",
+            component   : "datatable",
+            classname   : "DataTable",
+            create      : () => <TestDataTable />,
             tested: "2020-11-13"
         },
-        DatasetEditor: {
-            create: () => <TestDatasetEditor />,
-            category: "business",
+        {
+            category    : "business",
+            component   : "dataset",
+            classname   : "DatasetEditor",
+            create      : () => <TestDatasetEditor />,
             tested: "2020-11-13"
         },
-        SQLStepEditor: {
-            create: () => <TestSQLStepEditor />,
-            category: "business",
-            tested: ""
+        {
+            category    : "business",
+            component   : "dataset",
+            classname   : "SQLStepEditor",
+            create      : () => <TestSQLStepEditor />,
+            tested: "??"
         },
-        TaskEditor: {
-            create: () => <TestTaskEditor />,
-            category: "business",
-            tested: ""
+        {
+            category    : "business",
+            component   : "dataset",
+            classname   : "TaskEditor",
+            create      : () => <TestTaskEditor />,
+            tested: "??"
         },
-        PipelineEditor: {
-            create: () => <TestPipelineEditor />,
-            category: "business",
-            tested: ""
+        {
+            category    : "business",
+            component   : "pipeline",
+            classname   : "PipelineEditor",
+            create      : () => <TestPipelineEditor />,
+            tested: "??"
         },
-        ApplicationEditor: {
-            create: () => <TestApplicationEditor />,
-            category: "business",
-            tested: ""
+        {
+            category    : "business",
+            component   : "pipeline",
+            classname   : "PipelineTable",
+            create      : () => <TestPipelineTable />,
+            tested: "??"
         },
-        PipelineGroupEditor: {
-            create: () => <TestPipelineGroupEditor />,
-            category: "business",
-            tested: ""
+        {
+            category    : "business",
+            component   : "application",
+            classname   : "ApplicationEditor",
+            create      : () => <TestApplicationEditor />,
+            tested: "??"
         },
-        PipelineTable: {
-            create: () => <TestPipelineTable />,
-            category: "business",
-            tested: ""
+        {
+            category    : "business",
+            component   : "pipeline_group",
+            classname   : "PipelineGroupEditor",
+            create      : () => <TestPipelineGroupEditor />,
+            tested: "??"
         },
-        TimerTable: {
-            create: () => <TestTimerTable />,
-            category: "business",
-            tested: ""
+        {
+            category    : "business",
+            component   : "timer",
+            classname   : "TimerTable",
+            create      : () => <TestTimerTable />,
+            tested: "??"
         },
-    };
+    ];
 
-    renderComponent = () => {
-        const component = this.components[this.props.component];
-        if (_.isUndefined(component)) {
-            return null;
-        }
-        return component.create();
-    };
+    renderTestClass() {
+        const testClass = _.find(
+            this.testClasses,
+            testClass => testClass.classname === this.props.classname
+        );
+        return testClass.create();
+    }
+
+    renderTestList() {
+        return (
+            <Table hover size="sm" className="test-table">
+                <thead className="thead-dark">
+                    <tr>
+                        <th data-role='category'>Category</th>
+                        <th data-role='component'>Component</th>
+                        <th data-role='class'>Class</th>
+                        <th data-role='tested'>Tested</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {
+                        this.testClasses.map(testClass => (
+                            <tr key={testClass.classname}>
+                                <td>{testClass.category}</td>
+                                <td>{testClass.component}</td>
+                                <td>
+                                    <a href={`?classname=${testClass.classname}`} target="_blank">
+                                        {testClass.classname}
+                                    </a>
+                                </td>
+                                <td>{testClass.tested}</td>
+                            </tr>
+                        ))
+                    }
+                </tbody>
+            </Table>
+        );
+    }
 
     render() {
         return (
             <Container fluid>
-                { !this.props.component &&
-                    <div>
-                        <h1>Main Test Page</h1>
-                        {
-                            ["generic", "business"].map(category =>
-                                <div>
-                                    <h2>{category}</h2>
-                                    <table>
-                                        <thead>
-                                            <tr>
-                                                <td style={{width: "300px"}}>Component</td>
-                                                <td style={{width: "200px"}}>Tested</td>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {
-                                                _.chain(_.toPairs(this.components)).filter(
-                                                    ele => ele[1].category===category
-                                                ).map(
-                                                    ele => (
-                                                        <tr key={ele[0]}>
-                                                            <td>
-                                                                <a
-                                                                    href={`?component=${ele[0]}`}
-                                                                    target="_blank"
-                                                                >
-                                                                    {`${ele[0]}`}
-                                                                </a>
-                                                            </td>
-                                                            <td>
-                                                                {ele[1].tested}
-                                                            </td>
-                                                        </tr>
-                                                    )
-                                                ).value()
-                                            }
-                                        </tbody>
-                                    </table>
-                                </div>
-                            )
-                        }
-                    </div>
-                }
+                <h1>Main Test Page</h1>
                 {
-                    this.renderComponent()
+                    this.props.classname?this.renderTestClass():this.renderTestList()
                 }
             </Container>
-        )
+        );
     }
 }
 
@@ -145,7 +160,7 @@ $(function() {
     const app_context = get_app_context();
 
     ReactDOM.render(
-        <TestPage component={app_context.component}/>,
+        <TestPage classname={app_context.classname}/>,
         document.getElementById('app')
     );
 });

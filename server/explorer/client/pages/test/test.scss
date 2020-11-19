@@ -1,0 +1,30 @@
+table.test-table {
+    width: auto;
+    & > thead {
+        & > tr {
+            & > th {
+                text-align: center;
+            }
+
+            & > th[data-role='category'] {
+                width: 120px;
+            }
+            & > th[data-role='component'] {
+                width: 120px;
+            }
+            & > th[data-role='class'] {
+                width: 300px;
+            }
+            & > th[data-role='tested'] {
+                width: 300px;
+            }
+        }
+    }
+    & > tbody {
+        & > tr {
+            & > td {
+                text-align: center;
+            }
+        }
+    }
+}
