@@ -9,6 +9,7 @@ import {get_app_context} from '/common_lib'
 
 import {TestAlertBox}               from '/components/generic/alert/test.jsx'
 import {TestTopMessage}             from '/components/generic/top_message/test.jsx'
+import {TestSimpleDialogBox}        from '/components/generic/dialogbox/test_simple.jsx'
 import {TestDataTable}              from '/components/generic/datatable/test.jsx'
 
 import {TestDatasetEditor}          from '/components/business/dataset/test_dataset_editor.jsx'
@@ -35,9 +36,16 @@ class TestPage extends React.Component {
         },
         {
             category    : "generic",
-            component   : "alert",
+            component   : "top_message",
             classname   : "TopMessage",
             create      : () => <TestTopMessage />,
+            tested: "2020-11-13"
+        },
+        {
+            category    : "generic",
+            component   : "dialogbox",
+            classname   : "SimpleDialogBox",
+            create      : () => <TestSimpleDialogBox />,
             tested: "2020-11-13"
         },
         {
@@ -115,39 +123,41 @@ class TestPage extends React.Component {
 
     renderTestList() {
         return (
-            <Table hover size="sm" className="test-table">
-                <thead className="thead-dark">
-                    <tr>
-                        <th data-role='category'>Category</th>
-                        <th data-role='component'>Component</th>
-                        <th data-role='class'>Class</th>
-                        <th data-role='tested'>Tested</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {
-                        this.testClasses.map(testClass => (
-                            <tr key={testClass.classname}>
-                                <td>{testClass.category}</td>
-                                <td>{testClass.component}</td>
-                                <td>
-                                    <a href={`?classname=${testClass.classname}`} target="_blank">
-                                        {testClass.classname}
-                                    </a>
-                                </td>
-                                <td>{testClass.tested}</td>
-                            </tr>
-                        ))
-                    }
-                </tbody>
-            </Table>
+            <div>
+                <h1>Main Test Page</h1>
+                <Table hover size="sm" className="test-table">
+                    <thead className="thead-dark">
+                        <tr>
+                            <th data-role='category'>Category</th>
+                            <th data-role='component'>Component</th>
+                            <th data-role='class'>Class</th>
+                            <th data-role='tested'>Tested</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {
+                            this.testClasses.map(testClass => (
+                                <tr key={testClass.classname}>
+                                    <td>{testClass.category}</td>
+                                    <td>{testClass.component}</td>
+                                    <td>
+                                        <a href={`?classname=${testClass.classname}`} target="_blank">
+                                            {testClass.classname}
+                                        </a>
+                                    </td>
+                                    <td>{testClass.tested}</td>
+                                </tr>
+                            ))
+                        }
+                    </tbody>
+                </Table>
+            </div>
         );
     }
 
     render() {
         return (
             <Container fluid>
-                <h1>Main Test Page</h1>
                 {
                     this.props.classname?this.renderTestClass():this.renderTestList()
                 }
