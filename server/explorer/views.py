@@ -32,7 +32,7 @@ def get_app_config():
 # test page is for testing UI components
 def test(request):
     app_context = {
-        'component': request.GET.get("component", None)
+        'classname': request.GET.get("classname", None)
     }
 
     return render(
