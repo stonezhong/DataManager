@@ -4,7 +4,8 @@
     "description": "Data Manager for Data Warehouse",
     "main": "index.js",
     "scripts": {
-        "build": "webpack"
+        "build-prod": "webpack --env=production",
+        "build-dev" : "webpack --env=development"
     },
     "author": "",
     "license": "ISV",
