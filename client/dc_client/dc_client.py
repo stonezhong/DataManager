@@ -60,8 +60,8 @@ class DataCatalogClient(object):
         r.raise_for_status()
 
         d = r.json()
-        if d:
-            return d[0]
+        if d['count'] > 0:
+            return d['results'][0]
 
         return None
 
