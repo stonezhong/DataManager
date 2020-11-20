@@ -4,7 +4,7 @@ from jinja2 import Template
 from dc_client import DataCatalogClient
 from datetime import datetime
 
-from dlib import load_asset, print_json, write_asset, register_dataset_instance
+from dm_job_lib import load_asset, print_json, write_asset, register_dataset_instance
 
 
 

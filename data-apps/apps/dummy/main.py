@@ -3,7 +3,7 @@ import json
 from pyspark.sql import SparkSession, SQLContext, Row
 from dc_client import DataCatalogClient
 
-from dm_spark_lib import load_asset
+from dm_job_lib import load_asset
 
 def print_json(title, payload):
     print(title)

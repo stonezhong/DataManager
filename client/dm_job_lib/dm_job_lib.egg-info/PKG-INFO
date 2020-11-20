@@ -1,0 +1,14 @@
+Metadata-Version: 2.1
+Name: dm-job-lib
+Version: 0.0.2
+Summary: Data Manager Job Library
+Home-page: https://github.com/stonezhong/DataManager/tree/master/client/dm_job_lib
+Author: Stone Zhong
+Author-email: stonezhong@hotmail.com
+License: MIT
+Description: Data Manager Job Library
+        
+Platform: UNKNOWN
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3
+Description-Content-Type: text/markdown

@@ -10,12 +10,12 @@ with open(os.path.join(HERE, "README.md"), "r") as f:
 
 # This call to setup() does all the work
 setup(
-    name="dc_client",
-    version="0.0.9",
+    name="dc-client",
+    version="0.0.10",
     description="Data Catalog Client",
     long_description=README,
     long_description_content_type="text/markdown",
-    url="https://github.com/stonezhong/DataCatalogClient",
+    url="https://github.com/stonezhong/DataManager/tree/master/client/dc_client",
     author="Stone Zhong",
     author_email="stonezhong@hotmail.com",
     license="MIT",
