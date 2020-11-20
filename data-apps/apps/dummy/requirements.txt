@@ -1,2 +1,3 @@
 Jinja2==2.11.2
 dc-client==0.0.9
+dm-spark-lib=0.0.1
