@@ -11,11 +11,11 @@ with open(os.path.join(HERE, "README.md"), "r") as f:
 # This call to setup() does all the work
 setup(
     name="dm-job-lib",
-    version="0.0.1",
+    version="0.0.2",
     description="Data Manager Job Library",
     long_description=README,
     long_description_content_type="text/markdown",
-    url="https://github.com/stonezhong/DataCatalogClient",
+    url="https://github.com/stonezhong/DataManager/tree/master/client/dm_job_lib",
     author="Stone Zhong",
     author_email="stonezhong@hotmail.com",
     license="MIT",
@@ -24,5 +24,5 @@ setup(
         "Programming Language :: Python :: 3",
     ],
     packages=["dm_job_lib"],
-    install_requires=[""],
+    install_requires=["dc-client"],
 )

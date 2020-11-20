@@ -5,7 +5,7 @@ import json
 from pyspark.sql import SparkSession, SQLContext, Row
 from dc_client import DataCatalogClient
 
-from dlib import load_asset, print_json, write_asset, register_dataset_instance
+from dm_job_lib import load_asset, print_json, write_asset, register_dataset_instance
 
 
 STOCK_LIST = {
