@@ -1,4 +1,5 @@
 */build/
-dc_client/dc_client.egg-info/
 */dist/
 **/*/__pycache__/
+dc_client/dc_client.egg-info/
+dm_job_lib/dm_job_lib.egg-info/
