@@ -1,5 +1,4 @@
-.idea/
-build/
-dc_client.egg-info/
-dist/
+*/build/
+dc_client/dc_client.egg-info/
+*/dist/
 **/*/__pycache__/
