@@ -1,8 +1,8 @@
 const webpack = require("webpack");
 const path = require("path");
 
-module.exports = {
-    mode: "development",
+module.exports = env => ({
+    mode: env,
     externals: {
         jquery: 'jQuery',
         react: 'React',
@@ -49,5 +49,5 @@ module.exports = {
             }
         ]
     },
-    devtool: '#inline-source-map'
-}
+    devtool: env=="production"?undefined:'#inline-source-map'
+});
