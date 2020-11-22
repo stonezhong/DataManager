@@ -136,4 +136,4 @@ Please checkout [data-appls]
 ## UI for Building ETL Pipeline
 Pleaee see the youtube video for details.
 
-[![Data Manager Demo](http://img.youtube.com/vi/KOxbO0EI4MA/0.jpg)](https://www.youtube.com/watch?v=SLPCHyqxhKk")
+[![Data Manager Demo](https://img.youtube.com/vi/SLPCHyqxhKk/0.jpg)](https://www.youtube.com/watch?v=SLPCHyqxhKk")
