@@ -2,7 +2,7 @@
 
 Manages data assets and ETL pipelines for Apache Spark based Data Lake.
 
-Here is a list of platform we supports:
+## Here is a list of platform we supports:
 <table>
     <tr>
         <td>
@@ -17,13 +17,15 @@ Here is a list of platform we supports:
         <td>
             <img src="https://miro.medium.com/max/700/1*qgkjkj6BLVS1uD4mw_sTEg.png" width="120px" />
         </td>
-        <td>Use PySpark, fully compatible to other spark platform, allows you to test your pipeline in a single computer</td>
+        <td>
+            Use <a href="https://pypi.org/project/pyspark/">PySpark</a> package, fully compatible to other spark platform, allows you to test your pipeline in a single computer.
+        </td>
     </tr>
     <tr>
         <td>
             <img src="https://databricks.com/wp-content/uploads/2019/02/databricks-generic-tile.png" width="120px">
         </td>
-        <td>You host your spark cluster in [databricks](https://databricks.com/)</td>
+        <td>You host your spark cluster in <a href="https://databricks.com/">databricks</a></td>
     </tr>
     <tr>
         <td>
@@ -32,7 +34,16 @@ Here is a list of platform we supports:
                 width="120px"
             />
         </td>
-        <td>You host your spark cluster in [AWS EMR](https://aws.amazon.com/emr/)</td>
+        <td>You host your spark cluster in <a href="https://aws.amazon.com/emr/">Amazon AWS EMR</a></td>
+    </tr>
+    <tr>
+        <td>
+            <img
+                src="https://d15shllkswkct0.cloudfront.net/wp-content/blogs.dir/1/files/2020/07/100-768x402.jpeg"
+                width="120px"
+            />
+        </td>
+        <td>You host your spark cluster in <a href="https://cloud.google.com/dataproc">Google Cloud</a></td>
     </tr>
     <tr>
         <td>
@@ -41,7 +52,7 @@ Here is a list of platform we supports:
                 width="120px"
             />
         </td>
-        <td>You host your spark cluster in [Microsoft Azure HDInsight](https://azure.microsoft.com/en-us/services/hdinsight/)</td>
+        <td>You host your spark cluster in <a href="https://azure.microsoft.com/en-us/services/hdinsight/">Microsoft Azure HDInsight</a></td>
     </tr>
     <tr>
         <td>
@@ -51,7 +62,7 @@ Here is a list of platform we supports:
             />
         </td>
         <td>
-            You host your spark cluster in [Oracle Cloud Infrastructure, Data Flow Service](https://www.oracle.com/big-data/data-flow/)
+            You host your spark cluster in <a href="https://www.oracle.com/big-data/data-flow/">Oracle Cloud Infrastructure, Data Flow Service</a>
         </td>
     </tr>
     <tr>
@@ -61,16 +72,16 @@ Here is a list of platform we supports:
                 width="120px"
             />
         </td>
-        <td>You host your spark cluster in IBM Public Cloud</td>
+        <td>You host your spark cluster in <a href="https://www.ibm.com/products/big-data-and-analytics">IBM Public Cloud</a></td>
     </tr>
 </table>
 
 # Data Manager Feature
 
-* Data Catalog
-* Asset Tracking and data linage
-* Uniformed Spark Job Layer
-* [Automatic ETL Pipeline builder UI](#Automatic-ETL-Pipeline-builder-UI)
+* [Data Catalog](#Data-Catalog)
+* [Asset Tracking and data linage](#Asset-Tracking-and-data-linage)
+* [Uniformed Spark Job Layer](#Uniformed-Spark-Job-Layer)
+* [UI for Building ETL Pipeline](#UI-for-Building-ETL-Pipeline)
 
 ## Data Catalog
 
@@ -91,7 +102,7 @@ Screenshot for show schema of a dataset:
 ## Asset Tracking
 
 <details>
-<summary>List all assets for a given dataset</summary>
+<summary>List all assets</summary>
 Data Manage can show you all the asset of a dataset.
 
 <img src="docs/images/list_assets.png" />
@@ -122,4 +133,4 @@ Through [dm-job-lib](client/dm-job-lib), user's application can load asset, writ
 Please checkout [data-appls]
 </details>
 
-## Automatic ETL Pipeline builder UI
+## UI for Building ETL Pipeline
