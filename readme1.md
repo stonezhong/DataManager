@@ -72,7 +72,7 @@ Manages data assets and ETL pipelines for Apache Spark based Data Lake.
                 width="120px"
             />
         </td>
-        <td>You host your spark cluster in <a href="https://www.ibm.com/products/big-data-and-analytics">IBM Public Cloud</a></td>
+        <td>You host your spark cluster in <a href="https://www.ibm.com/products/big-data-and-analytics">IBM Cloud</a></td>
     </tr>
 </table>
 
@@ -111,7 +111,7 @@ Data Manage can show you all the asset of a dataset.
 <details>
 <summary>Support for views</summary>
 "asset" can be materized file, such as parquet, json or csv file, "asset" can also be a "view", which through a "loader", you can get the dataframe as well.
-In this example, the asset tradings:1.0:1:/2020-11-20 is a view, it unions 2 other assets
+In this example, the asset <code>tradings:1.0:1:/2020-11-20</code> is a view, it unions 2 other assets
 <img src="docs/images/asset_as_view.png" />
 </details>
 
@@ -134,3 +134,6 @@ Please checkout [data-appls]
 </details>
 
 ## UI for Building ETL Pipeline
+Pleaee see the youtube video for details.
+
+[![Data Manager Demo](http://img.youtube.com/vi/KOxbO0EI4MA/0.jpg)](https://www.youtube.com/watch?v=SLPCHyqxhKk")
