@@ -77,4 +77,19 @@ In this example, the asset tradings:1.0:1:/2020-11-20 is a view, it unions 2 oth
 
 ## Uniformed Spark Job Layer
 
+<details>
+<summary>dm-job-lib</summary>
+
+Through [dm-job-lib](client/dm-job-lib), user's application can load asset, write asset, and register asset.
+
+* Application using dm-job-lib to load, write assets are decoupled from specific cloud provider and can migrate to other platform easily.
+* Application using dm-job-lib can be tested using PySPark with small scale of data easily.
+</details>
+
+<details>
+<summary>uniformed tool to build, deploy and run job for all platforms</summary>
+
+Please checkout [data-appls]
+</details>
+
 ## Automatic ETL Pipeline builder UI
