@@ -76,12 +76,14 @@ Manages data assets and ETL pipelines for Apache Spark based Data Lake.
     </tr>
 </table>
 
-# Data Manager Feature
+#
 
-* [Data Catalog](#Data-Catalog)
-* [Asset Tracking and data linage](#Asset-Tracking-and-data-linage)
-* [Uniformed Spark Job Layer](#Uniformed-Spark-Job-Layer)
-* [UI for Building ETL Pipeline](#UI-for-Building-ETL-Pipeline)
+* Data Manager Feature
+    * [Data Catalog](#Data-Catalog)
+    * [Asset Tracking and data linage](#Asset-Tracking-and-data-linage)
+    * [Uniformed Spark Job Layer](#Uniformed-Spark-Job-Layer)
+    * [UI for Building ETL Pipeline](#UI-for-Building-ETL-Pipeline)
+* [Data Manager wiki](https://github.com/stonezhong/DataManager/wiki)
 
 ## Data Catalog
 
