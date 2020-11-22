@@ -40,25 +40,40 @@ Here is a list of platform we supports:
 * Data Catalog
 * Asset Tracking and data linage
 * Uniformed Spark Job Layer
-* [Automatic ETL Pipeline builder UI](#Automatic_ETL_Pipeline_builder_UI)
+* [Automatic ETL Pipeline builder UI](#Automatic-ETL-Pipeline-builder-UI)
 
 ## Data Catalog
 
-## Asset Tracking and data linage
+<details>
+<summary>Keep track all datasets</summary>
+
+* List all datasets
+* Choose a dataset, you can view the schema of it.
+
+Screenshot for list datasets:
+<img src="docs/images/list_datasets.png" />
+
+Screenshot for show schema of a dataset:
+<img src="docs/images/show_schema.png" />
+</details>
+
+
+## Asset Tracking
+
+<details>
+<summary>List all assets for a given dataset</summary>
+Data Manage can show you all the asset of a dataset.
+
+<img src="docs/images/list_assets.png" />
+</details>
+
+<summary>Support for views</summary>
+"asset" can be materized file, such as parquet, json or csv file, "asset" can also be a "view", which through a "loader", you can get the dataframe as well.
+In this example, the asset tradings:1.0:1:/2020-11-20 is a view, it unions 2 other assets
+<img src="docs/images/asset_as_view.png" />
+</details>
+
 
 ## Uniformed Spark Job Layer
-
-
-
-
-
-<br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>
-
-
-
-
-
-
-
 
 ## Automatic ETL Pipeline builder UI
