@@ -1,0 +1,4 @@
+{
+    "url_base": "http://dmhost:8888/api",
+    "auth": ["stonezhong", "iamrich"]
+}
