@@ -67,6 +67,7 @@ Data Manage can show you all the asset of a dataset.
 <img src="docs/images/list_assets.png" />
 </details>
 
+<details>
 <summary>Support for views</summary>
 "asset" can be materized file, such as parquet, json or csv file, "asset" can also be a "view", which through a "loader", you can get the dataframe as well.
 In this example, the asset tradings:1.0:1:/2020-11-20 is a view, it unions 2 other assets
