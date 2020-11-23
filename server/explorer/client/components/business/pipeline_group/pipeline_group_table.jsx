@@ -7,13 +7,16 @@ import Table from 'react-bootstrap/Table'
 import * as Icon from 'react-bootstrap-icons'
 
 import {PipelineGroupEditor} from '/components/business/pipeline_group/pipeline_group_editor.jsx'
+import {DataTable} from '/components/generic/datatable/main.jsx'
+
+import './pipeline_group.scss'
 
 /*********************************************************************************
  * Purpose: Show list of pipeline groups (aka Executions)
  * TODO: pagination
  *
  * Props
- *     pipeline_groups  : a list of applications
+ *     get_page         : A function to get the page
  *     allowEdit        : if True, user is allowed to edit pipeline group.
  *     allowNew         : if True, user is allowed to create new pipeline group
  *     onSave           : a callback, called with user want to save or edit
@@ -22,10 +25,48 @@ import {PipelineGroupEditor} from '/components/business/pipeline_group/pipeline_
  *
  */
 export class PipelineGroupTable extends React.Component {
-    thePipelineGroupEditorRef = React.createRef();
+    thePipelineGroupEditorRef   = React.createRef();
+    theDataTableRef             = React.createRef();
 
     canEdit = pipeline_group => {
         return this.props.allowEdit && pipeline_group.manual && !pipeline_group.finished;
+    };
+
+    render_tools = pipeline_group =>
+        <Button
+            variant="secondary"
+            size="sm"
+            onClick = {event => {
+                this.thePipelineGroupEditorRef.current.openDialog(
+                    this.canEdit(pipeline_group)?"edit":"view", pipeline_group
+                )
+            }}
+        >
+            { this.canEdit(pipeline_group)?<Icon.Pencil />:<Icon.Info /> }
+        </Button>;
+
+    render_name = pipeline_group => <a href={`execution?id=${pipeline_group.id}`}>{pipeline_group.name}</a>;
+
+    get_page = (offset, limit) => {
+        return this.props.get_page(
+            offset,
+            limit,
+        );
+    };
+
+    columns = {
+        tools:              {display: "", render_data: this.render_tools},
+        name:               {display: "Name", render_data: this.render_name},
+        created_time:       {display: "Created Time"},
+        category:           {display: "Category"},
+        manual:             {display: "Manual", render_data: pipeline_group => pipeline_group.manual?"Yes":"No"},
+        finished:           {display: "Finished", render_data: pipeline_group => pipeline_group.finished?"Yes":"No"},
+    };
+
+    onSave = (mode, pipeline_group) => {
+        return this.props.onSave(
+            mode, pipeline_group
+        ).then(this.theDataTableRef.current.refresh);
     };
 
     render() {
@@ -48,49 +89,22 @@ export class PipelineGroupTable extends React.Component {
                     </Col>
                 </Row>
 
-                <Table hover>
-                    <thead className="thead-dark">
-                        <tr>
-                            <th className="c-tc-icon1"></th>
-                            <th>Name</th>
-                            <th>Created Time</th>
-                            <th>Category</th>
-                            <th>Manual</th>
-                            <th>Finished</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    {
-                        this.props.pipeline_groups.map((pipeline_group) => {
-                            return (
-                                <tr key={pipeline_group.id}>
-                                    <td>
-                                        <Button
-                                            variant="secondary"
-                                            size="sm"
-                                            onClick={event => {
-                                                this.thePipelineGroupEditorRef.current.openDialog(
-                                                    this.canEdit(pipeline_group)?"edit":"view", pipeline_group
-                                                )
-                                            }}
-                                        >
-                                            { this.canEdit(pipeline_group)?<Icon.Pencil />:<Icon.Info /> }
-                                        </Button>
-                                    </td>
-                                    <td><a href={`execution?id=${pipeline_group.id}`}>{pipeline_group.name}</a></td>
-                                    <td>{pipeline_group.created_time}</td>
-                                    <td>{pipeline_group.category}</td>
-                                    <td>{pipeline_group.manual?"Yes":"No"}</td>
-                                    <td>{pipeline_group.finished?"Yes":"No"}</td>
-                                </tr>
-                            )
-                        })
-                    }
-                    </tbody>
-                </Table>
+                <DataTable
+                    ref={this.theDataTableRef}
+                    hover
+                    bordered
+                    className="pipeline-group-table"
+                    columns = {this.columns}
+                    id_column = "id"
+                    size = {this.props.size}
+                    page_size={this.props.page_size}
+                    fast_step_count={10}
+                    get_page={this.get_page}
+                />
+
                 <PipelineGroupEditor
                     ref={this.thePipelineGroupEditorRef}
-                    onSave={this.props.onSave}
+                    onSave={this.onSave}
                 />
             </div>
         )
