@@ -15,6 +15,7 @@ import * as Icon from 'react-bootstrap-icons'
 import { v4 as uuidv4 } from 'uuid';
 
 import {SequentialTaskEditor} from './task_editor.jsx'
+import {SimpleDialogBox} from '/components/generic/dialogbox/simple.jsx'
 
 import "./pipeline.scss"
 
@@ -31,6 +32,7 @@ const _ = require("lodash");
  */
 export class PipelineEditor extends React.Component {
     theTaskEditorRef = React.createRef();
+    theDlgboxRef = React.createRef();
 
     initPipelineValue = () => {
         return {
@@ -57,6 +59,12 @@ export class PipelineEditor extends React.Component {
         pipeline: this.initPipelineValue(),
     };
 
+    show_help = (title, content) => {
+        this.theDlgboxRef.current.openDialog(
+            title, content
+        );
+    };
+
     onClose = () => {
         this.setState({show: false});
     };
@@ -77,15 +85,11 @@ export class PipelineEditor extends React.Component {
         return true;
     };
 
-    getApplicationName = task => {
+    getApplication = task => {
         if (task.type != "other") {
-            return ""
+            return null;
         }
-        const apps = this.props.applications.filter(p => p.id==task.application_id);
-        if (apps.length > 0) {
-            return apps[0].name;
-        }
-        return "";
+        return _.find(this.props.applications, p => p.id==task.application_id);
     };
 
     // user shall convert the django output to native pipeline format
@@ -414,13 +418,13 @@ export class PipelineEditor extends React.Component {
                                         </Row>
                                         <Row>
                                             <Col>
-                                                <Table hover bordered size="sm">
+                                                <Table hover bordered size="sm" className="task-table">
                                                     <thead className="thead-dark">
                                                         <tr>
-                                                            <th className="c-tc-icon2"></th>
-                                                            <th>Name</th>
-                                                            <th>Type</th>
-                                                            <th>Application</th>
+                                                            <th data-role="tools"></th>
+                                                            <th data-role="name">Name</th>
+                                                            <th data-role="type">Type</th>
+                                                            <th data-role="application">Application</th>
                                                         </tr>
                                                     </thead>
                                                     <tbody>
@@ -428,7 +432,7 @@ export class PipelineEditor extends React.Component {
                                                         this.state.pipeline.tasks.map((task) => {
                                                             return (
                                                                 <tr key={task.name}>
-                                                                    <td className="align-middle">
+                                                                    <td data-role="type">
                                                                         <Button
                                                                             disabled = {this.state.mode==='view'}
                                                                             variant="secondary"
@@ -452,9 +456,24 @@ export class PipelineEditor extends React.Component {
                                                                             { this.state.mode === "view"?<Icon.Info />:<Icon.Pencil /> }
                                                                         </Button>
                                                                     </td>
-                                                                    <td className="align-middle">{task.name}</td>
-                                                                    <td className="align-middle">{task.type}</td>
-                                                                    <td className="align-middle">{this.getApplicationName(task)}</td>
+                                                                    <td data-role="name">{task.name}</td>
+                                                                    <td data-role="type">{task.type}</td>
+                                                                    <td data-role="application">
+                                                                        { this.getApplication(task) &&
+                                                                            <a
+                                                                                href="#"
+                                                                                onClick = {event => {
+                                                                                    event.preventDefault();
+                                                                                    this.show_help(
+                                                                                        this.getApplication(task).name,
+                                                                                        <code>{this.getApplication(task).description}</code>
+                                                                                    )
+                                                                                }}
+                                                                            >
+                                                                                {this.getApplication(task).name}
+                                                                            </a>
+                                                                        }
+                                                                    </td>
                                                                 </tr>
                                                             )
                                                         })
@@ -467,13 +486,13 @@ export class PipelineEditor extends React.Component {
                                         <Row>
                                             <Col>
                                                 <h4>Dependency</h4>
-                                                <Table hover bordered size="sm">
+                                                <Table hover bordered size="sm" className="dep-table">
                                                     <thead className="thead-dark">
                                                         <tr>
-                                                            <th className="c-tc-icon2"></th>
-                                                            <th>Source Task</th>
-                                                            <th></th>
-                                                            <th>Destination Task</th>
+                                                            <th data-role="tools"></th>
+                                                            <th data-role="dst-task">First</th>
+                                                            <th data-role="then"><Icon.ArrowRight /></th>
+                                                            <th data-role="src-task">Next Task</th>
                                                         </tr>
                                                     </thead>
                                                     <tbody>
@@ -495,9 +514,9 @@ export class PipelineEditor extends React.Component {
                                                                             <Icon.X />
                                                                         </Button>
                                                                     </td>
-                                                                    <td>{dep.src}</td>
-                                                                    <td>{"==>"}</td>
                                                                     <td>{dep.dst}</td>
+                                                                    <td><center><Icon.ArrowRight /></center></td>
+                                                                    <td>{dep.src}</td>
                                                                 </tr>
                                                             )
                                                         }
@@ -533,11 +552,11 @@ export class PipelineEditor extends React.Component {
                                                                     as="select"
                                                                     size="sm"
                                                                     disabled = {this.state.mode==='view'}
-                                                                    value={this.state.pipeline._srcDepTaskName}
+                                                                    value={this.state.pipeline._dstDepTaskName}
                                                                     onChange={event => {
                                                                         const v = event.target.value;
                                                                         this.setState(state => {
-                                                                            state.pipeline._srcDepTaskName = v;
+                                                                            state.pipeline._dstDepTaskName = v;
                                                                             return state;
                                                                         });
                                                                     }}
@@ -549,18 +568,18 @@ export class PipelineEditor extends React.Component {
                                                                 </Form.Control>
                                                             </td>
                                                             <td>
-                                                                <center>depend on</center>
+                                                                <center><Icon.ArrowRight /></center>
                                                             </td>
                                                             <td>
                                                                 <Form.Control
                                                                     as="select"
                                                                     size="sm"
                                                                     disabled = {this.state.mode==='view'}
-                                                                    value={this.state.pipeline._dstDepTaskName}
+                                                                    value={this.state.pipeline._srcDepTaskName}
                                                                     onChange={event => {
                                                                         const v = event.target.value;
                                                                         this.setState(state => {
-                                                                            state.pipeline._dstDepTaskName = v;
+                                                                            state.pipeline._srcDepTaskName = v;
                                                                             return state;
                                                                         });
                                                                     }}
@@ -581,15 +600,12 @@ export class PipelineEditor extends React.Component {
                             }
                         </Tabs>
 
-                        <Row>
-                            <Col>
-                                <SequentialTaskEditor
-                                    ref={this.theTaskEditorRef}
-                                    onSave={this.onTaskSaved}
-                                    applications={this.props.applications}
-                                />
-                            </Col>
-                        </Row>
+                        <SequentialTaskEditor
+                            ref={this.theTaskEditorRef}
+                            onSave={this.onTaskSaved}
+                            applications={this.props.applications}
+                        />
+                        <SimpleDialogBox ref={this.theDlgboxRef} />
 
                     </Container>
                 </Modal.Body>
