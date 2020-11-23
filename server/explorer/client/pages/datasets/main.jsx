@@ -8,11 +8,8 @@ const buildUrl = require('build-url');
 
 import {dt_2_utc_string, get_csrf_token, get_current_user} from '/common_lib'
 import {DatasetTable} from '/components/business/dataset/dataset_table.jsx'
-import {TopMessage} from '/components/generic/top_message/main.jsx'
 
 class DatasetsPage extends React.Component {
-    theTopMessageRef = React.createRef();
-
     state = {
         datasets: [],
         showExpired: false
@@ -78,7 +75,6 @@ class DatasetsPage extends React.Component {
     render() {
         return (
             <Container fluid>
-                <TopMessage ref={this.theTopMessageRef} />
                 <DatasetTable
                     allowEdit={!!this.props.current_user}
                     allowNew={!!this.props.current_user}
