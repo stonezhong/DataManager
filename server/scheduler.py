@@ -116,36 +116,6 @@ def handle_pipeline_instance_created(pi):
     pi.save()
     print("")
 
-# For pipeline instance in "started" status, let's pull it's
-# airflow status so it will switch to finished or failed
-@transaction.atomic
-def handle_pipeline_instance_started(pi):
-    print(f"handle pipeline {pi.id} in started status")
-    ctx = json.loads(pi.context)
-
-    run_id = ctx['dag_run']['execution_date']
-
-    r = airflow_lib.get_dag_run_status(
-        pi.pipeline.name,
-        run_id
-    )
-    if r['state'] == "success":
-        pi.status = PipelineInstance.FINISHED_STATUS
-        pi.save()
-        print(f"succeeded")
-        return
-
-    if r['state'] == 'failed':
-        pi.status = PipelineInstance.FAILED_STATUS
-        pi.save()
-        print(f"failed")
-        return
-
-    if r['state'] == 'running':
-        print(f"running, skip")
-        return
-
-    raise Exception(f"Unrecognized status: {r}")
 
 def event_handler(scheduled_event):
     logger.info("A ScheduledEvent is created!")
@@ -208,9 +178,6 @@ def create_pipeline_group_from_timers():
 def update_pipeline_instances():
     for pi in PipelineInstance.objects.filter(status=PipelineInstance.CREATED_STATUS):
         handle_pipeline_instance_created(pi)
-
-    for pi in PipelineInstance.objects.filter(status=PipelineInstance.STARTED_STATUS):
-        handle_pipeline_instance_started(pi)
 
 ########################################################################################
 # Purpose
