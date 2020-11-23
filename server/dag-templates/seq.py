@@ -6,8 +6,22 @@
 # Each task is launching a spark job
 #######################################################
 
+import logging, logging.config
 import os
 import json
+AIRFLOW_HOME = os.environ["AIRFLOW_HOME"]
+from jinja2 import Template
+
+def config_log():
+    # also see https://www.astronomer.io/guides/logging/ for logging
+    with open(os.path.join(AIRFLOW_HOME, "configs", "log.json"), "rt") as f:
+        template = Template(f.read())
+        log_config = json.loads(template.render(AIRFLOW_HOME=AIRFLOW_HOME))
+        logging.config.dictConfig(log_config)
+
+config_log()
+logger = logging.getLogger(__name__)
+
 from datetime import datetime
 import importlib
 import subprocess
@@ -16,13 +30,13 @@ from airflow.operators.python_operator import PythonOperator
 from spark_etl.job_submitters.livy_job_submitter import LivyJobSubmitter
 import MySQLdb
 import time
+import pytz
 
 # Templated variables
 pipeline_id = "{{pipeline_id}}"
 dag_id = "{{dag_id}}"
 
 # load config for etl
-AIRFLOW_HOME = os.environ["AIRFLOW_HOME"]
 
 def load_config(name):
     with open(os.path.join(AIRFLOW_HOME, "configs", name), "r") as f:
@@ -90,6 +104,26 @@ def update_pipeline_version(pipeline_id, version):
     conn.close()
     return
 
+def update_pipeline_instance_status(pipeline_instance_id, status):
+    mysql_cfg = load_config("mysql.json")
+    conn = MySQLdb.connect(
+        host    = mysql_cfg['hostname'],
+        user    = mysql_cfg['username'],
+        passwd  = mysql_cfg['password'],
+        db      = mysql_cfg['db'],
+        charset = mysql_cfg['charset'],
+    )
+    cur = conn.cursor()
+    now = datetime.utcnow().replace(tzinfo=pytz.UTC)
+    if status == "failed":
+        cur.execute("UPDATE main_pipelineinstance SET status='%s', failed_time='%s'   WHERE id=%s" % (status, now, pipeline_instance_id))
+    elif status == "finished":
+        cur.execute("UPDATE main_pipelineinstance SET status='%s', finished_time='%s' WHERE id=%s" % (status, now, pipeline_instance_id))
+    conn.commit()
+    cur.close()
+    conn.close()
+    return
+
 def get_pipeline_group_context(pipeline_instance_id):
     pipeline_group_context = {}
 
@@ -127,6 +161,9 @@ def get_task_from_context(pipeline_contetx, task_name):
             return task
     return None
 
+def pretty_json(payload):
+    return json.dumps(payload, indent=4, separators=(',', ': '))
+
 def print_json(title, payload):
     print(title)
     print("------------------------------------------")
@@ -134,24 +171,31 @@ def print_json(title, payload):
     print("------------------------------------------")
 
 
-pipeline_context, pipeline_version, dag_version = get_pipeline_details(pipeline_id)
-print_json("Pipeline context:", pipeline_context)
-print_json("Pipeline version:", pipeline_version)
-print_json("DAG version     :", dag_version)
+def on_dag_run_success(context):
+    try:
+        logger.info("on_dag_run_success: enter")
+        config = context['dag_run'].conf
+        pipeline_instance_id = config['pipeline_instance_id']
+        logger.info(f"pipeline_instance_id = {pipeline_instance_id}")
+        update_pipeline_instance_status(pipeline_instance_id, 'finished')
+        logger.info("on_dag_run_success: exit")
+    except:
+        logger.exception("on_dag_run_success")
+        raise
 
-args = {
-    'owner': 'airflow',
-    'depends_on_past': False,
-    'wait_for_downstream': False,
-    'start_date': datetime(2019, 8, 14),
-    'retries': 0,
-}
 
-dag = DAG(
-    dag_id,
-    default_args      = args,
-    schedule_interval = None
-)
+def on_dag_run_failure(context):
+    try:
+        logger.info("on_dag_run_failure: enter")
+        config = context['dag_run'].conf
+        pipeline_instance_id = config['pipeline_instance_id']
+        logger.info(f"pipeline_instance_id = {pipeline_instance_id}")
+        update_pipeline_instance_status(pipeline_instance_id, 'failed')
+        logger.info("on_dag_run_failure: exit")
+    except:
+        logger.exception("on_dag_run_failure")
+        raise
+
 
 def get_job_submitter(job_submitter_config):
     class_name  = job_submitter_config['class']
@@ -161,6 +205,7 @@ def get_job_submitter(job_submitter_config):
     args    = job_submitter_config.get("args", [])
     kwargs  = job_submitter_config.get("kwargs", {})
     return klass(*args, **kwargs)
+
 
 class ExecuteTask:
     def __init__(self, task_ctx):
@@ -212,26 +257,51 @@ class ExecuteTask:
             args=args)
         print("Done")
 
-task_dict = {}
+try:
+    logger.info(f"Creating dag, pipeline_id={pipeline_id}, dag_id={pipeline_id}")
+    pipeline_context, pipeline_version, dag_version = get_pipeline_details(pipeline_id)
+    logger.info(f"Pipeline context:\n{pretty_json(pipeline_context)}\n")
+    logger.info(f"Pipeline version: {pipeline_version}")
+    logger.info(f"DAG version     : {dag_version}")
 
+    task_dict = {}
 
-for task_ctx in pipeline_context['tasks']:
-    job_task = PythonOperator(
-        task_id = task_ctx['name'],
-        provide_context = True,
-        python_callable = ExecuteTask(task_ctx),
-        dag=dag,
+    args = {
+        'owner': 'airflow',
+        'depends_on_past': False,
+        'wait_for_downstream': False,
+        'start_date': datetime(2019, 8, 14),
+        'retries': 0,
+    }
+
+    dag = DAG(
+        dag_id,
+        default_args      = args,
+        schedule_interval = None,
+        on_success_callback = on_dag_run_success,
+        on_failure_callback = on_dag_run_failure,
     )
-    task_dict[task_ctx['name']] = job_task
+    for task_ctx in pipeline_context['tasks']:
+        job_task = PythonOperator(
+            task_id = task_ctx['name'],
+            provide_context = True,
+            python_callable = ExecuteTask(task_ctx),
+            dag=dag,
+        )
+        task_dict[task_ctx['name']] = job_task
 
-# wire dependencies
-for dependency in pipeline_context['dependencies']:
-    src_task = task_dict[dependency['src']]
-    dst_task = task_dict[dependency['dst']]
-    src_task << dst_task
+    # wire dependencies
+    for dependency in pipeline_context['dependencies']:
+        src_task = task_dict[dependency['src']]
+        dst_task = task_dict[dependency['dst']]
+        src_task << dst_task
 
 
-if dag_version < pipeline_version:
-    update_pipeline_version(pipeline_id, pipeline_version)
-dag
+    if dag_version < pipeline_version:
+        update_pipeline_version(pipeline_id, pipeline_version)
+    logger.info(f"DAG is created")
+    dag
 
+except:
+    logger.exception("Failed to create dag")
+    raise
