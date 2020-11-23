@@ -116,9 +116,9 @@ def update_pipeline_instance_status(pipeline_instance_id, status):
     cur = conn.cursor()
     now = datetime.utcnow().replace(tzinfo=pytz.UTC)
     if status == "failed":
-        cur.execute("UPDATE main_pipelineinstance SET status='%s', failed_time='%s'   WHERE id=%s" % (status, now, pipeline_instance_id))
+        cur.execute("UPDATE main_pipelineinstance SET status='%s', failed_time='%s'   WHERE id='%s'" % (status, now, pipeline_instance_id))
     elif status == "finished":
-        cur.execute("UPDATE main_pipelineinstance SET status='%s', finished_time='%s' WHERE id=%s" % (status, now, pipeline_instance_id))
+        cur.execute("UPDATE main_pipelineinstance SET status='%s', finished_time='%s' WHERE id='%s'" % (status, now, pipeline_instance_id))
     conn.commit()
     cur.close()
     conn.close()

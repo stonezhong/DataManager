@@ -83,7 +83,12 @@ export class PipelineTable extends React.Component {
         const pipeline2 = pipeline_from_django_model(pipeline);
         return (
             <div>
-                {pipeline2.paused?"Yes":"No"}
+                {
+                    <img
+                        src={pipeline2.paused?"/static/images/x-mark-32.ico":"/static/images/checkmark-32.ico"}
+                        className="icon24"
+                    />
+                }
                 {
                     this.props.allowEdit &&
                     <Button
@@ -98,7 +103,7 @@ export class PipelineTable extends React.Component {
                             }
                         }}
                     >
-                        {pipeline2.paused?"Unpause":"Pause"}
+                        {pipeline2.paused?"Activate":"Pause"}
                     </Button>
                 }
             </div>
@@ -135,7 +140,7 @@ export class PipelineTable extends React.Component {
         author:             {display: "Author"},
         team:               {display: "Team"},
         category:           {display: "Category"},
-        paused:             {display: "Paused", render_data: this.render_paused},
+        paused:             {display: "Active", render_data: this.render_paused},
     };
 
     render() {
