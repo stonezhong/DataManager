@@ -26,3 +26,11 @@ textarea.monofont {
 
 .ck-editor__editable {
   min-height: 300px; }
+
+img.icon24 {
+  width: 24px;
+  height: 24px; }
+
+img.icon32 {
+  width: 32px;
+  height: 32px; }

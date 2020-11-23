@@ -59,8 +59,14 @@ export class PipelineGroupTable extends React.Component {
         name:               {display: "Name", render_data: this.render_name},
         created_time:       {display: "Created Time"},
         category:           {display: "Category"},
-        manual:             {display: "Manual", render_data: pipeline_group => pipeline_group.manual?"Yes":"No"},
-        finished:           {display: "Finished", render_data: pipeline_group => pipeline_group.finished?"Yes":"No"},
+        manual:             {
+            display: "Manual",
+            render_data: pipeline_group => pipeline_group.manual?"manual":"auto"
+        },
+        finished:           {
+            display: "Finished",
+            render_data: pipeline_group => <img src={pipeline_group.finished?"/static/images/checkmark-32.ico":"/static/images/x-mark-32.ico"} className="icon24"/>
+        },
     };
 
     onSave = (mode, pipeline_group) => {
