@@ -50,3 +50,34 @@
         }
     }
 }
+
+table.pipeline-instance-table {
+    width: 600px;
+
+    & > thead {
+        & > tr {
+            & > th[data-role='airflow'] {
+                width: 120px;
+                text-align: center;
+            }
+            & > th[data-role='status'] {
+                width: 120px;
+                text-align: center;
+            }
+        }
+    }
+    & > tbody {
+        & > tr {
+            & > td {
+                height: 40px;
+                vertical-align: middle;
+            }
+            & > td[data-role='airflow'] {
+                text-align: center;
+            }
+            & > td[data-role='status'] {
+                text-align: center;
+            }
+        }
+    }
+}

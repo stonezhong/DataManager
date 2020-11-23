@@ -126,7 +126,7 @@ class PipelineGroupPage extends React.Component {
                         this.state.pipeline_group && <div>
                             <Row>
                                 <Col>
-                                    <h1 className="c-ib">Execution</h1>
+                                    <h1 className="c-ib">Execution - {this.state.pipeline_group.name}</h1>
                                     {
                                         this.showEdit() &&
                                         <div className="c-vc c-ib ml-2">
@@ -152,11 +152,6 @@ class PipelineGroupPage extends React.Component {
                                             </Button>
                                         </div>
                                     }
-                                </Col>
-                            </Row>
-                            <Row>
-                                <Col>
-                                    <h2>{this.state.pipeline_group.name}</h2>
                                 </Col>
                             </Row>
                             <Row>

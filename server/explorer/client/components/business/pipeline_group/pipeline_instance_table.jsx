@@ -1,6 +1,7 @@
 import React from 'react'
 
 import Table from 'react-bootstrap/Table'
+import './pipeline_group.scss'
 
 /*********************************************************************************
  * Purpose: Show list of pipeline instances
@@ -15,12 +16,12 @@ import Table from 'react-bootstrap/Table'
 export class PipelineInstanceTable extends React.Component {
     render() {
         return (
-            <Table hover>
+            <Table hover bordered size="sm" className="pipeline-instance-table">
                 <thead className="thead-dark">
                     <tr>
-                        <th>Pipeline</th>
-                        <th>Airflow</th>
-                        <th>Status</th>
+                        <th data-role='name'>Pipeline</th>
+                        <th data-role='airflow'>Airflow</th>
+                        <th data-role='status'>Status</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -28,13 +29,17 @@ export class PipelineInstanceTable extends React.Component {
                     this.props.pipeline_instances.map((pipeline_instance) => {
                         return (
                             <tr key={pipeline_instance.id}>
-                                <td><a href={`pipeline?id=${pipeline_instance.pipeline.id}`}>{pipeline_instance.pipeline.name}</a></td>
-                                <td>
+                                <td data-role='name'>
+                                    <a href={`pipeline?id=${pipeline_instance.pipeline.id}`}>{pipeline_instance.pipeline.name}</a>
+                                </td>
+                                <td data-role='airflow'>
                                     { this.props.get_dag_url(pipeline_instance)}
                                     { " | " }
                                     { this.props.get_dag_run_url(pipeline_instance) }
                                 </td>
-                                <td>{pipeline_instance.status}</td>
+                                <td data-role='status'>
+                                    {pipeline_instance.status}
+                                </td>
                             </tr>
                         )
                     })
