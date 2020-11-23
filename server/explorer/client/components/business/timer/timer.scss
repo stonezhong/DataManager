@@ -1,23 +1,73 @@
-table.timer-table {
-    th[data-role='icons'] {
-        width: 40px;
-    }
-    th[data-role='paused'] {
-        width: 40px;
-    }
-    th[data-role='topic'] {
-        width: 200px;
-    }
-    th[data-role='author'] {
-        width: 120px;
-    }
-    th[data-role='team'] {
-        width: 120px;
-    }
-    th[data-role='interval'] {
-        width: 120px;
-    }
-    th[data-role='start'] {
-        width: 180px;
+.timer-table {
+    & > div {
+        height: 680px;
+        overflow-y: auto;
+
+        & > table {
+            & > thead {
+                & > tr {
+                    & > th[data-role='tools'] {
+                        width: 40px;
+                    }
+                    & > th[data-role='paused'] {
+                        width: 80px;
+                        text-align: center;
+                    }
+                    & > th[data-role='category'] {
+                        width: 180px;
+                        text-align: center;
+                    }
+                    & > th[data-role='author'] {
+                        width: 120px;
+                        text-align: center;
+                    }
+                    & > th[data-role='team'] {
+                        width: 120px;
+                        text-align: center;
+                    }
+                    & > th[data-role='interval'] {
+                        width: 120px;
+                        text-align: center;
+                    }
+                    & > th[data-role='start_from'] {
+                        width: 180px;
+                        text-align: center;
+                    }
+                    & > th[data-role='end_at'] {
+                        width: 180px;
+                        text-align: center;
+                    }
+                }
+            }
+            & > tbody {
+                & > tr {
+                    & > td {
+                        height: 40px;
+                        vertical-align: middle;
+                    }
+                    & > td[data-role='paused'] {
+                        text-align: center;
+                    }
+                    & > td[data-role='category'] {
+                        text-align: center;
+                    }
+                    & > td[data-role='author'] {
+                        text-align: center;
+                    }
+                    & > td[data-role='team'] {
+                        text-align: center;
+                    }
+                    & > td[data-role='interval'] {
+                        text-align: center;
+                    }
+                    & > td[data-role='start_from'] {
+                        text-align: center;
+                    }
+                    & > td[data-role='end_at'] {
+                        text-align: center;
+                    }
+                }
+            }
+        }
     }
 }
