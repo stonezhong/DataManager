@@ -270,7 +270,9 @@ try:
         'owner': 'airflow',
         'depends_on_past': False,
         'wait_for_downstream': False,
-        'start_date': datetime(2019, 8, 14),
+         # We do not rely on airflow to schedule job anyway
+         # We always trigger job manually
+        'start_date': datetime(2000, 1, 1),
         'retries': 0,
     }
 
@@ -280,6 +282,7 @@ try:
         schedule_interval = None,
         on_success_callback = on_dag_run_success,
         on_failure_callback = on_dag_run_failure,
+        catchup=False
     )
     for task_ctx in pipeline_context['tasks']:
         job_task = PythonOperator(
