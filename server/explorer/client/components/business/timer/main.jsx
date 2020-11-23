@@ -14,6 +14,7 @@ import * as Icon from 'react-bootstrap-icons'
 import "./timer.scss"
 import {is_json_string, is_valid_datetime} from '/common_lib.js'
 import {AlertBox} from '/components/generic/alert/alert.jsx'
+import {DataTable} from '/components/generic/datatable/main.jsx'
 
 const _ = require('lodash');
 
@@ -89,15 +90,19 @@ export class TimerEditor extends React.Component {
 
         const native_timer = timer_ui_to_native(this.state.timer);
         const mode = this.state.mode;
-        this.setState({show: false}, () => {this.props.onSave(mode, native_timer)} );
+        this.props.onSave(mode, native_timer).then(
+            this.onClose
+        ).catch(error => {
+            this.theAlertBoxRef.current.show(error.message);
+        });
     };
 
-    openDialog = (mode, ui_timer) => {
+    openDialog = (mode, timer) => {
         if (mode === "view" || mode === "edit") {
             this.setState({
                 show: true,
                 mode: mode,
-                timer: _.cloneDeep(ui_timer)
+                timer: _.cloneDeep(timer_native_to_ui(timer))
             })
         } else if (mode === "new") {
             this.setState({
@@ -405,6 +410,50 @@ export class TimerEditor extends React.Component {
  */
 export class TimerTable extends React.Component {
     theTimerEditorRef = React.createRef();
+    theDataTableRef     = React.createRef();
+
+
+    get_page = (offset, limit) => {
+        return this.props.get_page(
+            offset,
+            limit
+        );
+    };
+
+    render_tools = timer =>
+        <Button
+            variant="secondary"
+            size="sm"
+            onClick={
+                event => {
+                    this.theTimerEditorRef.current.openDialog(
+                        this.props.allowEdit?"edit":"view", timer
+                    )
+                }
+            }
+        >
+            { this.props.allowEdit?<Icon.Pencil />:<Icon.Info />}
+        </Button>;
+
+    render_paused = timer => timer.paused?"Yes":"No";
+    render_interval = timer => `${timer.interval_amount} ${timer.interval_unit}`;
+
+
+    columns = {
+        tools:              {display: "", render_data: this.render_tools},
+        name:               {display: "Name"},
+        paused:             {display: "Paused", render_data: this.render_paused},
+        category:           {display: "Category"},
+        author:             {display: "Author"},
+        team:               {display: "Team"},
+        interval:           {display: "Interval", render_data: this.render_interval},
+        start_from:         {display: "Start"},
+        end_at:             {display: "End"},
+    };
+
+    onSave = (mode, timer) => {
+        return this.props.onSave(mode, timer).then(this.theDataTableRef.current.refresh);
+    };
 
     render() {
         return (
@@ -425,55 +474,25 @@ export class TimerTable extends React.Component {
                         }
                     </Col>
                 </Row>
-                <Table hover className="timer-table">
-                    <thead className="thead-dark">
-                        <tr>
-                            <th data-role='icons'></th>
-                            <th data-role='name'>Name</th>
-                            <th data-role='paused'>Paused</th>
-                            <th data-role='category'>Category</th>
-                            <th data-role='author'>Author</th>
-                            <th data-role='team'>Team</th>
-                            <th data-role='interval'>Interval</th>
-                            <th data-role='start'>Start</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    {
-                        this.props.timers.map(timer_native_to_ui).map(ui_timer => {
-                            return (
-                                <tr key={ui_timer.id}>
-                                    <td>
-                                        <Button
-                                            variant="secondary"
-                                            size="sm"
-                                            onClick={
-                                                event => {
-                                                    this.theTimerEditorRef.current.openDialog(
-                                                        this.props.allowEdit?"edit":"view", ui_timer
-                                                    )
-                                                }
-                                            }
-                                        >
-                                            { this.props.allowEdit?<Icon.Pencil />:<Icon.Info />}
-                                        </Button>
-                                    </td>
-                                    <td>{ui_timer.name}</td>
-                                    <td>{ui_timer.paused?"yes":"no"}</td>
-                                    <td>{ui_timer.category}</td>
-                                    <td>{ui_timer.author}</td>
-                                    <td>{ui_timer.team}</td>
-                                    <td>{ui_timer.interval_amount} {ui_timer.interval_unit}</td>
-                                    <td>{ui_timer.start_from}</td>
-                                </tr>
-                            )
-                        })
-                    }
-                    </tbody>
-                </Table>
+                <Row>
+                    <Col>
+                        <DataTable
+                            ref={this.theDataTableRef}
+                            hover
+                            bordered
+                            className="timer-table"
+                            columns = {this.columns}
+                            id_column = "id"
+                            size = {this.props.size}
+                            page_size={this.props.page_size}
+                            fast_step_count={10}
+                            get_page={this.get_page}
+                        />
+                    </Col>
+                </Row>
                 <TimerEditor
                     ref={this.theTimerEditorRef}
-                    onSave={this.props.onSave}
+                    onSave={this.onSave}
                 />
             </div>
         );
