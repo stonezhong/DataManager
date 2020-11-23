@@ -42,24 +42,20 @@ export class PipelineTable extends React.Component {
     thePipelineEditorRef = React.createRef();
     theDataTableRef      = React.createRef();
 
-    render_tools = pipeline => {
-        console.log(pipeline);
-        return (
-            <Button
-                variant="secondary"
-                size="sm"
-                variant="secondary"
-                onClick={event => {
-                    this.thePipelineEditorRef.current.openDialog(
-                        this.props.allowEdit?"edit":"view",
-                        pipeline_from_django_model(pipeline)
-                    );
-                }}
-            >
-                { this.props.allowEdit?<Icon.Pencil />:<Icon.Info />}
-            </Button>
-        );
-    };
+    render_tools = pipeline =>
+        <Button
+            variant="secondary"
+            size="sm"
+            variant="secondary"
+            onClick={event => {
+                this.thePipelineEditorRef.current.openDialog(
+                    this.props.allowEdit?"edit":"view",
+                    pipeline_from_django_model(pipeline)
+                );
+            }}
+        >
+            { this.props.allowEdit?<Icon.Pencil />:<Icon.Info />}
+        </Button>;
 
     render_type = pipeline => pipeline_from_django_model(pipeline).type;
 

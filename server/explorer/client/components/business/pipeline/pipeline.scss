@@ -81,3 +81,58 @@ div.pipeline-editor {
         }
     }
 }
+
+.task-table {
+    & > thead {
+        & > tr {
+            & > th[data-role='tools'] {
+                width: 100px;
+            }
+            & > th[data-role='name'] {
+                width: 35%;
+            }
+            & > th[data-role='type'] {
+                text-align: center;
+            }
+            & > th[data-role='application'] {
+                width: 35%;
+            }
+        }
+    }
+    & > tbody {
+        & > tr {
+            & > td {
+                vertical-align: middle;
+            }
+            & > td[data-role='type'] {
+                text-align: center;
+            }
+        }
+    }
+}
+
+.dep-table {
+    & > thead {
+        & > tr {
+            & > th[data-role='tools'] {
+                width: 100px;
+            }
+            & > th[data-role='src-task'] {
+                width: 35%;
+            }
+            & > th[data-role='then'] {
+                text-align: center;
+            }
+            & > th[data-role='dst-task'] {
+                width: 35%;
+            }
+        }
+    }
+    & > tbody {
+        & > tr {
+            & > td[data-role='then'] {
+                text-align: center;
+            }
+        }
+    }
+}
