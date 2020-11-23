@@ -1,0 +1,52 @@
+.pipeline-group-table {
+    & > div {
+        height: 680px;
+        overflow-y: auto;
+
+        & > table {
+            & > thead {
+                & > tr {
+                    & > th[data-role='tools'] {
+                        width: 40px;
+                    }
+                    & > th[data-role='created_time'] {
+                        width: 180px;
+                        text-align: center;
+                    }
+                    & > th[data-role='category'] {
+                        width: 180px;
+                        text-align: center;
+                    }
+                    & > th[data-role='manual'] {
+                        width: 80px;
+                        text-align: center;
+                    }
+                    & > th[data-role='finished'] {
+                        width: 80px;
+                        text-align: center;
+                    }
+                }
+            }
+            & > tbody {
+                & > tr {
+                    & > td {
+                        height: 40px;
+                        vertical-align: middle;
+                    }
+                    & > td[data-role='created_time'] {
+                        text-align: center;
+                    }
+                    & > td[data-role='category'] {
+                        text-align: center;
+                    }
+                    & > td[data-role='manual'] {
+                        text-align: center;
+                    }
+                    & > td[data-role='finished'] {
+                        text-align: center;
+                    }
+                }
+            }
+        }
+    }
+}
