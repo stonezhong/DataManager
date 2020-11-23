@@ -13,6 +13,7 @@ import {TestSimpleDialogBox}        from '/components/generic/dialogbox/test_sim
 import {TestDataTable}              from '/components/generic/datatable/test.jsx'
 
 import {TestDatasetEditor}          from '/components/business/dataset/test_dataset_editor.jsx'
+import {TestDatasetTable}           from '/components/business/dataset/test_dataset_table.jsx'
 import {TestSchemaViewer}           from '/components/business/dataset/test_schema_viewer.jsx'
 
 import {TestTimerTable}             from '/components/business/timer/test.jsx'
@@ -63,6 +64,13 @@ class TestPage extends React.Component {
             classname   : "DatasetEditor",
             create      : () => <TestDatasetEditor />,
             tested: "2020-11-13"
+        },
+        {
+            category    : "business",
+            component   : "dataset",
+            classname   : "DatasetTable",
+            create      : () => <TestDatasetTable />,
+            tested: "2020-11-22"
         },
         {
             category    : "business",
