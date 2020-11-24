@@ -1,0 +1,19 @@
+div.data-table {
+    & > div {
+        overflow-y: auto;
+    }
+
+    & > div {
+        & > table {
+            background-color: white;
+            & > tbody {
+                & > tr {
+                    & > td {
+                        height: 40px;
+                        vertical-align: middle;
+                    }
+                }
+            }
+        }
+    }
+}

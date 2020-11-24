@@ -6,6 +6,10 @@ import ButtonGroup from 'react-bootstrap/ButtonGroup'
 
 import * as Icon from 'react-bootstrap-icons'
 
+import classNames from 'classnames'
+
+import "./datatable.scss"
+
 /*********************************************************************************
  * Purpose: Generic Data Table
  *
@@ -152,7 +156,7 @@ export class DataTable extends React.Component {
 
     render() {
         return (
-            <div className={this.props.className}>
+            <div className={classNames("data-table", this.props.className)}>
                 <div>
                     <Table {...this.get_table_props()}>
                         <thead className="thead-dark">
