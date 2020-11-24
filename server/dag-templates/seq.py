@@ -227,12 +227,14 @@ class ExecuteTask:
         spark_env = load_config("spark_env.json")
 
         if self.task_ctx['type'] == 'other':
+            task_args_str = Template(self.task_ctx['args']).render(pipeline_group_context)
             args = {
                 "pipeline_group_context": pipeline_group_context,
-                "app_args": json.loads(self.task_ctx['args']),
+                "app_args": json.loads(task_args_str),
                 "dc_config": dc_config,
             }
             appLocation = get_application_location(self.task_ctx['application_id'])
+            print_json("app_args", args['app_args'])
         elif self.task_ctx['type'] == 'dummy':
             print("Dummy task")
             print("Done")
@@ -247,6 +249,7 @@ class ExecuteTask:
                 "dc_config": dc_config,
             }
             appLocation = execute_sql_app['appLocation']
+            print_json("app_args", args['app_args'])
 
 
         spark_etl_cfg = load_config("spark_etl.json")

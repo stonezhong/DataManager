@@ -5,7 +5,8 @@ import json
 from pyspark.sql import SparkSession, SQLContext, Row
 from dc_client import DataCatalogClient
 
-from dm_job_lib import load_asset, print_json, write_asset, register_dataset_instance
+from dm_job_lib import load_asset, print_json, write_asset, register_dataset_instance, \
+    register_dataset_instance_for_view
 
 
 STOCK_LIST = {
@@ -41,10 +42,11 @@ def main(spark, input_args):
     print(f"dt = {dt}")
 
     app_args = input_args['app_args']
+    action = app_args['action']
     market = app_args.get('market')
     data_root = app_args.get("data_root")
 
-    if market:
+    if action == 'import-data':
         random.seed()
         Trade = Row("market", "type", "symbol", "amount", "price", "commission")
         trades = []
@@ -70,7 +72,10 @@ def main(spark, input_args):
             'parquet',
             file_to_write,
             df)
-    else:
+    elif action == 'create-view':
+        loader = app_args['loader']
+        loader_name = loader['name']
+        loader_args = loader['args']
         # register the view after all the market are uploaded
         dc_config = input_args['dc_config']
         pipeline_group_context = input_args['pipeline_group_context']
@@ -83,19 +88,11 @@ def main(spark, input_args):
 
 
         data_time = datetime.strptime(dt, "%Y-%m-%d")
-        dcc.create_dataset_instance(
-            'tradings', '1.0', 1,
-            f"/{dt}", [],
-            data_time,
-            loader = json.dumps({
-                "name": "union",
-                "args": {
-                    "dsi_paths": [
-                        f"tradings:1.0:1:/{dt}_NASDAQ",
-                        f"tradings:1.0:1:/{dt}_NYSE",
-                    ]
-                }
-            })
+
+        register_dataset_instance_for_view(
+            spark, dcc, f'tradings:1.0:1:/{dt}',
+            loader_name,
+            loader_args
         )
 
     print("Done")
