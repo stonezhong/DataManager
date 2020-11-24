@@ -19,6 +19,12 @@ LOADERS = {
     "union": union_loader
 }
 
+#####################################################################
+# Load a view
+#####################################################################
+def load_view(spark, dcc, loader_name, loader_args):
+    loader_f = LOADERS[loader_name]
+    return loader_f(spark, dcc, loader_args)
 
 def load_asset(spark, dcc, dsi_path):
     # dcc: data catalog client
@@ -49,8 +55,7 @@ def load_asset(spark, dcc, dsi_path):
     # we can use a loader
     loader_name = loader['name']
     loader_args = loader['args']
-    loader_f = LOADERS[loader_name]
-    return loader_f(spark, dcc, loader_args)
+    return load_view(spark, dcc, loader_name, loader_args)
 
 def write_asset(spark, df, table, mode='overwrite'):
     # table is compatible with DatasetLocation
@@ -82,6 +87,29 @@ def register_dataset_instance(dcc, dsi_path, file_type, location, df):
             'location': location
         }],
         datetime.utcnow(),
+        row_count = df.count()
+    )
+    dcc.set_dataset_schema_and_sample_data(
+        ds['id'],
+        json.dumps(df.schema.jsonValue()),
+        ""  # no sample data for now
+    )
+
+def register_dataset_instance_for_view(spark, dcc, dsi_path, loader_name, loader_args):
+    dataset_name, major_version, minor_version, path = dsi_path.split(":")
+    ds = dcc.get_dataset(dataset_name, major_version, int(minor_version))
+    if ds is None:
+        ds = dcc.create_dataset(dataset_name, major_version, int(minor_version), "-- Placeholder --", "trading")
+
+    df = load_view(spark, dcc, loader_name, loader_args)
+    dcc.create_dataset_instance(
+        dataset_name, major_version, int(minor_version),
+        path, [],
+        datetime.utcnow(),
+        loader = json.dumps({
+            "name": loader_name,
+            "args": loader_args,
+        }),
         row_count = df.count()
     )
     dcc.set_dataset_schema_and_sample_data(
