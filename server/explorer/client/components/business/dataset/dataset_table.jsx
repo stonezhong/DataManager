@@ -3,7 +3,6 @@ import React from 'react'
 import Button from 'react-bootstrap/Button'
 import Col from 'react-bootstrap/Col'
 import Row from 'react-bootstrap/Row'
-import Table from 'react-bootstrap/Table'
 import Form from 'react-bootstrap/Form'
 import * as Icon from 'react-bootstrap-icons'
 
