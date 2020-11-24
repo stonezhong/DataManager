@@ -7,6 +7,18 @@ module.exports = env => ({
         jquery: 'jQuery',
         react: 'React',
         'react-dom': 'ReactDOM',
+        'react-bootstrap/Button':       ['ReactBootstrap', 'Button'],
+        'react-bootstrap/Col':          ['ReactBootstrap', 'Col'],
+        'react-bootstrap/Row':          ['ReactBootstrap', 'Row'],
+        'react-bootstrap/Form':         ['ReactBootstrap', 'Form'],
+        'react-bootstrap/Container':    ['ReactBootstrap', 'Container'],
+        'react-bootstrap/Modal':        ['ReactBootstrap', 'Modal'],
+        'react-bootstrap/Table':        ['ReactBootstrap', 'Table'],
+        'react-bootstrap/Spinner':      ['ReactBootstrap', 'Spinner'],
+        'react-bootstrap/Alert':        ['ReactBootstrap', 'Alert'],
+        'lodash': '_',
+        '@ckeditor/ckeditor5-build-classic': 'ClassicEditor',
+        '@ckeditor/ckeditor5-react': 'CKEditor',
     },
     resolve: {
         roots: [
