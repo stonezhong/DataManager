@@ -4,65 +4,12 @@ import Col from 'react-bootstrap/Col'
 import Row from 'react-bootstrap/Row'
 import Table from 'react-bootstrap/Table'
 import Button from 'react-bootstrap/Button'
-import Container from 'react-bootstrap/Container'
-import Modal from 'react-bootstrap/Modal'
 
 import * as Icon from 'react-bootstrap-icons'
 import {DataTable} from '/components/generic/datatable/main.jsx'
+import {SimpleDialogBox} from '/components/generic/dialogbox/simple.jsx'
 
 import './dataset.scss'
-
-class LoaderViewer extends React.Component {
-    state = {
-        show: false,
-        loader: "{}",
-    };
-
-    onClose = () => {
-        this.setState({show: false});
-    };
-
-    openDialog = (loader) => {
-        this.setState({
-            show: true,
-            loader: loader
-        })
-    };
-
-    render() {
-        return (
-            <Modal
-                show={this.state.show}
-                onHide={this.onClose}
-                backdrop="static"
-                size='lg'
-                scrollable
-            >
-                <Modal.Header closeButton>
-                    <Modal.Title>Loader</Modal.Title>
-                </Modal.Header>
-
-                <Modal.Body>
-                    <Container fluid className="pb-2 mb-2">
-                        <pre>
-                            {JSON.stringify(JSON.parse(this.state.loader),null,2)}
-                        </pre>
-                    </Container>
-                </Modal.Body>
-
-                <Modal.Footer>
-                    <Button
-                        variant="secondary"
-                        onClick={this.onClose}
-                        size="sm"
-                    >
-                        Close
-                    </Button>
-                </Modal.Footer>
-            </Modal>
-        );
-    }
-}
 
 /*********************************************************************************
  * Purpose: Show list of dataset instances
@@ -100,7 +47,10 @@ export class DatasetInstanceTable extends React.Component {
             variant="secondary"
             onClick={event => {
                 this.theLoaderViewerRef.current.openDialog(
-                    dataset_instance.loader
+                    "Loader",
+                    <pre>
+                        {JSON.stringify(JSON.parse(dataset_instance.loader),null,2)}
+                    </pre>
                 );
             }}
         >
@@ -136,7 +86,12 @@ export class DatasetInstanceTable extends React.Component {
                         fast_step_count={10}
                         get_page={this.get_page}
                     />
-                    <LoaderViewer ref={this.theLoaderViewerRef}/>
+                    <SimpleDialogBox
+                        ref={this.theLoaderViewerRef}
+                        backdrop="static"
+                        size='lg'
+                        scrollable
+                    />
                 </Col>
             </Row>
         )
