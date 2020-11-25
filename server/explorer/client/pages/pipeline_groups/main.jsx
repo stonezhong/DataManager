@@ -39,7 +39,7 @@ class PipelineGroupsPage extends React.Component {
                 context     : pipeline_group.context,
                 finished    : pipeline_group.finished,
             }
-            fetch(`/api/PipelineGroups/${pipeline_group.id}/`, {
+            return fetch(`/api/PipelineGroups/${pipeline_group.id}/`, {
                 method: 'patch',
                 headers: {
                     'Content-Type': 'application/json',
