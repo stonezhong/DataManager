@@ -1,4 +1,6 @@
-.application-table {
+div.application-table {
+    width: 1000px;
+
     & > div {
         height: 680px;
         overflow-y: auto;
