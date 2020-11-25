@@ -1,4 +1,6 @@
-.pipeline-group-table {
+div.pipeline-group-table {
+    width: 1000px;
+
     & > div {
         height: 680px;
         overflow-y: auto;
@@ -53,6 +55,7 @@
 
 table.pipeline-instance-table {
     width: 600px;
+    background-color: white;
 
     & > thead {
         & > tr {

@@ -1,4 +1,6 @@
-.timer-table {
+div.timer-table {
+    width: 1200px;
+
     & > div {
         height: 680px;
         overflow-y: auto;

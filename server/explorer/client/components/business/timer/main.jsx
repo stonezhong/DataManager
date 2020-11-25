@@ -435,14 +435,19 @@ export class TimerTable extends React.Component {
             { this.props.allowEdit?<Icon.Pencil />:<Icon.Info />}
         </Button>;
 
-    render_paused = timer => timer.paused?"Yes":"No";
+    render_paused = timer =>
+        <img
+            src={timer.paused?"/static/images/x-mark-32.ico":"/static/images/checkmark-32.ico"}
+            className="icon24"
+        />
+;
     render_interval = timer => `${timer.interval_amount} ${timer.interval_unit}`;
 
 
     columns = {
         tools:              {display: "", render_data: this.render_tools},
         name:               {display: "Name"},
-        paused:             {display: "Paused", render_data: this.render_paused},
+        paused:             {display: "Active", render_data: this.render_paused},
         category:           {display: "Category"},
         author:             {display: "Author"},
         team:               {display: "Team"},

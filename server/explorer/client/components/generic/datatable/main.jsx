@@ -86,7 +86,7 @@ export class DataTable extends React.Component {
             page*this.props.page_size,
             this.props.page_size
         )).then(result => {
-            const page_count = Math.floor((result.count + this.props.page_size)/this.props.page_size);
+            const page_count = Math.floor((result.count + this.props.page_size - 1)/this.props.page_size);
             if (page_count === 0) {
                 this.setState({
                     page_count: 0,
@@ -143,7 +143,7 @@ export class DataTable extends React.Component {
             this.props.page_size
         )).then(result => {
             this.setState({
-                page_count: Math.floor((result.count + this.props.page_size)/this.props.page_size),
+                page_count: Math.floor((result.count + this.props.page_size - 1)/this.props.page_size),
                 rows: _.cloneDeep(result.results),
                 page: 0,
             });

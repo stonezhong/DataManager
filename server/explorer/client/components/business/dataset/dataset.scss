@@ -1,4 +1,6 @@
-.dataset-table {
+div.dataset-table {
+    width: 1300px;
+
     & > div {
         height: 680px;
         overflow-y: auto;
@@ -84,7 +86,7 @@
     }
 }
 
-.dataset-instance-table {
+div.dataset-instance-table {
     & > div {
         height: 680px;
         overflow-y: auto;

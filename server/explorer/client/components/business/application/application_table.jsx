@@ -66,12 +66,18 @@ export class ApplicationTable extends React.Component {
         );
     };
 
+    render_retired = application =>
+        <img
+            src={application.retired?"/static/images/x-mark-32.ico":"/static/images/checkmark-32.ico"}
+            className="icon24"
+        />;
+
     columns = {
         tools:              {display: "", render_data: this.render_tools},
         name:               {display: "Name", render_data: this.render_name},
         author:             {display: "Author"},
         team:               {display: "Team"},
-        retired:            {display: "Retired", render_data: application => application.retired?"Yes":"No"},
+        retired:            {display: "Active", render_data: this.render_retired},
     };
 
     onSave = (mode, dataset) => {
