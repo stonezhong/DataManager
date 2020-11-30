@@ -10,6 +10,7 @@ from django.contrib.auth import logout as do_logout, \
 from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction
 from django.urls import reverse
+from django.http import HttpResponse
 
 from main.models import Dataset, Pipeline, PipelineGroup, PipelineInstance, \
     Application
@@ -242,3 +243,6 @@ def schedulers(request):
         }
     )
 
+# this is required by Let's Encrypt to get free SSL cert.
+# def letsencrypt(request):
+#     return HttpResponse("mlhSihbAVhD1xOT4H8RsFj5cVLepXtkG3Xc82plLLZQ.sywOEQ5dSXlmO1xrkMppiEh2IRAjylAg7cjNfrLejj0")
