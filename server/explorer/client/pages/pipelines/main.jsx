@@ -20,10 +20,11 @@ class PipelinesPage extends React.Component {
     onPause = (pipeline_id) => {
         // called when user want to pause a pipeline
         return fetch(`/api/Pipelines/${pipeline_id}/`, {
-            method: 'patch',
+            method: 'post',
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRFToken': get_csrf_token(),
+                'X-Data-Manager-Use-Method': 'PATCH',
             },
             body: JSON.stringify({paused: true})
         }).then(handle_json_response)
@@ -32,10 +33,11 @@ class PipelinesPage extends React.Component {
     onUnpause = (pipeline_id) => {
         // called when user want to unpause a pipeline
         return fetch(`/api/Pipelines/${pipeline_id}/`, {
-            method: 'patch',
+            method: 'post',
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRFToken': get_csrf_token(),
+                'X-Data-Manager-Use-Method': 'PATCH',
             },
             body: JSON.stringify({paused: false})
         }).then(handle_json_response)

@@ -45,10 +45,11 @@ class DatasetsPage extends React.Component {
             }
 
             return fetch(`/api/Datasets/${dataset.id}/`, {
-                method: 'patch',
+                method: 'post',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRFToken': get_csrf_token(),
+                    'X-Data-Manager-Use-Method': 'PATCH',
                 },
                 body: JSON.stringify(to_patch)
             }).then(handle_json_response);
