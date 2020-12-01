@@ -182,7 +182,6 @@ export class PipelineEditor extends React.Component {
                 size='xl'
                 scrollable
             >
-
                 <Modal.Header closeButton>
                     <Modal.Title>{this.get_title()}</Modal.Title>
                 </Modal.Header>

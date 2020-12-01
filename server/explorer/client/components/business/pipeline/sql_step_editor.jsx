@@ -7,6 +7,8 @@ import Col from 'react-bootstrap/Col'
 import Form from 'react-bootstrap/Form'
 import Table from 'react-bootstrap/Table'
 import Modal from 'react-bootstrap/Modal'
+import Tabs from 'react-bootstrap/Tabs'
+import Tab from 'react-bootstrap/Tab'
 
 import * as Icon from 'react-bootstrap-icons'
 
@@ -128,310 +130,323 @@ export class SQLStepEditor extends React.Component {
                 backdrop="static"
                 size='xl'
                 scrollable
-                centered
             >
                 <Modal.Header closeButton>
                     <Modal.Title>{this.get_title()}</Modal.Title>
                 </Modal.Header>
+
                 <Modal.Body>
-                    <Container fluid className="p-2 m-2">
-                        <Row>
-                            <Col>
-                                <Form.Group as={Row} controlId="sql-step-name">
-                                    <Form.Label column sm={2}>Name</Form.Label>
-                                    <Col sm={10}>
-                                        <Form.Control
-                                            size="sm"
-                                            disabled = {this.state.mode==='edit'||this.state.mode==='view'}
-                                            value={this.state.step.name}
-                                            onChange={(event) => {
-                                                const v = event.target.value;
-                                                this.setState(state => {
-                                                    state.step.name = v;
-                                                    return state;
-                                                })
-                                            }}
-                                        />
-                                    </Col>
-                                </Form.Group>
-                            </Col>
-                        </Row>
+                    <Container fluid className="pb-2 mb-2">
+                        <Tabs
+                            defaultActiveKey="BasicInfo"
+                            transition={false}
+                        >
+                            <Tab eventKey="BasicInfo" title="Basic Info">
+                                <Container className="pt-2">
+                                    <Row>
+                                        <Col>
+                                            <Form.Group as={Row} controlId="sql-step-name">
+                                                <Form.Label column sm={2}>Name</Form.Label>
+                                                <Col sm={10}>
+                                                    <Form.Control
+                                                        size="sm"
+                                                        disabled = {this.state.mode==='edit'||this.state.mode==='view'}
+                                                        value={this.state.step.name}
+                                                        onChange={(event) => {
+                                                            const v = event.target.value;
+                                                            this.setState(state => {
+                                                                state.step.name = v;
+                                                                return state;
+                                                            })
+                                                        }}
+                                                    />
+                                                </Col>
+                                            </Form.Group>
+                                        </Col>
+                                    </Row>
+                                    <Row>
+                                        <Col>
+                                            <h4>Import Asserts</h4>
+                                            <Table hover bordered variant="dark" size="sm">
+                                                <thead>
+                                                    <tr>
+                                                        <th className="c-tc-icon1"></th>
+                                                        <th style={{width: "200px"}}>Alias</th>
+                                                        <th>Assert path</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                {
+                                                    this.state.step.imports.map((imp) => {
+                                                        return (
+                                                            <tr key={imp.alias}>
+                                                                <td className="align-middle">
+                                                                    <Button
+                                                                        variant="primary"
+                                                                        size="sm"
+                                                                        disabled = {this.state.mode==='view'}
+                                                                        onClick={() => {this.deleteImport(imp.alias)}}
+                                                                    >
+                                                                        <Icon.X />
+                                                                    </Button>
+                                                                </td>
+                                                                <td className="align-middle">{imp.alias}</td>
+                                                                <td className="align-middle">{imp.dsi_name}</td>
+                                                            </tr>
+                                                        )
+                                                    })
+                                                }
+                                                {
+                                                    (this.state.mode === 'edit' || this.state.mode === 'new') &&
+                                                    <tr>
+                                                        <td className="align-middle">
+                                                            <Button
+                                                                variant="primary"
+                                                                size="sm"
+                                                                disabled = {
+                                                                    !this.state.step._toAddAlias.trim() ||
+                                                                    !this.state.step._toAddAssertPath.trim()
+                                                                }
+                                                                onClick={() => {
+                                                                    this.setState(state => {
+                                                                        state.step.imports.push({
+                                                                            alias   : state.step._toAddAlias.trim(),
+                                                                            dsi_name: state.step._toAddAssertPath.trim(),
+                                                                        });
+                                                                        this.state.step._toAddAlias = '';
+                                                                        this.state.step._toAddAssertPath = '';
+                                                                        return state;
+                                                                    });
+                                                                }}
+                                                            >
+                                                                <Icon.Plus />
+                                                            </Button>
+                                                        </td>
+                                                        <td>
+                                                            <Form.Control id="task_step_alias_to_add"
+                                                                size="sm"
+                                                                value={this.state.step._toAddAlias}
+                                                                onChange={(event) => {
+                                                                    const v = event.target.value;
+                                                                    this.setState(state => {
+                                                                        state.step._toAddAlias = v;
+                                                                        return state;
+                                                                    })
+                                                                }}
+                                                            />
+                                                        </td>
+                                                        <td>
+                                                            <Form.Control id="task_step_dsi_name_to_add"
+                                                                size="sm"
+                                                                value={this.state.step._toAddAssertPath}
+                                                                onChange={(event) => {
+                                                                    const v = event.target.value;
+                                                                    this.setState(state => {
+                                                                        state.step._toAddAssertPath = v;
+                                                                        return state;
+                                                                    })
+                                                                }}
+                                                            />
+                                                        </td>
+                                                    </tr>
 
-                        <Row>
-                            <Col>
-                                <h4>Import Asserts</h4>
-                                <Table hover bordered variant="dark" size="sm">
-                                    <thead>
-                                        <tr>
-                                            <th className="c-tc-icon1"></th>
-                                            <th style={{width: "200px"}}>Alias</th>
-                                            <th>Assert path</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                    {
-                                        this.state.step.imports.map((imp) => {
-                                            return (
-                                                <tr key={imp.alias}>
-                                                    <td className="align-middle">
-                                                        <Button
-                                                            variant="primary"
-                                                            size="sm"
-                                                            disabled = {this.state.mode==='view'}
-                                                            onClick={() => {this.deleteImport(imp.alias)}}
-                                                        >
-                                                            <Icon.X />
-                                                        </Button>
-                                                    </td>
-                                                    <td className="align-middle">{imp.alias}</td>
-                                                    <td className="align-middle">{imp.dsi_name}</td>
-                                                </tr>
-                                            )
-                                        })
-                                    }
-                                    {
-                                        (this.state.mode === 'edit' || this.state.mode === 'new') &&
-                                        <tr>
-                                            <td className="align-middle">
-                                                <Button
-                                                    variant="primary"
-                                                    size="sm"
-                                                    disabled = {
-                                                        !this.state.step._toAddAlias.trim() ||
-                                                        !this.state.step._toAddAssertPath.trim()
-                                                    }
-                                                    onClick={() => {
-                                                        this.setState(state => {
-                                                            state.step.imports.push({
-                                                                alias   : state.step._toAddAlias.trim(),
-                                                                dsi_name: state.step._toAddAssertPath.trim(),
+                                                }
+                                                </tbody>
+                                            </Table>
+                                        </Col>
+                                    </Row>
+
+                                    <Row>
+                                        <Col>
+                                            <Form.Group as={Row} controlId="sql-step-output-alias">
+                                                <Form.Label column sm={4}>Output alias</Form.Label>
+                                                <Col sm={8}>
+                                                    <Form.Control
+                                                        size="sm"
+                                                        disabled = {this.state.mode==='view'}
+                                                        value={this.state.step.alias}
+                                                        onChange={(event) => {
+                                                            const v = event.target.value;
+                                                            this.setState(state => {
+                                                                state.step.alias = v;
+                                                                return state;
                                                             });
-                                                            this.state.step._toAddAlias = '';
-                                                            this.state.step._toAddAssertPath = '';
-                                                            return state;
-                                                        });
-                                                    }}
-                                                >
-                                                    <Icon.Plus />
-                                                </Button>
-                                            </td>
-                                            <td>
-                                                <Form.Control id="task_step_alias_to_add"
-                                                    size="sm"
-                                                    value={this.state.step._toAddAlias}
-                                                    onChange={(event) => {
-                                                        const v = event.target.value;
-                                                        this.setState(state => {
-                                                            state.step._toAddAlias = v;
-                                                            return state;
-                                                        })
-                                                    }}
-                                                />
-                                            </td>
-                                            <td>
-                                                <Form.Control id="task_step_dsi_name_to_add"
-                                                    size="sm"
-                                                    value={this.state.step._toAddAssertPath}
-                                                    onChange={(event) => {
-                                                        const v = event.target.value;
-                                                        this.setState(state => {
-                                                            state.step._toAddAssertPath = v;
-                                                            return state;
-                                                        })
-                                                    }}
-                                                />
-                                            </td>
-                                        </tr>
-
+                                                        }}
+                                                    />
+                                                </Col>
+                                            </Form.Group>
+                                        </Col>
+                                        <Col>
+                                            <Form.Group as={Row} controlId="save-to-file">
+                                                <Form.Label column sm={4}>Write Output</Form.Label>
+                                                <Col sm={8}>
+                                                    <Form.Check
+                                                        size="sm"
+                                                        className="c-vc"
+                                                        type="checkbox"
+                                                        disabled = {this.state.mode==="view"}
+                                                        checked={this.state.step._output}
+                                                        onChange={(event) => {
+                                                            const v = event.target.checked;
+                                                            this.setState(
+                                                                state => {
+                                                                    state.step._output = v;
+                                                                    return state;
+                                                                }
+                                                            )
+                                                        }}
+                                                    />
+                                                </Col>
+                                            </Form.Group>
+                                        </Col>
+                                    </Row>
+                                    {
+                                        this.state.step._output &&
+                                        <Row>
+                                            <Col>
+                                                <fieldset class="border p-2">
+                                                    <legend  class="w-auto">Write Output</legend>
+                                                    <Row>
+                                                        <Col>
+                                                            <Form.Group as={Row} controlId="sql-step-output-location">
+                                                                <Form.Label column sm={3}>Location</Form.Label>
+                                                                <Col sm={9}>
+                                                                    <Form.Control
+                                                                        size="sm"
+                                                                        disabled = {this.state.mode==='view'}
+                                                                        value={this.state.step.output.location}
+                                                                        onChange={(event) => {
+                                                                            const v = event.target.value;
+                                                                            this.setState(state => {
+                                                                                state.step.output.location = v;
+                                                                                return state;
+                                                                            });
+                                                                        }}
+                                                                    />
+                                                                </Col>
+                                                            </Form.Group>
+                                                        </Col>
+                                                        <Col>
+                                                            <Form.Group as={Row} controlId="sql-step-output-dataset-name">
+                                                                <Form.Label column sm={3}>Asset Path</Form.Label>
+                                                                <Col sm={9}>
+                                                                    <Form.Control
+                                                                        size="sm"
+                                                                        disabled = {this.state.mode==='view'}
+                                                                        value={this.state.step.output.register_dataset_instance}
+                                                                        onChange={(event) => {
+                                                                            const v = event.target.value;
+                                                                            this.setState(state => {
+                                                                                state.step.output.register_dataset_instance = v;
+                                                                                return state;
+                                                                            });
+                                                                        }}
+                                                                    />
+                                                                </Col>
+                                                            </Form.Group>
+                                                        </Col>
+                                                    </Row>
+                                                    <Row>
+                                                        <Col>
+                                                            <Form.Group as={Row} controlId="sql-step-output-type">
+                                                                <Form.Label column sm={3}>Type</Form.Label>
+                                                                <Col sm={9}>
+                                                                    <Form.Control
+                                                                        size="sm"
+                                                                        as="select"
+                                                                        disabled = {this.state.mode==='view'}
+                                                                        value={this.state.step.output.type}
+                                                                        onChange={(event) => {
+                                                                            const v = event.target.value;
+                                                                            this.setState(state => {
+                                                                                state.step.output.type = v;
+                                                                                return state;
+                                                                            });
+                                                                        }}
+                                                                    >
+                                                                        <option key="parquet" value="parquet">parquet</option>
+                                                                        <option key="json"    value="json">json</option>
+                                                                    </Form.Control>
+                                                                </Col>
+                                                            </Form.Group>
+                                                        </Col>
+                                                        <Col>
+                                                            <Form.Group as={Row} controlId="sql-step-output-write-mode">
+                                                                <Form.Label column sm={3}>Write Mode</Form.Label>
+                                                                <Col sm={9}>
+                                                                    <Form.Control
+                                                                        size="sm"
+                                                                        as="select"
+                                                                        disabled = {this.state.mode==='view'}
+                                                                        value={this.state.step.output.write_mode}
+                                                                        onChange={(event) => {
+                                                                            const v = event.target.value;
+                                                                            this.setState(state => {
+                                                                                state.step.output.write_mode = v;
+                                                                                return state;
+                                                                            });
+                                                                        }}
+                                                                    >
+                                                                        <option key="overwrite" value="overwrite">overwrite</option>
+                                                                        <option key="append"    value="append">append</option>
+                                                                    </Form.Control>
+                                                                </Col>
+                                                            </Form.Group>
+                                                        </Col>
+                                                    </Row>
+                                                    <Row>
+                                                        <Col></Col>
+                                                        <Col>
+                                                            <Form.Group as={Row} controlId="sql-step-output-data-time">
+                                                                <Form.Label column sm={3}>Data Time</Form.Label>
+                                                                <Col sm={9}>
+                                                                    <Form.Control
+                                                                        size="sm"
+                                                                        disabled = {this.state.mode==='view'}
+                                                                        value={this.state.step.output.data_time}
+                                                                        onChange={(event) => {
+                                                                            const v = event.target.value;
+                                                                            this.setState(state => {
+                                                                                state.step.output.data_time = v;
+                                                                                return state;
+                                                                            });
+                                                                        }}
+                                                                    />
+                                                                </Col>
+                                                            </Form.Group>
+                                                        </Col>
+                                                    </Row>
+                                                </fieldset>
+                                            </Col>
+                                        </Row>
                                     }
-                                    </tbody>
-                                </Table>
-                            </Col>
-                        </Row>
-                        <Row>
-                            <Col>
-                                <Form.Group controlId="sql-step-sql">
-                                    <Form.Label>SQL Statement</Form.Label>
-                                    <Form.Control as="textarea" rows="5"
-                                        size="sm"
-                                        className="monofont"
-                                        disabled = {this.state.mode==='view'}
-                                        value={this.state.step.sql}
-                                        onChange={(event) => {
-                                            const v = event.target.value;
-                                            this.setState(state => {
-                                                state.step.sql = v;
-                                                return state;
-                                            })
-                                        }}
-                                    />
-                                </Form.Group>
-                            </Col>
-                        </Row>
-                        <Row>
-                            <Col>
-                                <Form.Group as={Row} controlId="sql-step-output-alias">
-                                    <Form.Label column sm={4}>Output alias</Form.Label>
-                                    <Col sm={8}>
-                                        <Form.Control
-                                            size="sm"
-                                            disabled = {this.state.mode==='view'}
-                                            value={this.state.step.alias}
-                                            onChange={(event) => {
-                                                const v = event.target.value;
-                                                this.setState(state => {
-                                                    state.step.alias = v;
-                                                    return state;
-                                                });
-                                            }}
-                                        />
-                                    </Col>
-                                </Form.Group>
-                            </Col>
-                            <Col>
-                                <Form.Group as={Row} controlId="save-to-file">
-                                    <Form.Label column sm={4}>Write Output</Form.Label>
-                                    <Col sm={8}>
-                                        <Form.Check
-                                            size="sm"
-                                            className="c-vc"
-                                            type="checkbox"
-                                            disabled = {this.state.mode==="view"}
-                                            checked={this.state.step._output}
-                                            onChange={(event) => {
-                                                const v = event.target.checked;
-                                                this.setState(
-                                                    state => {
-                                                        state.step._output = v;
-                                                        return state;
-                                                    }
-                                                )
-                                            }}
-                                        />
-                                    </Col>
-                                </Form.Group>
-                            </Col>
-                        </Row>
-                        {
-                            this.state.step._output &&
-                            <Row>
-                                <Col>
-                                    <fieldset class="border p-2">
-                                        <legend  class="w-auto">Write Output</legend>
-                                        <Row>
-                                            <Col>
-                                                <Form.Group as={Row} controlId="sql-step-output-location">
-                                                    <Form.Label column sm={3}>Location</Form.Label>
-                                                    <Col sm={9}>
-                                                        <Form.Control
-                                                            size="sm"
-                                                            disabled = {this.state.mode==='view'}
-                                                            value={this.state.step.output.location}
-                                                            onChange={(event) => {
-                                                                const v = event.target.value;
-                                                                this.setState(state => {
-                                                                    state.step.output.location = v;
-                                                                    return state;
-                                                                });
-                                                            }}
-                                                        />
-                                                    </Col>
-                                                </Form.Group>
-                                            </Col>
-                                            <Col>
-                                                <Form.Group as={Row} controlId="sql-step-output-dataset-name">
-                                                    <Form.Label column sm={3}>Asset Path</Form.Label>
-                                                    <Col sm={9}>
-                                                        <Form.Control
-                                                            size="sm"
-                                                            disabled = {this.state.mode==='view'}
-                                                            value={this.state.step.output.register_dataset_instance}
-                                                            onChange={(event) => {
-                                                                const v = event.target.value;
-                                                                this.setState(state => {
-                                                                    state.step.output.register_dataset_instance = v;
-                                                                    return state;
-                                                                });
-                                                            }}
-                                                        />
-                                                    </Col>
-                                                </Form.Group>
-                                            </Col>
-                                        </Row>
-                                        <Row>
-                                            <Col>
-                                                <Form.Group as={Row} controlId="sql-step-output-type">
-                                                    <Form.Label column sm={3}>Type</Form.Label>
-                                                    <Col sm={9}>
-                                                        <Form.Control
-                                                            size="sm"
-                                                            as="select"
-                                                            disabled = {this.state.mode==='view'}
-                                                            value={this.state.step.output.type}
-                                                            onChange={(event) => {
-                                                                const v = event.target.value;
-                                                                this.setState(state => {
-                                                                    state.step.output.type = v;
-                                                                    return state;
-                                                                });
-                                                            }}
-                                                        >
-                                                            <option key="parquet" value="parquet">parquet</option>
-                                                            <option key="json"    value="json">json</option>
-                                                        </Form.Control>
-                                                    </Col>
-                                                </Form.Group>
-                                            </Col>
-                                            <Col>
-                                                <Form.Group as={Row} controlId="sql-step-output-write-mode">
-                                                    <Form.Label column sm={3}>Write Mode</Form.Label>
-                                                    <Col sm={9}>
-                                                        <Form.Control
-                                                            size="sm"
-                                                            as="select"
-                                                            disabled = {this.state.mode==='view'}
-                                                            value={this.state.step.output.write_mode}
-                                                            onChange={(event) => {
-                                                                const v = event.target.value;
-                                                                this.setState(state => {
-                                                                    state.step.output.write_mode = v;
-                                                                    return state;
-                                                                });
-                                                            }}
-                                                        >
-                                                            <option key="overwrite" value="overwrite">overwrite</option>
-                                                            <option key="append"    value="append">append</option>
-                                                        </Form.Control>
-                                                    </Col>
-                                                </Form.Group>
-                                            </Col>
-                                        </Row>
-                                        <Row>
-                                            <Col></Col>
-                                            <Col>
-                                                <Form.Group as={Row} controlId="sql-step-output-data-time">
-                                                    <Form.Label column sm={3}>Data Time</Form.Label>
-                                                    <Col sm={9}>
-                                                        <Form.Control
-                                                            size="sm"
-                                                            disabled = {this.state.mode==='view'}
-                                                            value={this.state.step.output.data_time}
-                                                            onChange={(event) => {
-                                                                const v = event.target.value;
-                                                                this.setState(state => {
-                                                                    state.step.output.data_time = v;
-                                                                    return state;
-                                                                });
-                                                            }}
-                                                        />
-                                                    </Col>
-                                                </Form.Group>
-                                            </Col>
-                                        </Row>
-                                    </fieldset>
-                                </Col>
-                            </Row>
-                        }
+                                </Container>
+                            </Tab>
+                            <Tab eventKey="SQLStmt" title="SQL Statement">
+                                <Container className="pt-2">
+                                    <Row>
+                                        <Col>
+                                            <Form.Group controlId="sql-step-sql">
+                                                <Form.Label>SQL Statement</Form.Label>
+                                                <Form.Control as="textarea" rows="25"
+                                                    size="sm"
+                                                    className="monofont"
+                                                    disabled = {this.state.mode==='view'}
+                                                    value={this.state.step.sql}
+                                                    onChange={(event) => {
+                                                        const v = event.target.value;
+                                                        this.setState(state => {
+                                                            state.step.sql = v;
+                                                            return state;
+                                                        })
+                                                    }}
+                                                />
+                                            </Form.Group>
+                                        </Col>
+                                    </Row>
+                                </Container>
+                            </Tab>
+                        </Tabs>
                     </Container>
                 </Modal.Body>
 
