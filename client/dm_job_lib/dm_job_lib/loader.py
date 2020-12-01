@@ -74,7 +74,12 @@ def write_asset(spark, df, table, mode='overwrite'):
 # Register dataset instance
 # - it will create dataset if not exist, user need to fill in description latter
 ##############################################################################
-def register_dataset_instance(dcc, dsi_path, file_type, location, df):
+def register_dataset_instance(dcc, dsi_path, file_type, location, df, data_time = None):
+    if data_time is None:
+        effective_data_time = datetime.utcnow()
+    else:
+        effective_data_time = data_time
+
     dataset_name, major_version, minor_version, path = dsi_path.split(":")
     ds = dcc.get_dataset(dataset_name, major_version, int(minor_version))
     if ds is None:
@@ -86,7 +91,7 @@ def register_dataset_instance(dcc, dsi_path, file_type, location, df):
             'type': file_type,
             'location': location
         }],
-        datetime.utcnow(),
+        effective_data_time,
         row_count = df.count()
     )
     dcc.set_dataset_schema_and_sample_data(
@@ -95,7 +100,12 @@ def register_dataset_instance(dcc, dsi_path, file_type, location, df):
         ""  # no sample data for now
     )
 
-def register_dataset_instance_for_view(spark, dcc, dsi_path, loader_name, loader_args):
+def register_dataset_instance_for_view(spark, dcc, dsi_path, loader_name, loader_args, data_time = None):
+    if data_time is None:
+        effective_data_time = datetime.utcnow()
+    else:
+        effective_data_time = data_time
+
     dataset_name, major_version, minor_version, path = dsi_path.split(":")
     ds = dcc.get_dataset(dataset_name, major_version, int(minor_version))
     if ds is None:
@@ -105,7 +115,7 @@ def register_dataset_instance_for_view(spark, dcc, dsi_path, loader_name, loader
     dcc.create_dataset_instance(
         dataset_name, major_version, int(minor_version),
         path, [],
-        datetime.utcnow(),
+        effective_data_time,
         loader = json.dumps({
             "name": loader_name,
             "args": loader_args,

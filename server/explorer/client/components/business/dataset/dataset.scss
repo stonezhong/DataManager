@@ -97,6 +97,10 @@ div.dataset-instance-table {
                     & > th[data-role='path'] {
                         text-align: center;
                     }
+                    & > th[data-role='data_time'] {
+                        width: 180px;
+                        text-align: center;
+                    }
                     & > th[data-role='publish_time'] {
                         width: 180px;
                         text-align: center;
@@ -120,6 +124,9 @@ div.dataset-instance-table {
                     & > td {
                         height: 40px;
                         vertical-align: middle;
+                    }
+                    & > td[data-role='data_time'] {
+                        text-align: center;
                     }
                     & > td[data-role='publish_time'] {
                         text-align: center;

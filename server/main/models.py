@@ -124,7 +124,7 @@ class Dataset(models.Model):
             dataset = self,
             parent_instance = None,        # top level instance
             deleted_time = None            # still active
-        ).order_by('name').all()
+        ).order_by('-data_time', "path").all()
 
     def get_child(self, requester, name):
         """
@@ -288,7 +288,7 @@ class DatasetInstance(models.Model):
             dataset = self.dataset,
             parent_instance = self,                 # self's children
             deleted_time = None                     # still active
-        ).order_by('name').all()
+        ).order_by('-data_time', 'path').all()
 
     def get_child(self, requester, name):
         """

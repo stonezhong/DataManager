@@ -52,15 +52,25 @@ def execute_step(spark, step, dcc, app_args, pipeline_group_context):
     if register_dsi_full_path:
         register_dsi_full_path = resolve(register_dsi_full_path, pipeline_group_context)
         location = resolve(output['location'], pipeline_group_context)
+
+        data_time_raw = output.get("data_time")
+        if data_time_raw:
+            data_time_str = resolve(data_time_raw, pipeline_group_context)
+            data_time = datetime.strptime(data_time_str, "%Y-%m-%d %H:%M:%S")
+        else:
+            data_time = None
+
         print(f"register output: register_dsi_full_path = {register_dsi_full_path}")
         print(f"register output: type = {output['type']}")
         print(f"register output: location = {location}")
+        print(f"register output: data_time = {data_time}")
         register_dataset_instance(
             dcc,
             register_dsi_full_path,
             output['type'],
             location,
             df,
+            data_time = data_time
         )
     else:
         print(f"register output: won't")

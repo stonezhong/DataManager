@@ -58,12 +58,23 @@ export class DatasetInstanceTable extends React.Component {
         </Button>
     );
 
+    render_data_time = dataset_instance => {
+        // short display if data_time is at day boundary
+        const suffix = " 00:00:00";
+        if (dataset_instance.data_time.endsWith(suffix)) {
+            return dataset_instance.data_time.substring(0, dataset_instance.data_time.length - suffix.length);
+        } else {
+            return dataset_instance.data_time;
+        }
+    };
+
     get_page = (offset, limit) => {
         return this.props.get_page(offset, limit);
     };
 
     columns = {
         path:               {display: "Path"},
+        data_time:          {display: "Data Time", render_data: this.render_data_time},
         publish_time:       {display: "Publish Time"},
         loader:             {display: "Loader", render_data: this.render_loader},
         row_count:          {display: "Row Count"},

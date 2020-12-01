@@ -32,7 +32,8 @@ export class SQLStepEditor extends React.Component {
                 type: 'parquet',
                 write_mode: 'overwrite',
                 location: '',
-                register_dataset_instance: ''
+                register_dataset_instance: '',
+                data_time: '',
             },
             _toAddAlias: '',
             _toAddAssertPath: ''
@@ -83,7 +84,8 @@ export class SQLStepEditor extends React.Component {
                     type: 'parquet',
                     write_mode: 'overwrite',
                     location: '',
-                    register_dataset_instance: ''
+                    register_dataset_instance: '',
+                    data_time: ''
                 };
             }
             this.setState({
@@ -400,6 +402,28 @@ export class SQLStepEditor extends React.Component {
                                                             <option key="overwrite" value="overwrite">overwrite</option>
                                                             <option key="append"    value="append">append</option>
                                                         </Form.Control>
+                                                    </Col>
+                                                </Form.Group>
+                                            </Col>
+                                        </Row>
+                                        <Row>
+                                            <Col></Col>
+                                            <Col>
+                                                <Form.Group as={Row} controlId="sql-step-output-data-time">
+                                                    <Form.Label column sm={3}>Data Time</Form.Label>
+                                                    <Col sm={9}>
+                                                        <Form.Control
+                                                            size="sm"
+                                                            disabled = {this.state.mode==='view'}
+                                                            value={this.state.step.output.data_time}
+                                                            onChange={(event) => {
+                                                                const v = event.target.value;
+                                                                this.setState(state => {
+                                                                    state.step.output.data_time = v;
+                                                                    return state;
+                                                                });
+                                                            }}
+                                                        />
                                                     </Col>
                                                 </Form.Group>
                                             </Col>
