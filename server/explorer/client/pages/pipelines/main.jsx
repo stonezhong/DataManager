@@ -9,7 +9,7 @@ import Container from 'react-bootstrap/Container'
 import {PipelineTable} from '/components/business/pipeline/pipeline_table.jsx'
 import {
     get_csrf_token, pipeline_to_django_model, pipeline_from_django_model,
-    get_app_context, get_current_user, get_app_config
+    get_app_context, get_current_user, get_app_config, handle_json_response
 } from '/common_lib'
 
 class PipelinesPage extends React.Component {
@@ -26,7 +26,7 @@ class PipelinesPage extends React.Component {
                 'X-CSRFToken': get_csrf_token(),
             },
             body: JSON.stringify({paused: true})
-        }).then((res) => res.json())
+        }).then(handle_json_response)
     }
 
     onUnpause = (pipeline_id) => {
@@ -38,7 +38,7 @@ class PipelinesPage extends React.Component {
                 'X-CSRFToken': get_csrf_token(),
             },
             body: JSON.stringify({paused: false})
-        }).then((res) => res.json())
+        }).then(handle_json_response)
     }
 
     // called when PipelineEditor saved a pipeline in memory
@@ -53,7 +53,7 @@ class PipelinesPage extends React.Component {
                 },
                 body: JSON.stringify(to_post)
             })
-                .then(res => res.json())
+                .then(handle_json_response)
                 .then(
                     pipeline_created => {
                         if (pipeline.type == 'external') {
@@ -67,7 +67,7 @@ class PipelinesPage extends React.Component {
                                     'Content-Type': 'application/json',
                                     'X-CSRFToken': get_csrf_token(),
                                 },
-                            }).then(res => res.json());
+                            }).then(handle_json_response);
                         }
                     }
                 )
@@ -80,7 +80,7 @@ class PipelinesPage extends React.Component {
                     'X-CSRFToken': get_csrf_token(),
                 },
                 body: JSON.stringify(to_post)
-            }).then(res => res.json());
+            }).then(handle_json_response);
         }
     };
 
@@ -93,7 +93,7 @@ class PipelinesPage extends React.Component {
             }
         };
         const url = buildUrl('', buildArgs);
-        return fetch(url).then(res => res.json());
+        return fetch(url).then(handle_json_response);
     };
 
     render() {
