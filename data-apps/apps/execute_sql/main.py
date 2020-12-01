@@ -63,7 +63,7 @@ def execute_step(spark, step, dcc, app_args, pipeline_group_context):
         print(f"register output: register_dsi_full_path = {register_dsi_full_path}")
         print(f"register output: type = {output['type']}")
         print(f"register output: location = {location}")
-        print(f"register output: data_timme = {data_timme}")
+        print(f"register output: data_time = {data_time}")
         register_dataset_instance(
             dcc,
             register_dsi_full_path,
