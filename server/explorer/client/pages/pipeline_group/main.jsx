@@ -7,7 +7,7 @@ import Col from 'react-bootstrap/Col'
 import Row from 'react-bootstrap/Row'
 import Container from 'react-bootstrap/Container'
 
-import {get_csrf_token, get_app_context, get_app_config, get_current_user} from '/common_lib'
+import {get_csrf_token, get_app_context, get_app_config, get_current_user, handle_json_response} from '/common_lib'
 import {PipelineGroupEditor} from '/components/business/pipeline_group/pipeline_group_editor.jsx'
 import {PipelineSelector} from '/components/business/pipeline/pipeline_selector.jsx'
 import {PipelineInstanceTable} from '/components/business/pipeline_group/pipeline_instance_table.jsx'
@@ -21,7 +21,7 @@ class PipelineGroupPage extends React.Component {
 
     load_pipeline_group = () => {
         fetch(`/api/PipelineGroups/${this.props.pipeline_group_id}/details/`)
-            .then(res => res.json())
+            .then(handle_json_response)
             .then(
                 (result) => {
                     this.setState(
@@ -72,7 +72,7 @@ class PipelineGroupPage extends React.Component {
 
     openDiagForAttach = (event) => {
         fetch("/api/Pipelines/active/")
-        .then(res => res.json())
+        .then(handle_json_response)
         .then(
             (result) => {
                 // remove pipeline instance already exist
@@ -101,7 +101,7 @@ class PipelineGroupPage extends React.Component {
                 body: JSON.stringify(to_post)
             }
         )
-        .then(res => res.json())
+        .then(handle_json_response)
         .then(
             (result) => {
                 // no need to reload

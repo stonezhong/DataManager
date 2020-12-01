@@ -8,7 +8,7 @@ import {PipelineGroupTable} from '/components/business/pipeline_group/pipeline_g
 import $ from 'jquery'
 const buildUrl = require('build-url');
 
-import {dt_2_utc_string, get_csrf_token, get_current_user} from '/common_lib'
+import {dt_2_utc_string, get_csrf_token, get_current_user, handle_json_response} from '/common_lib'
 
 class PipelineGroupsPage extends React.Component {
     state = {
@@ -33,7 +33,7 @@ class PipelineGroupsPage extends React.Component {
                     'X-CSRFToken': get_csrf_token(),
                 },
                 body: JSON.stringify(to_post)
-            }).then((res) => res.json());
+            }).then(handle_json_response);
         } else if (mode === "edit") {
             const to_patch = {
                 context     : pipeline_group.context,
@@ -46,7 +46,7 @@ class PipelineGroupsPage extends React.Component {
                     'X-CSRFToken': get_csrf_token(),
                 },
                 body: JSON.stringify(to_patch)
-            }).then((res) => res.json());
+            }).then(handle_json_response);
         }
     };
 
@@ -62,7 +62,7 @@ class PipelineGroupsPage extends React.Component {
             }
         };
         const url = buildUrl('', buildArgs);
-        return fetch(url).then(res => res.json());
+        return fetch(url).then(handle_json_response);
 
     };
 

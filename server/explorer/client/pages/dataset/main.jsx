@@ -13,7 +13,7 @@ const buildUrl = require('build-url');
 import {DatasetInstanceTable} from '/components/business/dataset/dataset_instance_table.jsx'
 import {TopMessage} from '/components/generic/top_message/main.jsx'
 
-import {get_app_context, get_current_user} from '/common_lib'
+import {get_app_context, get_current_user, handle_json_response} from '/common_lib'
 import Modal from 'react-bootstrap/esm/Modal'
 
 class DatasetDescriptionDialog extends React.Component {
@@ -88,7 +88,7 @@ class DatasetPage extends React.Component {
             }
         };
         const url = buildUrl('', buildArgs);
-        return fetch(url).then(res => res.json());
+        return fetch(url).then(handle_json_response);
     };
 
     render() {

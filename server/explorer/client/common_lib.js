@@ -126,3 +126,10 @@ export function is_valid_datetime(s, allow_empty=false) {
     const dt_pattern = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/;
     return s.match(dt_pattern);
 }
+
+export function handle_json_response(res) {
+    if (res.status !== 200) {
+        throw new Error(`server error: ${res.statusText}`);
+    }
+    return res.json();
+}

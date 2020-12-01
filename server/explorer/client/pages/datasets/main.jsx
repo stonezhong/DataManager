@@ -6,7 +6,7 @@ import Container from 'react-bootstrap/Container'
 import $ from 'jquery'
 const buildUrl = require('build-url');
 
-import {dt_2_utc_string, get_csrf_token, get_current_user} from '/common_lib'
+import {dt_2_utc_string, get_csrf_token, get_current_user, handle_json_response} from '/common_lib'
 import {DatasetTable} from '/components/business/dataset/dataset_table.jsx'
 
 class DatasetsPage extends React.Component {
@@ -35,7 +35,7 @@ class DatasetsPage extends React.Component {
                     'X-CSRFToken': get_csrf_token(),
                 },
                 body: JSON.stringify(to_post)
-            }).then((res) => res.json())
+            }).then(handle_json_response)
         } else if (mode == 'edit') {
             // You can only change description and team
             const to_patch = {
@@ -51,7 +51,7 @@ class DatasetsPage extends React.Component {
                     'X-CSRFToken': get_csrf_token(),
                 },
                 body: JSON.stringify(to_patch)
-            }).then(res => res.json());
+            }).then(handle_json_response);
         }
     };
 
@@ -69,7 +69,7 @@ class DatasetsPage extends React.Component {
             buildArgs.queryParams.expiration_time__isnull="True"
         }
         const url = buildUrl('', buildArgs);
-        return fetch(url).then(res => res.json());
+        return fetch(url).then(handle_json_response);
     };
 
     render() {
