@@ -67,11 +67,14 @@ def main(spark, input_args):
 
         print(f"Writing to {file_to_write}")
 
+        data_time = datetime.strptime(dt, "%Y-%m-%d")
         register_dataset_instance(
             dcc, f'tradings:1.0:1:/{dt}_{market}',
             'parquet',
             file_to_write,
-            df)
+            df,
+            data_time = data_time
+        )
     elif action == 'create-view':
         loader = app_args['loader']
         loader_name = loader['name']
@@ -92,7 +95,8 @@ def main(spark, input_args):
         register_dataset_instance_for_view(
             spark, dcc, f'tradings:1.0:1:/{dt}',
             loader_name,
-            loader_args
+            loader_args,
+            data_time = data_time
         )
 
     print("Done")
