@@ -271,7 +271,7 @@ class PipelineViewSet(viewsets.ModelViewSet):
         context = json.loads(pipeline.context)
         template_name = None
 
-        if context['type'] == 'sequential':
+        if context['type'] == 'simple-flow':
             template_name = 'seq'
         if template_name is not None:
             template_file = os.path.join(

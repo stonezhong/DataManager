@@ -43,7 +43,7 @@ export class TestPipelineEditor extends React.Component {
                     className="mr-2"
                     onClick={() => {
                         this.testPipelineEditorRef.current.openDialog('edit', {
-                            type: "sequential",
+                            type: "simple-flow",
                             author: "stonezhong",
                             category: "daily",
                             team: "trading",
@@ -74,7 +74,7 @@ export class TestPipelineEditor extends React.Component {
                     className="mr-2"
                     onClick={() => {
                         this.testPipelineEditorRef.current.openDialog('view', {
-                            type: "sequential",
+                            type: "simple-flow",
                             author: "stonezhong",
                             category: "daily",
                             team: "trading",
