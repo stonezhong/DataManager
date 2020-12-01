@@ -46,7 +46,7 @@ export class TestPipelineGroupEditor extends React.Component {
                                             id: '7bbafbcd-725e-4208-93b6-df7efc75df9f',
                                             author: 'stonezhong',
                                             category: 'daily',
-                                            context: "{\"type\":\"sequential\",\"dag_id\":\"\",\"requiredDSIs\":[],\"tasks\":[{\"name\":\"import-trading-data\",\"description\":\"\",\"type\":\"other\",\"args\":\"{}\",\"steps\":[],\"application_id\":\"1e871b84-5ee8-45e3-bd29-a62b52bdfe56\"}]}",
+                                            context: "{\"type\":\"simple-flow\",\"dag_id\":\"\",\"requiredDSIs\":[],\"tasks\":[{\"name\":\"import-trading-data\",\"description\":\"\",\"type\":\"other\",\"args\":\"{}\",\"steps\":[],\"application_id\":\"1e871b84-5ee8-45e3-bd29-a62b52bdfe56\"}]}",
                                             version: 1,
                                             dag_version: 1,
                                             name: 'import-trading-data',

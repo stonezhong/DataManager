@@ -41,7 +41,7 @@ export class PipelineEditor extends React.Component {
             category: '',
             description: '',
             // belong to the context
-            type        : 'sequential',
+            type        : 'simple-flow',
             dag_id      : '',                // for external pipeline
             requiredDSIs: [],          // required dataset instances
             tasks       : [],
@@ -271,12 +271,12 @@ export class PipelineEditor extends React.Component {
                                                 disabled = {this.state.mode==='view'}
                                                 name="pipeline-type"
                                                 inline
-                                                label="Sequential"
+                                                label="simple-flow"
                                                 type="radio"
-                                                checked={this.state.pipeline.type=="sequential"}
+                                                checked={this.state.pipeline.type=="simple-flow"}
                                                 onChange={() => {
                                                     this.setState(state => {
-                                                        state.pipeline.type = "sequential";
+                                                        state.pipeline.type = "simple-flow";
                                                         return state;
                                                     })
                                                 }}
@@ -400,7 +400,7 @@ export class PipelineEditor extends React.Component {
                                 </Container>
                             </Tab>
                             {
-                                (this.state.pipeline.type==="sequential") &&  <Tab eventKey="Tasks" title="Tasks">
+                                (this.state.pipeline.type==="simple-flow") &&  <Tab eventKey="Tasks" title="Tasks">
                                     <Container className="pt-2">
                                         <Row>
                                             <Col>

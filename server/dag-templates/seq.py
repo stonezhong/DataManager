@@ -2,7 +2,7 @@
 # -*- coding: UTF-8 -*-
 
 #######################################################
-# DAG template for sequential tasks DAG
+# DAG template for simple-flow tasks DAG
 # Each task is launching a spark job
 #######################################################
 
