@@ -11,7 +11,7 @@ with open(os.path.join(HERE, "README.md"), "r") as f:
 # This call to setup() does all the work
 setup(
     name="dc-client",
-    version="0.0.10",
+    version="0.0.11",
     description="Data Catalog Client",
     long_description=README,
     long_description_content_type="text/markdown",
@@ -21,7 +21,6 @@ setup(
     license="MIT",
     classifiers=[
         "License :: OSI Approved :: MIT License",
-        "Programming Language :: Python :: 2",
         "Programming Language :: Python :: 3",
     ],
     packages=["dc_client"],
