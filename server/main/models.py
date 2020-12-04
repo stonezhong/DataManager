@@ -92,8 +92,6 @@ class Dataset(models.Model):
 
     # is this dataset active at given time?
     def is_active_at(self, dt):
-        if dt < self.publish_time:
-            return False
         return self.expiration_time is None or self.expiration_time > dt
 
     # create a dataset
@@ -191,9 +189,7 @@ class DatasetInstance(models.Model):
 
     class Meta:
         unique_together = [
-            ['dataset', 'parent_instance', 'name', 'revision']
-        ]
-        unique_together = [
+            ['dataset', 'parent_instance', 'name', 'revision'],
             ['dataset', 'path', 'revision']
         ]
 
@@ -204,8 +200,8 @@ class DatasetInstance(models.Model):
 
         # TODO: Need finer control on who can create dataset instance for a given dataset
 
-        if not dataset.is_active_at(publish_time):
-            raise InvalidOperationException("Invalid publish_time")
+        if not dataset.is_active_at(data_time):
+            raise InvalidOperationException("Invalid data_time")
 
         instance_path = parent_instance.path if parent_instance is not None else ""
 
@@ -272,12 +268,17 @@ class DatasetInstance(models.Model):
 
         return di
 
-    def destroy(self, requester):
+    def soft_delete(self, requester):
         if not requester.is_authenticated:
             raise PermissionDeniedException()
 
-        self.locations.all().delete()
-        self.delete()
+        if self.deleted_time is not None:
+            raise InvalidOperationException("Already deleted")
+
+        now = datetime.utcnow().replace(tzinfo=pytz.UTC)
+        self.deleted_time = now
+        self.save(update_fields=['deleted_time'])
+
 
     def get_children(self, requester):
         """
