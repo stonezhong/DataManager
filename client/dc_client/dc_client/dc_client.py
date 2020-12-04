@@ -131,7 +131,7 @@ class DataCatalogClient(object):
         r.raise_for_status()
 
 
-    def get_dataset_instance(self, name, major_version, minor_version, path):
+    def get_dataset_instance(self, name, major_version, minor_version, path, revision=None):
         """Get a dataset instance.
 
         Parameters
@@ -144,34 +144,42 @@ class DataCatalogClient(object):
             The minor version of the dataset.
         path: str
             The path of the dataset instance.
+        revision: integer
+            Optional. If specified, only dataset matching the revision will be returned.
+            Otherwise, the latest revision will be returned.
         """
         dataset = self.get_dataset(name, major_version, minor_version)
         if dataset is None:
-            raise Exception("dataset not found")
+            return None
 
-        if not path.startswith('/'):
-            raise Exception("path must be absolute")
-        if path.endswith('/'):
-            raise Exception("path must not end with /")
-        names = path[1:].split('/')
+        url = "{}/DatasetInstances/".format(self.url_base)
+        params = {
+            'path': path,
+            'dataset': dataset['id'],
+        }
+        if revision is None:
+            # get the latest revision
+            params.update({
+                "ordering": "-revision",
+                "limit": 1,
+            })
+        else:
+            params.update({
+                "revision": revision
+            })
 
-        parent_instance_id = None
-        ret = None
-        for name in names:
-            if parent_instance_id is None:
-                url = "{}/Datasets/{}/child".format(self.url_base, dataset['id'])
-            else:
-                url = "{}/DatasetInstances/{}/child".format(self.url_base, parent_instance_id)
-            params={
-                'name': name
-            }
-            r = self.session.get(url=url, params = params)
-            r.raise_for_status()
-            ret = r.json()
-            parent_instance_id = ret['id']
+        r = self.session.get(url=url, params = params)
+        r.raise_for_status()
 
-        _update_locations(ret['locations'])
-        return ret
+        d = r.json()
+        if d['count'] > 0:
+            dsi = d['results'][0]
+            if dsi['deleted_time'] is not None:
+                # dataset instance is already deleted
+                return None
+            return dsi
+
+        return None
 
 
     def create_dataset_instance(self, name, major_version, minor_version, path, locations, data_time, row_count=None, loader=None):
