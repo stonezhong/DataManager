@@ -29,9 +29,9 @@ def load_view(spark, dcc, loader_name, loader_args):
 def load_asset(spark, dcc, dsi_path):
     # dcc: data catalog client
 
-    dataset_name, major_version, minor_version, path = dsi_path.split(":")
+    dataset_name, major_version, minor_version, path, revision = (asset_path.split(":") + [None])[:5]
     di = dcc.get_dataset_instance(
-        dataset_name, major_version, int(minor_version), path
+        dataset_name, major_version, int(minor_version), path, revion=revion
     )
     if di is None:
         raise Exception(f"data with path {dsi_path} does not exist!")
@@ -84,7 +84,7 @@ def register_dataset_instance(dcc, dsi_path, file_type, location, df, data_time 
     ds = dcc.get_dataset(dataset_name, major_version, int(minor_version))
     if ds is None:
         ds = dcc.create_dataset(dataset_name, major_version, int(minor_version), "-- Placeholder --", "trading")
-    dcc.create_dataset_instance(
+    dsi = dcc.create_dataset_instance(
         dataset_name, major_version, int(minor_version),
         path,
         [{
@@ -99,6 +99,7 @@ def register_dataset_instance(dcc, dsi_path, file_type, location, df, data_time 
         json.dumps(df.schema.jsonValue()),
         ""  # no sample data for now
     )
+    return dsi
 
 def register_dataset_instance_for_view(spark, dcc, dsi_path, loader_name, loader_args, data_time = None):
     if data_time is None:
@@ -112,7 +113,7 @@ def register_dataset_instance_for_view(spark, dcc, dsi_path, loader_name, loader
         ds = dcc.create_dataset(dataset_name, major_version, int(minor_version), "-- Placeholder --", "trading")
 
     df = load_view(spark, dcc, loader_name, loader_args)
-    dcc.create_dataset_instance(
+    dsi = dcc.create_dataset_instance(
         dataset_name, major_version, int(minor_version),
         path, [],
         effective_data_time,
@@ -127,3 +128,4 @@ def register_dataset_instance_for_view(spark, dcc, dsi_path, loader_name, loader
         json.dumps(df.schema.jsonValue()),
         ""  # no sample data for now
     )
+    return dsi
