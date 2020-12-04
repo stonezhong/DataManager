@@ -152,7 +152,7 @@ class DatasetInstanceViewSet(viewsets.ModelViewSet):
     queryset = DatasetInstance.objects.all()
     serializer_class = DatasetInstanceSerializer
     filter_backends = [DjangoFilterBackend, OrderingFilter]
-    filterset_fields = ['dataset', 'path']
+    filterset_fields = ['dataset', 'path', 'name', 'revision']
 
     @action(detail=True, methods=['get'])
     def children(self, request, pk=None):
@@ -213,8 +213,10 @@ class DatasetInstanceViewSet(viewsets.ModelViewSet):
     @transaction.atomic
     def destroy(self, request, pk=None):
         this_instance = DatasetInstance.objects.get(pk=pk)
-        this_instance.destroy(request.user)
-        return Response()
+        this_instance.soft_delete(request.user)
+
+        response = DatasetInstanceSerializer(instance=this_instance, context={'request': request}).data
+        return Response(response)
 
 
 class DataLocationViewSet(viewsets.ModelViewSet):
