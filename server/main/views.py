@@ -275,7 +275,7 @@ class PipelineViewSet(viewsets.ModelViewSet):
         template_name = None
 
         if context['type'] == 'simple-flow':
-            template_name = 'seq'
+            template_name = 'simple-flow'
         if template_name is not None:
             template_file = os.path.join(
                 settings.BASE_DIR,

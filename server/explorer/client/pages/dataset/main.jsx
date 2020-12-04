@@ -13,7 +13,7 @@ const buildUrl = require('build-url');
 import {DatasetInstanceTable} from '/components/business/dataset/dataset_instance_table.jsx'
 import {TopMessage} from '/components/generic/top_message/main.jsx'
 
-import {get_app_context, get_current_user, handle_json_response} from '/common_lib'
+import {get_app_context, get_current_user, get_csrf_token, handle_json_response} from '/common_lib'
 import Modal from 'react-bootstrap/esm/Modal'
 
 class DatasetDescriptionDialog extends React.Component {
@@ -91,6 +91,18 @@ class DatasetPage extends React.Component {
         return fetch(url).then(handle_json_response);
     };
 
+    onDelete = dataset_instance_id => {
+        return fetch(
+            `/api/DatasetInstances/${dataset_instance_id}/`, {
+                method: 'delete',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': get_csrf_token(),
+                },
+            }
+        ).then(handle_json_response);
+    };
+
     render() {
         return (
             <Container fluid>
@@ -116,7 +128,9 @@ class DatasetPage extends React.Component {
                     </Col>
                 </Row>
                 <DatasetInstanceTable
+                    allowDelete={!!this.props.current_user}
                     get_page = {this.get_page}
+                    onDelete = {this.onDelete}
                     page_size={15}
                     size="sm"
                 />

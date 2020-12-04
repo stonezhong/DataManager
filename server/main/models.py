@@ -106,6 +106,18 @@ class Dataset(models.Model):
         if len(ds_list) != 1:
             raise DataCorruptionException("Something went wrong")
         return ds_list[0]
+    def get(cls, requester, name, major_version, minor_version):
+        """
+        Return Dataset that matchs the name, major_version, minor_veriosn
+        """
+        datasets = Dataset.objects.filter(
+            name = name,
+            major_version = major_version,
+            minor_version = minor_version
+        ).all()[:1]
+        if len(dataset_instances) == 0:
+            return None
+        return dataset_instances[0]
 
 
     # create a dataset

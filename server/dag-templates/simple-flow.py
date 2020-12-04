@@ -12,14 +12,6 @@ import json
 AIRFLOW_HOME = os.environ["AIRFLOW_HOME"]
 from jinja2 import Template
 
-def config_log():
-    # also see https://www.astronomer.io/guides/logging/ for logging
-    with open(os.path.join(AIRFLOW_HOME, "configs", "log.json"), "rt") as f:
-        template = Template(f.read())
-        log_config = json.loads(template.render(AIRFLOW_HOME=AIRFLOW_HOME))
-        logging.config.dictConfig(log_config)
-
-config_log()
 logger = logging.getLogger(__name__)
 
 from datetime import datetime
@@ -267,6 +259,7 @@ class ExecuteTask:
             appLocation,
             options=spark_etl_cfg.get("job_run_options", {}),
             args=args)
+
         print("Done")
         return ret
 

@@ -94,6 +94,9 @@ div.dataset-instance-table {
         & > table {
             & > thead {
                 & > tr {
+                    & > th[data-role='tools'] {
+                        width: 40px;
+                    }
                     & > th[data-role='path'] {
                         text-align: center;
                     }

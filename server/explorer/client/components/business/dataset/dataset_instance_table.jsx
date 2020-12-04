@@ -16,6 +16,10 @@ import './dataset.scss'
  * TODO: pagination
  *
  * Props
+ *     get_page              : get a page of dataset instances
+ *     allowDelete           : boolean, do we allow user to delete asset?
+ *     onDelete              : onDelete(dataset_instance.id) is called when
+ *                             user hit delete button
  *     dataset               : the dataset object
  *     dataset_instances     : a list of dataset instances
  *
@@ -68,11 +72,31 @@ export class DatasetInstanceTable extends React.Component {
         }
     };
 
+    render_tools = dataset_instance => {
+        return (
+            this.props.allowDelete &&
+            <Button
+                size="sm"
+                variant="link"
+                onClick={event => {
+                    this.onDelete(dataset_instance.id);
+                }}
+            >
+                <Icon.Trash />
+            </Button>
+        );
+    };
+
     get_page = (offset, limit) => {
         return this.props.get_page(offset, limit);
     };
 
+    onDelete = dataset_instance_id => {
+        return this.props.onDelete(dataset_instance_id).then(this.theDataTableRef.current.refresh);
+    };
+
     columns = {
+        tools:              {display: "", render_data: this.render_tools},
         path:               {display: "Path"},
         data_time:          {display: "Data Time", render_data: this.render_data_time},
         publish_time:       {display: "Publish Time"},

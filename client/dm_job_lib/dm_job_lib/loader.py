@@ -8,11 +8,11 @@ from dc_client import DataCatalogClient
 #####################################################################
 def union_loader(spark, dcc, args):
     df = None
-    for dsi_path in args['dsi_paths']:
+    for asset_path in args['asset_paths']:
         if df is None:
-            df = load_asset(spark, dcc, dsi_path)
+            df = load_asset(spark, dcc, asset_path)
         else:
-            df = df.union(load_asset(spark, dcc, dsi_path))
+            df = df.union(load_asset(spark, dcc, asset_path))
     return df
 
 LOADERS = {
@@ -26,7 +26,7 @@ def load_view(spark, dcc, loader_name, loader_args):
     loader_f = LOADERS[loader_name]
     return loader_f(spark, dcc, loader_args)
 
-def load_asset(spark, dcc, dsi_path):
+def load_asset(spark, dcc, asset_path):
     # dcc: data catalog client
 
     dataset_name, major_version, minor_version, path, revision = (dsi_path.split(":") + [None])[:5]
@@ -70,6 +70,28 @@ def write_asset(spark, df, table, mode='overwrite'):
     else:
         raise Exception(f"Unrecognized table type: {table_type}")
 
+def decode_dsi_full_path(dsi_full_path):
+    segs = dsi_full_path.split(':')
+    if len(segs) == 4:
+        dataset_name, major_version, minor_version, dsi_path = segs
+        return {
+            'dataset_name': dataset_name,
+            'major_version': major_version,
+            'minor_version': int(minor_version),
+            'dsi_path': dsi_path
+        }
+    if len(segs) == 5:
+        dataset_name, major_version, minor_version, dsi_path, revision = segs
+        return {
+            'dataset_name': dataset_name,
+            'major_version': major_version,
+            'minor_version': int(minor_version),
+            'dsi_path': dsi_path,
+            'revision': int(revision)
+        }
+    raise Exception(f"Unrecognized dsi_full_path: {dsi_full_path}")
+
+
 ##############################################################################
 # Register dataset instance
 # - it will create dataset if not exist, user need to fill in description latter
@@ -80,8 +102,8 @@ def register_dataset_instance(dcc, dsi_path, file_type, location, df, data_time 
     else:
         effective_data_time = data_time
 
-    dataset_name, major_version, minor_version, path = dsi_path.split(":")
-    ds = dcc.get_dataset(dataset_name, major_version, int(minor_version))
+    dsi_info = decode_dsi_full_path(full_dsi_path)
+    ds = dcc.get_dataset(dsi_info['dataset_name'], dsi_info['major_version'], dsi_info['minor_version'])
     if ds is None:
         ds = dcc.create_dataset(dataset_name, major_version, int(minor_version), "-- Placeholder --", "trading")
     dsi = dcc.create_dataset_instance(
