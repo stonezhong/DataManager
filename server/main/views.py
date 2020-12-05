@@ -205,6 +205,7 @@ class DatasetInstanceViewSet(viewsets.ModelViewSet):
             cdii.data_time,
             cdii.locations,
             loader = cdii.loader,
+            src_dsi_paths = cdii.src_dsi_paths
         )
 
         response = DatasetInstanceSerializer(instance=di, context={'request': request}).data
