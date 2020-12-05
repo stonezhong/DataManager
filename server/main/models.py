@@ -153,17 +153,7 @@ class Dataset(models.Model):
             return None
         return dataset_instances[0]
 
-    def get_instance_by_path(self, path):
-        dataset_instances = DatasetInstance.objects.filter(
-            dataset = self,
-            path = path,                                # the instance path
-            deleted_time = None                         # still active
-        ).order_by('-revision').all()[:1]
-        if len(dataset_instances) == 0:
-            return None
-        return dataset_instances[0]
-
-    def set_schema_and_sample_data(self, requester, schema, sample_data=None):
+    def set_schema_and_sample_data(self, requester, schema, sample_data=""):
         if not requester.is_authenticated:
             raise PermissionDeniedException()
 
