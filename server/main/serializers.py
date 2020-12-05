@@ -2,8 +2,19 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 
 from .models import Dataset, DatasetInstance, DataLocation, Pipeline, \
-    PipelineGroup, PipelineInstance, Application, Timer, ScheduledEvent
+    PipelineGroup, PipelineInstance, Application, Timer, ScheduledEvent, \
+    DatasetInstanceDep
 
+class NestDatasetInstanceDepSerializer(serializers.ModelSerializer):
+    src_dsi_path = serializers.ReadOnlyField(source='src_dsi.dsi_path')
+    dst_dsi_path = serializers.ReadOnlyField(source='dst_dsi.dsi_path')
+
+    class Meta:
+        model = DatasetInstanceDep
+        fields = [
+            'src_dsi_path',
+            'dst_dsi_path',
+        ]
 
 class DatasetSerializer(serializers.ModelSerializer):
     publish_time = serializers.DateTimeField(
@@ -63,6 +74,10 @@ class DatasetInstanceSerializer(serializers.ModelSerializer):
         many=True,
         read_only=False
     )
+    dst_dsideps = NestDatasetInstanceDepSerializer(
+        many=True,
+        read_only=True
+    )
 
     class Meta:
         model = DatasetInstance
@@ -70,7 +85,7 @@ class DatasetInstanceSerializer(serializers.ModelSerializer):
             'url',
             'id', 'dataset', 'parent_instance', 'name', 'path',
             'publish_time', 'deleted_time', 'data_time', 'revision', 'row_count', 'loader',
-            'locations'
+            'locations', 'dst_dsideps'
         ]
 
 

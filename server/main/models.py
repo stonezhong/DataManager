@@ -94,6 +94,20 @@ class Dataset(models.Model):
     def is_active_at(self, dt):
         return self.expiration_time is None or self.expiration_time > dt
 
+    @classmethod
+    def from_name_and_version(cls, name, major_version, minor_version):
+        ds_list = Dataset.objects.filter(
+            name = name,
+            major_version = major_version,
+            minor_version = minor_version
+        )
+        if len(ds_list) == 0:
+            return None
+        if len(ds_list) != 1:
+            raise DataCorruptionException("Something went wrong")
+        return ds_list[0]
+
+
     # create a dataset
     @classmethod
     def create(cls, requester, name, major_version, minor_version, publish_time,
@@ -193,8 +207,32 @@ class DatasetInstance(models.Model):
             ['dataset', 'path', 'revision']
         ]
 
+    @property
+    def dsi_path(self):
+        return f"{self.dataset.name}:{self.dataset.major_version}:{self.dataset.minor_version}:{self.path}:{self.revision}"
+
     @classmethod
-    def create(cls, requester, dataset, parent_instance, name, row_count, publish_time, data_time, locations, loader=None):
+    def from_dsi_path(cls, dsi_path):
+        dataset_name, major_version, minor_version, path, revision = dsi_path.split(':')
+        ds = Dataset.from_name_and_version(dataset_name, major_version, int(minor_version))
+
+        dsi_list = DatasetInstance.objects.filter(
+            dataset = ds,
+            path = path,
+            revision = revision,
+        )
+        if len(dsi_list) == 0:
+            return None
+        if len(dsi_list) != 1:
+            raise DataCorruptionException("Something went wrong")
+        dsi = dsi_list[0]
+        if dsi.deleted_time is not None:
+            return None
+
+        return dsi
+
+    @classmethod
+    def create(cls, requester, dataset, parent_instance, name, row_count, publish_time, data_time, locations, loader=None, src_dsi_paths=[]):
         if not requester.is_authenticated:
             raise PermissionDeniedException()
 
@@ -265,6 +303,17 @@ class DatasetInstance(models.Model):
             for child in old_di.get_children(requester):
                 child.parent_instance = di
                 child.save()
+
+        # save dependencies
+        for src_dsi_path in src_dsi_paths:
+            src_dsi = DatasetInstance.from_dsi_path(src_dsi_path)
+            if src_dsi is None:
+                raise InvalidOperationException(f"dataset {src_dsi_path} does not exist")
+            dsi_dep = DatasetInstanceDep(
+                src_dsi = src_dsi,
+                dst_dsi = di
+            )
+            dsi_dep.save()
 
         return di
 

@@ -101,10 +101,16 @@ models = {
                     "required": ["type", "location"],
                     "additionalProperties": False,
                 }
+            },
+            "src_dsi_paths": {  # optional
+                "type": "array",
+                "items": {
+                    "type": "string"
+                }
             }
         },
         "additionalProperties": False,
-        "required": ["dataset_id", "parent_instance_id", "name", "data_time", "locations"]
+        "required": ["dataset_id", "parent_instance_id", "name", "data_time", "locations", "src_dsi_paths"]
     },
     "create_pipeline_input": {
         "type": "object",

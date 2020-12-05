@@ -99,7 +99,8 @@ def main(spark, input_args):
             spark, dcc, f'tradings:1.0:1:/{dt}',
             loader_name,
             loader_args,
-            data_time = data_time
+            data_time = data_time,
+            src_dsi_paths = loader_args['dsi_paths']
         )
 
     print("Done")

@@ -52,4 +52,5 @@ class CreateDatasetInstanceInput:
             ))
         self.locations = locations
 
+        self.src_dsi_paths = data.get("src_dsi_paths", [])
         return self
