@@ -306,6 +306,36 @@ class DatasetInstance(models.Model):
             return None
         return dataset_instances[0]
 
+    def set_dependency(self, requester, dsi_list):
+        """
+        Make this dataset instance depend on list of other
+        dataset instances
+        """
+        for dsi in dsi_list:
+            dsi_dep = DatasetInstanceDep(
+                src_dsi = dsi,
+                dst_dsi = self
+            )
+            dsi_dep.save()
+
+
+class DatasetInstanceDep(models.Model):
+    # each row represent src dsi generates dst dsi. (aka dst depened on src)
+    id                  = models.AutoField(primary_key=True)
+    src_dsi             = models.ForeignKey(DatasetInstance,
+                                            on_delete = models.PROTECT,
+                                            related_name = 'src_dsideps',
+                                            null=False)       # non NULL field
+    dst_dsi             = models.ForeignKey(DatasetInstance,
+                                            on_delete = models.PROTECT,
+                                            related_name = 'dst_dsideps',
+                                            null=False)       # non NULL field
+
+    class Meta:
+        unique_together = [
+            ['src_dsi', 'dst_dsi']
+        ]
+
 
 class DataLocation(models.Model):
     id                  = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
