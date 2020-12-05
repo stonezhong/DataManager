@@ -213,6 +213,9 @@ class ExecuteTask:
 
     def __call__(self, ds, **kwargs):
         # task_ctx is json stored in context field in pipeline model
+        task = kwargs['task']
+        dag = task.dag
+        ti = kwargs['ti']
 
         # for each dag run, user will pass in a pipeline group
         config = kwargs['dag_run'].conf
@@ -222,6 +225,12 @@ class ExecuteTask:
         pipeline_instance_id = config['pipeline_instance_id']
         pipeline_group_context = get_pipeline_group_context(pipeline_instance_id)
         print_json("pipeline group context context", pipeline_group_context)
+
+        # inject XCOM into pipeline group context
+        pipeline_group_context['xcom'] = {}
+        for task in dag.tasks:
+            pipeline_group_context['xcom'][task.task_id] = ti.xcom_pull(task_ids=task.task_id)
+        print_json("pipeline group context context after xcom", pipeline_group_context)
 
         dc_config = load_config("dc_config.json")
         spark_env = load_config("spark_env.json")
@@ -254,11 +263,12 @@ class ExecuteTask:
 
         spark_etl_cfg = load_config("spark_etl.json")
         job_submitter = get_job_submitter(spark_etl_cfg['job_submitter'])
-        job_submitter.run(
+        ret = job_submitter.run(
             appLocation,
             options=spark_etl_cfg.get("job_run_options", {}),
             args=args)
         print("Done")
+        return ret
 
 try:
     logger.info(f"Creating dag, pipeline_id={pipeline_id}, dag_id={pipeline_id}")
