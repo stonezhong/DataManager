@@ -197,6 +197,16 @@ class DatasetInstance(models.Model):
             ['dataset', 'path', 'revision']
         ]
 
+    # return all dataset instance path this dataset depend on (aka lead to this dataset)
+    @property
+    def src_dataset_instances(self):
+        return [dep.src_dsi.dsi_path for dep in self.dst_dsideps.all()]
+
+    # return all dataset instance path depend on this dataset (aka this dataset leads to)
+    @property
+    def dst_dataset_instances(self):
+        return [dep.dst_dsi.dsi_path for dep in self.src_dsideps.all()]
+
     @property
     def dsi_path(self):
         return f"{self.dataset.name}:{self.dataset.major_version}:{self.dataset.minor_version}:{self.path}:{self.revision}"
@@ -245,6 +255,9 @@ class DatasetInstance(models.Model):
 
             # You need to expire the old onw, the new one should have a bumped revision
             old_di = dis[0]
+
+            if len(old_di.dst_dataset_instances) > 0:
+                raise InvalidOperationException("Cannot create new revision")
 
             # re-publish should happen after the previous revision
             if old_di.publish_time > publish_time:
@@ -314,6 +327,9 @@ class DatasetInstance(models.Model):
         if self.deleted_time is not None:
             raise InvalidOperationException("Already deleted")
 
+        if len(self.dst_dataset_instances) > 0:
+            raise InvalidOperationException("Cannot delete")
+
         now = datetime.utcnow().replace(tzinfo=pytz.UTC)
         self.deleted_time = now
         self.save(update_fields=['deleted_time'])
@@ -345,17 +361,6 @@ class DatasetInstance(models.Model):
             return None
         return dataset_instances[0]
 
-    def set_dependency(self, requester, dsi_list):
-        """
-        Make this dataset instance depend on list of other
-        dataset instances
-        """
-        for dsi in dsi_list:
-            dsi_dep = DatasetInstanceDep(
-                src_dsi = dsi,
-                dst_dsi = self
-            )
-            dsi_dep.save()
 
 
 class DatasetInstanceDep(models.Model):

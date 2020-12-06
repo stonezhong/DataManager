@@ -1,1 +1,1 @@
-from .test_models import DatasetTestCase
+from .models import DatasetTestCase, DatasetInstanceTestCase
