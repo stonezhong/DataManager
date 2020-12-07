@@ -12,7 +12,6 @@ import React from 'react'
 import Button from 'react-bootstrap/Button'
 import Col from 'react-bootstrap/Col'
 import Row from 'react-bootstrap/Row'
-import Table from 'react-bootstrap/Table'
 import * as Icon from 'react-bootstrap-icons'
 import Spinner from 'react-bootstrap/Spinner'
 
@@ -24,6 +23,8 @@ import {
 } from '/common_lib'
 
 import './pipeline.scss'
+
+const _ = require("lodash");
 
 /*************************************************************************
  * props
@@ -61,12 +62,13 @@ export class PipelineTable extends React.Component {
 
     render_airflow_dag = pipeline => {
         const pipeline2 = pipeline_from_django_model(pipeline);
+        const pipeline_id = _.replace(pipeline.id, /-/g, '');
         return (
             <div>
                 {
                     (pipeline.dag_version > 0) &&
                     <a
-                        href={`${this.props.airflow_base_url}/admin/airflow/graph?dag_id=${pipeline2.name}&execution_date=`}
+                        href={`${this.props.airflow_base_url}/admin/airflow/graph?dag_id=${pipeline2.name}.${pipeline_id}&execution_date=`}
                     >
                         <img src="/static/images/airflow.jpeg" style={{height: "24px"}}/>
                     </a>
