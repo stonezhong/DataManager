@@ -209,7 +209,7 @@ export class DatasetEditor extends React.Component {
                                 <CKEditor
                                     editor={ ClassicEditor }
                                     data={this.state.dataset.description}
-                                    readOnly={this.state.mode==='view'}
+                                    disabled={this.state.mode==='view'}
                                     type="classic"
                                     onChange={(event, editor) => {
                                         const v = editor.getData();
