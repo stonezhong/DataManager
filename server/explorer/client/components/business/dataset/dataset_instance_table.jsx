@@ -16,6 +16,9 @@ import './dataset.scss'
  * TODO: pagination
  *
  * Props
+ *     allowDelete           : boolean, allow delete dataset?
+ *     onDelete              : function, onDelete(dataset_instance_id), delete a
+ *                             dataset instance
  *     dataset               : the dataset object
  *     dataset_instances     : a list of dataset instances
  *
@@ -68,14 +71,87 @@ export class DatasetInstanceTable extends React.Component {
         }
     };
 
+    render_dependency = dataset_instance => (
+        <Button
+            variant="secondary"
+            size="sm"
+            variant="secondary"
+            onClick={event => {
+                this.theLoaderViewerRef.current.openDialog(
+                    "Asset Dependency",
+                    <div>
+                        {(dataset_instance.dst_dataset_instances.length == 0) && <p>
+                            This asset does not lead to any asset
+                        </p>}
+                        {(dataset_instance.dst_dataset_instances.length > 0) && <div>
+                            This asset leads to the following assets:
+                            <ul>
+                                {
+                                    dataset_instance.dst_dataset_instances.map(
+                                        dsi_path => <li>{dsi_path}</li>
+                                    )
+                                }
+                            </ul>
+                        </div>}
+
+                        {(dataset_instance.src_dataset_instances.length == 0) && <p>
+                            This asset does not require any asset
+                        </p>}
+                        {(dataset_instance.src_dataset_instances.length > 0) && <div>
+                            This asset requires the following assets:
+                            <ul>
+                                {
+                                    dataset_instance.src_dataset_instances.map(
+                                        dsi_path => <li>{dsi_path}</li>
+                                    )
+                                }
+                            </ul>
+                        </div>}
+
+                    </div>
+                );
+            }}
+        >
+            <Icon.Info />
+        </Button>
+    );
+
+    onDelete = dataset_instance_id => {
+        return this.props.onDelete(dataset_instance_id).then(this.theDataTableRef.current.refresh);
+    };
+
+
+    render_tools = dataset_instance => {
+        if (!this.props.allowDelete) {
+            return null;
+        }
+
+        if (dataset_instance.dst_dataset_instances.length > 0) {
+            return null;
+        }
+
+        return (<Button
+            variant="secondary"
+            size="sm"
+            onClick={
+                event => { this.onDelete(dataset_instance.id); }
+            }
+        >
+            <Icon.Trash />
+        </Button>);
+    };
+
     get_page = (offset, limit) => {
         return this.props.get_page(offset, limit);
     };
 
     columns = {
+        tools:              {display:"", render_data: this.render_tools},
         path:               {display: "Path"},
         data_time:          {display: "Data Time", render_data: this.render_data_time},
         publish_time:       {display: "Publish Time"},
+        revision:           {display: "Revision"},
+        dependency:         {display: "Dependency", render_data: this.render_dependency},
         loader:             {display: "Loader", render_data: this.render_loader},
         row_count:          {display: "Row Count"},
         locations:          {display: "Locations", render_data: this.render_locations}
