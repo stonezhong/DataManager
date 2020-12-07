@@ -74,10 +74,6 @@ class DatasetInstanceSerializer(serializers.ModelSerializer):
         many=True,
         read_only=False
     )
-    dst_dsideps = NestDatasetInstanceDepSerializer(
-        many=True,
-        read_only=True
-    )
 
     class Meta:
         model = DatasetInstance
@@ -85,7 +81,7 @@ class DatasetInstanceSerializer(serializers.ModelSerializer):
             'url',
             'id', 'dataset', 'parent_instance', 'name', 'path',
             'publish_time', 'deleted_time', 'data_time', 'revision', 'row_count', 'loader',
-            'locations', 'dst_dsideps'
+            'locations', 'src_dataset_instances', 'dst_dataset_instances'
         ]
 
 

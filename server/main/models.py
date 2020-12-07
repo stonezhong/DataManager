@@ -200,12 +200,20 @@ class DatasetInstance(models.Model):
     # return all dataset instance path this dataset depend on (aka lead to this dataset)
     @property
     def src_dataset_instances(self):
-        return [dep.src_dsi.dsi_path for dep in self.dst_dsideps.all()]
+        dsi_path = []
+        for dep in self.dst_dsideps.all():
+            if dep.src_dsi.deleted_time is None:
+                dsi_path.append(dep.src_dsi.dsi_path)
+        return dsi_path
 
     # return all dataset instance path depend on this dataset (aka this dataset leads to)
     @property
     def dst_dataset_instances(self):
-        return [dep.dst_dsi.dsi_path for dep in self.src_dsideps.all()]
+        dsi_path = []
+        for dep in self.src_dsideps.all():
+            if dep.dst_dsi.deleted_time is None:
+                dsi_path.append(dep.dst_dsi.dsi_path)
+        return dsi_path
 
     @property
     def dsi_path(self):
