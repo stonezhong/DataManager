@@ -7,7 +7,7 @@ import Form from 'react-bootstrap/Form'
 import * as Icon from 'react-bootstrap-icons'
 
 import {DatasetEditor} from './dataset_editor.jsx'
-import {SchemaViewer} from './schema_viewer.jsx'
+import {SchemaViewer, get_schema} from './schema_viewer.jsx'
 import {DataTable} from '/components/generic/datatable/main.jsx'
 
 import './dataset.scss'
@@ -30,7 +30,6 @@ import './dataset.scss'
  *                                ]
  *                            }
  *
- *     allowEdit            : if True, user is allowed to edit dataset.
  *     allowNew             : if True, user is allowed to create new dataset
  *     initShowExpired      : init value of showExpired, user can change it
  *     onSave               : a callback, called with user want to save or edit
@@ -43,27 +42,16 @@ export class DatasetTable extends React.Component {
     theSchemaViewerRef  = React.createRef();
     theDataTableRef     = React.createRef();
 
-    get_schema = dataset => {
-        if (!dataset.schema) {
-            return null;
-        }
-        const schema_str = dataset.schema.trim();
-        if (!schema_str) {
-            return null;
-        }
-        return JSON.parse(schema_str);
-    };
-
     render_schema = dataset => {
         return (
-            this.get_schema(dataset) &&
+            get_schema(dataset) &&
             <Button
                 variant="secondary"
                 size="sm"
                 onClick={
                     event => {
                         this.theSchemaViewerRef.current.openDialog(
-                            this.get_schema(dataset)
+                            get_schema(dataset)
                         )
                     }
                 }
@@ -72,21 +60,6 @@ export class DatasetTable extends React.Component {
             </Button>
         );
     };
-
-    render_tools = dataset =>
-        <Button
-            variant="secondary"
-            size="sm"
-            onClick={
-                event => {
-                    this.theDatasetEditorRef.current.openDialog(
-                        this.props.allowEdit?"edit":"view", dataset
-                    )
-                }
-            }
-        >
-            { this.props.allowEdit?<Icon.Pencil />:<Icon.Info />}
-        </Button>;
 
     render_name = dataset =>
         <a href={`dataset?id=${dataset.id}`}>{dataset.name}</a>
@@ -97,7 +70,6 @@ export class DatasetTable extends React.Component {
     };
 
     columns = {
-        tools:              {display: "", render_data: this.render_tools},
         name:               {display: "Name", render_data: this.render_name},
         schema:             {display: "Schema", render_data: this.render_schema},
         author:             {display: "Author"},

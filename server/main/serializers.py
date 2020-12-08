@@ -5,6 +5,17 @@ from .models import Dataset, DatasetInstance, DataLocation, Pipeline, \
     PipelineGroup, PipelineInstance, Application, Timer, ScheduledEvent, \
     DatasetInstanceDep
 
+class ApplicationSerializer(serializers.ModelSerializer):
+    author = serializers.ReadOnlyField(source='author.username')
+
+    class Meta:
+        model = Application
+        fields = [
+            'url',
+            'id', 'name', 'description', 'author', 'team',
+            'retired', 'app_location', 'sys_app_id'
+        ]
+
 class NestDatasetInstanceDepSerializer(serializers.ModelSerializer):
     src_dsi_path = serializers.ReadOnlyField(source='src_dsi.dsi_path')
     dst_dsi_path = serializers.ReadOnlyField(source='dst_dsi.dsi_path')
@@ -74,6 +85,7 @@ class DatasetInstanceSerializer(serializers.ModelSerializer):
         many=True,
         read_only=False
     )
+    application = ApplicationSerializer(many=False, read_only=True)
 
     class Meta:
         model = DatasetInstance
@@ -163,17 +175,6 @@ class PipelineGroupDetailsSerializer(serializers.ModelSerializer):
             'url',
             'id', 'name', 'created_time', 'category', 'context', 'finished', 'manual',
             'pis'
-        ]
-
-class ApplicationSerializer(serializers.ModelSerializer):
-    author = serializers.ReadOnlyField(source='author.username')
-
-    class Meta:
-        model = Application
-        fields = [
-            'url',
-            'id', 'name', 'description', 'author', 'team',
-            'retired', 'app_location', 'sys_app_id'
         ]
 
 class TimerSerializer(serializers.ModelSerializer):

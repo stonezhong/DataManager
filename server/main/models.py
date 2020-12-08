@@ -279,6 +279,25 @@ class DatasetInstance(models.Model):
         return f"{self.dataset.name}:{self.dataset.major_version}:{self.dataset.minor_version}:{self.path}:{self.revision}"
 
     @classmethod
+    def revisions_from_dsi_path(cls, dsi_path):
+        # all the dataset_instance belongs to the same dataset
+        # if return is not None, it MUST be a non-empty list
+        dataset_name, major_version, minor_version, path = dsi_path.split(':')[:4]
+        ds = Dataset.from_name_and_version(dataset_name, major_version, int(minor_version))
+        if ds is None:
+            return None
+
+        dsi_list = DatasetInstance.objects.filter(
+            dataset = ds,
+            path = path,
+        ).order_by('-revision')
+
+        if len(dsi_list) == 0:
+            return None
+
+        return dsi_list
+
+    @classmethod
     def from_dsi_path(cls, dsi_path):
         dataset_name, major_version, minor_version, path, revision = dsi_path.split(':')
         ds = Dataset.from_name_and_version(dataset_name, major_version, int(minor_version))

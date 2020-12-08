@@ -8,6 +8,7 @@ import Button from 'react-bootstrap/Button'
 import * as Icon from 'react-bootstrap-icons'
 import {DataTable} from '/components/generic/datatable/main.jsx'
 import {SimpleDialogBox} from '/components/generic/dialogbox/simple.jsx'
+import {AssetLink, AssetLinkFromDSIPath} from '/components/business/dataset/utils.jsx'
 
 import './dataset.scss'
 
@@ -16,7 +17,8 @@ import './dataset.scss'
  * TODO: pagination
  *
  * Props
- *     allowDelete           : boolean, allow delete dataset?
+ *     ds                    : object, dataset
+ *     allowDelete           : boolean, allow delete dataset instance?
  *     onDelete              : function, onDelete(dataset_instance_id), delete a
  *                             dataset instance
  *     dataset               : the dataset object
@@ -80,34 +82,33 @@ export class DatasetInstanceTable extends React.Component {
                 this.theLoaderViewerRef.current.openDialog(
                     "Asset Dependency",
                     <div>
-                        {(dataset_instance.dst_dataset_instances.length == 0) && <p>
-                            This asset does not lead to any asset
-                        </p>}
-                        {(dataset_instance.dst_dataset_instances.length > 0) && <div>
-                            This asset leads to the following assets:
-                            <ul>
-                                {
-                                    dataset_instance.dst_dataset_instances.map(
-                                        dsi_path => <li>{dsi_path}</li>
-                                    )
-                                }
-                            </ul>
-                        </div>}
-
                         {(dataset_instance.src_dataset_instances.length == 0) && <p>
-                            This asset does not require any asset
+                            From assets: none
                         </p>}
                         {(dataset_instance.src_dataset_instances.length > 0) && <div>
-                            This asset requires the following assets:
+                            From assets:
                             <ul>
                                 {
                                     dataset_instance.src_dataset_instances.map(
-                                        dsi_path => <li>{dsi_path}</li>
+                                        dsi_path => <li><AssetLinkFromDSIPath dsi_path={dsi_path}/></li>
                                     )
                                 }
                             </ul>
                         </div>}
 
+                        {(dataset_instance.dst_dataset_instances.length == 0) && <p>
+                            To assets: none
+                        </p>}
+                        {(dataset_instance.dst_dataset_instances.length > 0) && <div>
+                            To assets:
+                            <ul>
+                                {
+                                    dataset_instance.dst_dataset_instances.map(
+                                        dsi_path => <li><AssetLinkFromDSIPath dsi_path={dsi_path}/></li>
+                                    )
+                                }
+                            </ul>
+                        </div>}
                     </div>
                 );
             }}
@@ -141,13 +142,15 @@ export class DatasetInstanceTable extends React.Component {
         </Button>);
     };
 
+    render_path = dataset_instance => <AssetLink ds={this.props.ds} dsi={dataset_instance} />;
+
     get_page = (offset, limit) => {
         return this.props.get_page(offset, limit);
     };
 
     columns = {
         tools:              {display:"", render_data: this.render_tools},
-        path:               {display: "Path"},
+        path:               {display: "Path", render_data: this.render_path},
         data_time:          {display: "Data Time", render_data: this.render_data_time},
         publish_time:       {display: "Publish Time"},
         revision:           {display: "Revision"},

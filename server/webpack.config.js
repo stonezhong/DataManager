@@ -33,6 +33,7 @@ module.exports = env => ({
         "pipeline_groups"   : '/pages/pipeline_groups/main.jsx',
         "pipeline_group"    : '/pages/pipeline_group/main.jsx',
         "applications"      : '/pages/applications/main.jsx',
+        "dataset_instance"  : '/pages/dataset_instance/main.jsx',
         "schedulers"        : '/pages/schedulers/main.jsx',
         "test"              : '/pages/test/main.jsx',
     },
