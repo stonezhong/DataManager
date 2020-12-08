@@ -13,9 +13,10 @@ from django.urls import reverse
 from django.http import HttpResponse
 
 from main.models import Dataset, Pipeline, PipelineGroup, PipelineInstance, \
-    Application
+    Application, DatasetInstance
 from main.serializers import PipelineSerializer, DatasetSerializer, \
-    ApplicationSerializer, PipelineGroupDetailsSerializer
+    ApplicationSerializer, PipelineGroupDetailsSerializer, \
+    DatasetInstanceSerializer
 
 from rest_framework.renderers import JSONRenderer
 
@@ -90,7 +91,7 @@ def dataset(request):
             ],
             'nav_item_role': 'datasets',
             'app_config': get_app_config(),
-            'app_context': json.dumps(app_context),
+            'app_context': JSONRenderer().render(app_context).decode("utf-8"),
         }
     )
 
@@ -143,7 +144,7 @@ def pipelines(request):
             ],
             'nav_item_role': 'pipelines',
             'app_config': get_app_config(),
-            'app_context': json.dumps(app_context),
+            'app_context': JSONRenderer().render(app_context).decode("utf-8"),
         }
     )
 
@@ -169,7 +170,7 @@ def pipeline(request):
             ],
             'nav_item_role': 'pipelines',
             'app_config': get_app_config(),
-            'app_context': json.dumps(app_context),
+            'app_context': JSONRenderer().render(app_context).decode("utf-8"),
         }
     )
 
@@ -227,6 +228,38 @@ def applications(request):
         }
     )
 
+
+def dataset_instance(request):
+    dsi_path = request.GET['dsi_path']
+
+    if dsi_path is None:
+        return HttpResponseBadRequest()
+
+    dsi_list = DatasetInstance.revisions_from_dsi_path(dsi_path)
+    ds = dsi_list[0].dataset
+
+    dsi_list_rendered = DatasetInstanceSerializer(dsi_list, many=True, context={"request": request})
+    ds_rendered = DatasetSerializer(ds, context={"request": request})
+
+    app_context = {
+        'dsi_list': dsi_list_rendered.data,
+        'ds': ds_rendered.data,
+    }
+
+    return render(
+        request,
+        'common_page.html',
+        context={
+            'user': request.user,
+            'sub_title': "Dataset",
+            'scripts':[
+                '/static/js-bundle/dataset_instance.js'
+            ],
+            'nav_item_role': 'Asset',
+            'app_config': get_app_config(),
+            'app_context': JSONRenderer().render(app_context).decode('utf-8'),
+        }
+    )
 
 def schedulers(request):
     return render(

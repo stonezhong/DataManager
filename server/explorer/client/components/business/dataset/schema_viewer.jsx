@@ -9,6 +9,17 @@ import './dataset.scss'
 
 const _ = require("lodash");
 
+export function get_schema(dataset) {
+    if (!dataset.schema) {
+        return null;
+    }
+    const schema_str = dataset.schema.trim();
+    if (!schema_str) {
+        return null;
+    }
+    return JSON.parse(schema_str);
+}
+
 /*********************************************************************************
  * Purpose: View a Dataset Schema
  *

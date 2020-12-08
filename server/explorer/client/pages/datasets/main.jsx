@@ -7,6 +7,7 @@ import $ from 'jquery'
 const buildUrl = require('build-url');
 
 import {dt_2_utc_string, get_csrf_token, get_current_user, handle_json_response} from '/common_lib'
+import {saveDataset} from '/apis'
 import {DatasetTable} from '/components/business/dataset/dataset_table.jsx'
 
 class DatasetsPage extends React.Component {
@@ -15,46 +16,9 @@ class DatasetsPage extends React.Component {
         showExpired: false
     };
 
-    onSave = (mode, dataset) => {
-        if (mode == "new") {
-            // TODO: shuold not trust client side time
-            const now = dt_2_utc_string(new Date());
-            const to_post = {
-                name            : dataset.name,
-                major_version   : dataset.major_version,
-                minor_version   : dataset.minor_version,
-                description     : dataset.description,
-                team            : dataset.team,
-                publish_time    : now,
-            }
+    onSave = (mode, dataset) => saveDataset(get_csrf_token(), mode, dataset)
 
-            return fetch('/api/Datasets/', {
-                method: 'post',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': get_csrf_token(),
-                },
-                body: JSON.stringify(to_post)
-            }).then(handle_json_response)
-        } else if (mode == 'edit') {
-            // You can only change description and team
-            const to_patch = {
-                description     : dataset.description,
-                team            : dataset.team,
-                expiration_time : (dataset.expiration_time==='')?null:dataset.expiration_time
-            }
 
-            return fetch(`/api/Datasets/${dataset.id}/`, {
-                method: 'post',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': get_csrf_token(),
-                    'X-Data-Manager-Use-Method': 'PATCH',
-                },
-                body: JSON.stringify(to_patch)
-            }).then(handle_json_response);
-        }
-    };
 
 
     get_page = (offset, limit, filter={}) => {
@@ -77,7 +41,6 @@ class DatasetsPage extends React.Component {
         return (
             <Container fluid>
                 <DatasetTable
-                    allowEdit={!!this.props.current_user}
                     allowNew={!!this.props.current_user}
                     onSave={this.onSave}
                     initShowExpired={false}
