@@ -1,5 +1,6 @@
 import uuid
 from datetime import datetime, timedelta
+from enum import Enum
 
 from django.db import models
 from django.contrib.auth.models import User
@@ -60,6 +61,48 @@ class PermissionDeniedException(AppException):
 
 class DataCorruptionException(AppException):
     pass
+
+class Application(models.Model):
+
+    class SysAppID(Enum):
+        EXECUTE_SQL = 1
+
+    # For now, assuming it is a spark app.
+    id                  = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name                = models.CharField(max_length=255, blank=False, unique=True)     # required
+    description         = models.TextField(blank=False)                     # description is required
+    author              = models.ForeignKey(
+        User,
+        on_delete=models.PROTECT,
+        null=False,
+        related_name='app_created'
+    )                                                                       # required
+    team                = models.CharField(max_length=64, blank=False)      # required
+    # user won't be able to use retired app
+    retired             = models.BooleanField(null=False)
+    app_location        = models.CharField(max_length=255, blank=False)
+
+    # If sys_app_id is null, then it is not a system app, otherwise, it is a
+    # system app, all system app is defined in SysAppID
+    sys_app_id          = models.IntegerField(null=True,)
+
+    # create an application
+    @classmethod
+    def create(cls, requester, name, description, team, app_location):
+        if not requester.is_authenticated:
+            raise PermissionDeniedException()
+
+        application = Application(
+            name = name,
+            description = description,
+            author = requester,
+            team = team,
+            retired = False,
+            app_location = app_location,
+        )
+        application.save()
+        return application
+
 
 class Dataset(models.Model):
     id              = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -175,7 +218,7 @@ class Dataset(models.Model):
         self.save()
 
 
-
+# We call it asset in UI
 class DatasetInstance(models.Model):
     id                  = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     dataset             = models.ForeignKey(Dataset, on_delete = models.PROTECT, null=False)       # non NULL field
@@ -190,6 +233,22 @@ class DatasetInstance(models.Model):
     # Ff loader is true, then this instance is virtual, the loeader will need to load this table
     # loader field is a JSON object that contains loader name and loader args
     loader              = models.TextField(null=True)
+
+    # Most asset are produced by an application, we will capture
+    # the application, and arguments passed to the application
+    # Those fields are optional, for example, when user do a one-off
+    # to back fill the data, they probably do not have application
+    # associated, in that case, they can put a note, see note field
+    application         = models.ForeignKey(
+        Application,
+        on_delete=models.PROTECT,
+        null=True,
+        related_name='dsis'
+    )
+    application_args    = models.TextField(null=True)
+
+    # Optional, put by producer for anything people need to be aware of
+    note = models.TextField(null=True)
 
     class Meta:
         unique_together = [
@@ -240,7 +299,10 @@ class DatasetInstance(models.Model):
         return dsi
 
     @classmethod
-    def create(cls, requester, dataset, parent_instance, name, row_count, publish_time, data_time, locations, loader=None, src_dsi_paths=[]):
+    def create(cls, requester, dataset, parent_instance, name, row_count, publish_time,
+               data_time, locations, loader=None, src_dsi_paths=[],
+               application_id=None, application_args=None
+    ):
         if not requester.is_authenticated:
             raise PermissionDeniedException()
 
@@ -283,6 +345,11 @@ class DatasetInstance(models.Model):
         else:
             revision = 0
 
+        if application_id is None:
+            application = None
+        else:
+            application = Application.objects.get(pk=application_id)
+
         # save data instance
         di = DatasetInstance(
             dataset = dataset,
@@ -294,6 +361,8 @@ class DatasetInstance(models.Model):
             publish_time = publish_time,
             data_time = data_time,
             deleted_time = None,
+            application = application,
+            application_args = application_args,
             revision = revision
         )
         di.save()
@@ -519,39 +588,6 @@ class PipelineInstance(models.Model):
     started_time        = models.DateTimeField(null=True)
     finished_time       = models.DateTimeField(null=True)
     failed_time         = models.DateTimeField(null=True)
-
-class Application(models.Model):
-    # For now, assuming it is a spark app.
-    id                  = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    name                = models.CharField(max_length=255, blank=False, unique=True)     # required
-    description         = models.TextField(blank=False)                     # description is required
-    author              = models.ForeignKey(
-        User,
-        on_delete=models.PROTECT,
-        null=False,
-        related_name='app_created'
-    )                                                                       # required
-    team                = models.CharField(max_length=64, blank=False)      # required
-    # user won't be able to use retired app
-    retired             = models.BooleanField(null=False)
-    app_location        = models.CharField(max_length=255, blank=False)
-
-    # create an application
-    @classmethod
-    def create(cls, requester, name, description, team, app_location):
-        if not requester.is_authenticated:
-            raise PermissionDeniedException()
-
-        application = Application(
-            name = name,
-            description = description,
-            author = requester,
-            team = team,
-            retired = False,
-            app_location = app_location,
-        )
-        application.save()
-        return application
 
 class Timer(models.Model):
     id                  = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)

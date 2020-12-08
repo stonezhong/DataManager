@@ -125,7 +125,7 @@ def login(request):
         )
 
 def pipelines(request):
-    applications = Application.objects.filter(retired=False)
+    applications = Application.objects.filter(retired=False, sys_app_id__isnull=True)
 
     s = ApplicationSerializer(applications, many=True, context={"request": request})
     app_context = {

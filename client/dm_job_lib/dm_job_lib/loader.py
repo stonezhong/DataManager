@@ -74,7 +74,10 @@ def write_asset(spark, df, table, mode='overwrite'):
 # Register dataset instance
 # - it will create dataset if not exist, user need to fill in description latter
 ##############################################################################
-def register_dataset_instance(dcc, dsi_path, file_type, location, df, data_time = None, src_dsi_paths = []):
+def register_dataset_instance(dcc, dsi_path, file_type, location, df,
+                              data_time = None, src_dsi_paths = [],
+                              application_id = None, application_args = None
+    ):
     if data_time is None:
         effective_data_time = datetime.utcnow()
     else:
@@ -93,7 +96,9 @@ def register_dataset_instance(dcc, dsi_path, file_type, location, df, data_time 
         }],
         effective_data_time,
         row_count = df.count(),
-        src_dsi_paths = src_dsi_paths
+        src_dsi_paths = src_dsi_paths,
+        application_id = application_id,
+        application_args = application_args
     )
     dcc.set_dataset_schema_and_sample_data(
         ds['id'],
@@ -102,7 +107,10 @@ def register_dataset_instance(dcc, dsi_path, file_type, location, df, data_time 
     )
     return dsi
 
-def register_dataset_instance_for_view(spark, dcc, dsi_path, loader_name, loader_args, data_time = None, src_dsi_paths = []):
+def register_dataset_instance_for_view(spark, dcc, dsi_path, loader_name, loader_args,
+                                       data_time = None, src_dsi_paths = [],
+                                       application_id = None, application_args = None
+    ):
     if data_time is None:
         effective_data_time = datetime.utcnow()
     else:
@@ -123,7 +131,9 @@ def register_dataset_instance_for_view(spark, dcc, dsi_path, loader_name, loader
             "args": loader_args,
         }),
         row_count = df.count(),
-        src_dsi_paths = src_dsi_paths
+        src_dsi_paths = src_dsi_paths,
+        application_id = application_id,
+        application_args = application_args
     )
     dcc.set_dataset_schema_and_sample_data(
         ds['id'],

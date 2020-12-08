@@ -107,10 +107,19 @@ models = {
                 "items": {
                     "type": "string"
                 }
+            },
+            "application_id": {
+                "type": ["string", "null"]
+            },
+            "application_args": {
+                "type": ["string", "null"]
             }
         },
         "additionalProperties": False,
-        "required": ["dataset_id", "parent_instance_id", "name", "data_time", "locations", "src_dsi_paths"]
+        "required": [
+            "dataset_id", "parent_instance_id", "name", "data_time", "locations", "src_dsi_paths",
+            "application_id", "application_args"
+        ]
     },
     "create_pipeline_input": {
         "type": "object",

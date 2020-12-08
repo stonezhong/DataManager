@@ -182,7 +182,11 @@ class DataCatalogClient(object):
         return None
 
 
-    def create_dataset_instance(self, name, major_version, minor_version, path, locations, data_time, row_count=None, loader=None, src_dsi_paths=[]):
+    def create_dataset_instance(self, name, major_version, minor_version, path, locations, data_time,
+                                row_count=None, loader=None, src_dsi_paths=[],
+                                application_id = None, application_args = None
+
+        ):
         """Create a dataset instance.
 
         Parameters
@@ -207,6 +211,10 @@ class DataCatalogClient(object):
                 Optional. The storage size of the data in this location.
         src_dsi_paths: [string]
             list of dataset instances path that this asset depend on. the path MUST contain revision.
+        application_id: string, optional
+            if present, it is the application id which produces this asset
+        application_args: string, optional
+            if present, it is the args passed to this application.
         """
         dataset = self.get_dataset(name, major_version, minor_version)
         if dataset is None:
@@ -240,7 +248,9 @@ class DataCatalogClient(object):
             'row_count': row_count,
             'loader': loader,
             'locations': locations,
-            'src_dsi_paths': src_dsi_paths
+            'src_dsi_paths': src_dsi_paths,
+            'application_id': application_id,
+            'application_args': application_args,
         }
         if row_count is None:
             data.pop("row_count")

@@ -102,10 +102,12 @@ def handle_pipeline_instance_created(pi):
 
     print("ALL required assets are ready!!")
     print(f"triggering DAG {pi.pipeline.name}")
+    pipeline_instance_id = str(pi.id).replace("-", "")
+    pipeline_id = str(pi.pipeline.id).replace("-", "")
     r = airflow_lib.trigger_dag(
-        pi.pipeline.name,
+        f"{pi.pipeline.name}.{pipeline_id}",
         {
-            "pipeline_instance_id": str(pi.id).replace("-", "")
+            "pipeline_instance_id": pipeline_instance_id
         }
     )
 
