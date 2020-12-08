@@ -81,7 +81,8 @@ class DatasetInstanceSerializer(serializers.ModelSerializer):
             'url',
             'id', 'dataset', 'parent_instance', 'name', 'path',
             'publish_time', 'deleted_time', 'data_time', 'revision', 'row_count', 'loader',
-            'locations', 'src_dataset_instances', 'dst_dataset_instances'
+            'locations', 'src_dataset_instances', 'dst_dataset_instances',
+            'application', 'application_args'
         ]
 
 
@@ -172,7 +173,7 @@ class ApplicationSerializer(serializers.ModelSerializer):
         fields = [
             'url',
             'id', 'name', 'description', 'author', 'team',
-            'retired', 'app_location'
+            'retired', 'app_location', 'sys_app_id'
         ]
 
 class TimerSerializer(serializers.ModelSerializer):

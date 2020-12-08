@@ -34,7 +34,7 @@ import pytz
 
 # Templated variables
 pipeline_id = "{{pipeline_id}}"
-dag_id = "{{dag_id}}"
+dag_id = "{{dag_id}}.{{pipeline_id}}"
 
 # load config for etl
 
@@ -239,6 +239,7 @@ class ExecuteTask:
             task_args_str = Template(self.task_ctx['args']).render(pipeline_group_context)
             args = {
                 "pipeline_group_context": pipeline_group_context,
+                "application_id": self.task_ctx['application_id'],
                 "app_args": json.loads(task_args_str),
                 "dc_config": dc_config,
             }

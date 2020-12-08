@@ -28,5 +28,6 @@ def filesize(value):
 def user_to_json(user):
     return json.dumps({
         'name': user.username,
-        'id': user.id
+        'id': user.id,
+        'is_superuser': user.is_superuser
     })

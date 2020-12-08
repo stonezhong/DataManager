@@ -53,4 +53,7 @@ class CreateDatasetInstanceInput:
         self.locations = locations
 
         self.src_dsi_paths = data.get("src_dsi_paths", [])
+
+        self.application_id = data.get("application_id")
+        self.application_args = data.get("application_args")
         return self

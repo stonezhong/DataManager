@@ -205,7 +205,9 @@ class DatasetInstanceViewSet(viewsets.ModelViewSet):
             cdii.data_time,
             cdii.locations,
             loader = cdii.loader,
-            src_dsi_paths = cdii.src_dsi_paths
+            src_dsi_paths = cdii.src_dsi_paths,
+            application_id = cdii.application_id,
+            application_args = cdii.application_args,
         )
 
         response = DatasetInstanceSerializer(instance=di, context={'request': request}).data
@@ -329,7 +331,10 @@ class ApplicationViewSet(viewsets.ModelViewSet):
     queryset = Application.objects.all()
     serializer_class = ApplicationSerializer
     filter_backends = [DjangoFilterBackend, OrderingFilter]
-    filterset_fields = ['name']
+    filterset_fields = {
+        'name'              : ['exact'],
+        'sys_app_id'        : ['isnull', 'exact']
+    }
     ordering_fields = ['name']
 
     @transaction.atomic

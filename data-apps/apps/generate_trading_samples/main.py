@@ -42,6 +42,7 @@ def main(spark, input_args):
     print(f"dt = {dt}")
 
     app_args = input_args['app_args']
+    application_id = input_args['application_id']
     action = app_args['action']
     market = app_args.get('market')
     data_root = app_args.get("data_root")
@@ -73,7 +74,9 @@ def main(spark, input_args):
             'parquet',
             file_to_write,
             df,
-            data_time = data_time
+            data_time = data_time,
+            application_id = application_id,
+            application_args = json.dumps(app_args),
         )
         return {
             'dsi_path': f'tradings:1.0:1:/{dt}_{market}:{dsi["revision"]}'
@@ -100,7 +103,9 @@ def main(spark, input_args):
             loader_name,
             loader_args,
             data_time = data_time,
-            src_dsi_paths = loader_args['dsi_paths']
+            src_dsi_paths = loader_args['dsi_paths'],
+            application_id = application_id,
+            application_args = json.dumps(app_args),
         )
 
     print("Done")

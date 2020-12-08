@@ -61,7 +61,9 @@ export class ApplicationTable extends React.Component {
                     }
                 }
             >
-                {application.name}
+                {
+                    (application.sys_app_id === null)?application.name:<b>{application.name}</b>
+                }
             </a>
         );
     };
