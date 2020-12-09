@@ -28,6 +28,12 @@ def load_view(spark, dcc, loader_name, loader_args):
 
 def load_asset(spark, dcc, dsi_path):
     # dcc: data catalog client
+    df, _ = load_asset_ex(spark, dcc, dsi_path)
+    return df
+
+def load_asset_ex(spark, dcc, dsi_path):
+    # same as load_asset, but it return the asset path with revision as well
+    # dcc: data catalog client
 
     dataset_name, major_version, minor_version, path, revision = (dsi_path.split(":") + [None])[:5]
     di = dcc.get_dataset_instance(
@@ -49,13 +55,13 @@ def load_asset(spark, dcc, dsi_path):
             df = spark.read.parquet(table_path)
         else:
             raise Exception(f"Unrecognized table type: {table_type}")
-        return df
+        return df, f"{dataset_name}:{major_version}:{minor_version}:{path}:{di.revision}"
 
     loader = json.loads(loader_str)
     # we can use a loader
     loader_name = loader['name']
     loader_args = loader['args']
-    return load_view(spark, dcc, loader_name, loader_args)
+    return load_view(spark, dcc, loader_name, loader_args), f"{dataset_name}:{major_version}:{minor_version}:{path}:{di['revision']}"
 
 def write_asset(spark, df, table, mode='overwrite'):
     # table is compatible with DatasetLocation

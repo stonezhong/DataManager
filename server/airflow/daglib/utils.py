@@ -49,6 +49,19 @@ def get_application_location(application_id):
 
     return None
 
+
+def get_execute_sql_app_location():
+    # Get system app for execute SQL application location
+    app_location = None
+
+    with get_mysql_connection() as cur:
+        cur.execute("SELECT id, app_location FROM main_application WHERE sys_app_id=1")
+        for row in cur:
+            return row[0], row[1]
+
+    return None, None
+
+
 def get_pipeline_details(pipeline_id):
     # Get pipeline context, version and dag_version
     with get_mysql_connection() as cur:
@@ -146,13 +159,12 @@ class ExecuteTask:
         log_info_with_title("pipeline group context context after xcom", pipeline_group_context)
 
         dc_config = load_json_config("dc_config.json")
-        spark_env = load_json_config("spark_env.json")
 
         if self.task_ctx['type'] == 'other':
             task_args_str = Template(self.task_ctx['args']).render(pipeline_group_context)
             args = {
                 "pipeline_group_context": pipeline_group_context,
-                "application_id": self.task_ctx['application_id'],
+                "application_id": task_ctx['application_id'],
                 "app_args": json.loads(task_args_str),
                 "dc_config": dc_config,
             }
@@ -163,15 +175,20 @@ class ExecuteTask:
             logger.info("Done")
             return
         else:
-            execute_sql_app = spark_env['apps']['execute_sql']
+            application_id, appLocation = get_execute_sql_app_location()
+            if appLocation is None:
+                logger.error("Unable to find Execute SQL system app")
+                raise Exception(f"Unable to find Execute SQL system app")
+            task_ctx_str = Template(json.dumps(self.task_ctx)).render(pipeline_group_context)
+            task_ctx = json.loads(task_ctx_str)
             args = {
                 "pipeline_group_context": pipeline_group_context,
+                "application_id":application_id,
                 "app_args": {
-                    "steps": self.task_ctx['steps'],
+                    "steps": task_ctx['steps'],
                 },
                 "dc_config": dc_config,
             }
-            appLocation = execute_sql_app['appLocation']
             log_info_with_title("app_args", args['app_args'])
 
 

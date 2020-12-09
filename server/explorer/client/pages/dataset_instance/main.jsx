@@ -13,16 +13,24 @@ import {DatasetInstanceView} from '/components/business/dataset/dataset_instance
 class DatasetInstancePage extends React.Component {
     render() {
         const dataset = this.props.app_context.ds;
+        const execute_sql_app_id = this.props.app_context.execute_sql_app_id;
 
         return (
             <Container fluid>
                 <Row><Col><h1>Asset</h1></Col></Row>
                 <Row>
+                    <Col>
                     {
-                        this.props.app_context.dsi_list.map(dsi => <Col xs={6} id={`revision-${dsi.revision}`}>
-                            <DatasetInstanceView key={dsi.id} dsi={dsi} dataset={dataset}/>
-                        </Col>)
+                        this.props.app_context.dsi_list.map(dsi => <div id={`revision-${dsi.revision}`}  className="mb-4">
+                            <DatasetInstanceView
+                                key={dsi.id}
+                                dsi={dsi}
+                                dataset={dataset}
+                                execute_sql_app_id={execute_sql_app_id}
+                            />
+                        </div>)
                     }
+                    </Col>
                 </Row>
             </Container>
         )
