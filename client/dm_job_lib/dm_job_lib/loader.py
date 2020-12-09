@@ -55,7 +55,7 @@ def load_asset_ex(spark, dcc, dsi_path):
             df = spark.read.parquet(table_path)
         else:
             raise Exception(f"Unrecognized table type: {table_type}")
-        return df, f"{dataset_name}:{major_version}:{minor_version}:{path}:{di.revision}"
+        return df, f"{dataset_name}:{major_version}:{minor_version}:{path}:{di['revision']}"
 
     loader = json.loads(loader_str)
     # we can use a loader
