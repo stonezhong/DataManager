@@ -103,6 +103,14 @@ class Application(models.Model):
         application.save()
         return application
 
+    @classmethod
+    def get_execute_sql_app(cls, request):
+        apps = cls.objects.filter(sys_app_id=cls.SysAppID.EXECUTE_SQL.value)
+        if len(apps) == 0:
+            raise DataCorruptionException("Execute SQL Application is not configured")
+        return apps[0]
+
+
 
 class Dataset(models.Model):
     id              = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
