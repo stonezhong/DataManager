@@ -44,31 +44,6 @@ class PipelineGroupPage extends React.Component {
     thePipelineGroupEditorRef = React.createRef();
     thePipelineSelectorRef    = React.createRef();
 
-    get_dag_run_url = (pipeline_instance) => {
-        if (pipeline_instance.status === 'created') {
-            return null;
-        }
-        // either started, finished or failed
-        const AIRFLOW_BASE_URL = this.props.app_config.AIRFLOW_BASE_URL;
-        const context = JSON.parse(pipeline_instance.context);
-
-        const run_id = context.dag_run.execution_date;
-        const dag_id = pipeline_instance.pipeline.name;
-        const q = `dag_id=${encodeURIComponent(dag_id)}&execution_date=${encodeURIComponent(run_id)}`
-
-        return (
-            <a href={`${AIRFLOW_BASE_URL}/admin/airflow/graph?${q}`}>Run</a>
-        );
-    };
-
-    get_dag_url = (pipeline_instance) => {
-        const AIRFLOW_BASE_URL = this.props.app_config.AIRFLOW_BASE_URL;
-        const dag_id = pipeline_instance.pipeline.name;
-        const q = `dag_id=${encodeURIComponent(dag_id)}`
-        return (
-            <a href={`${AIRFLOW_BASE_URL}/admin/airflow/tree?${q}`}>DAG</a>
-        );
-    };
 
     openDiagForAttach = (event) => {
         fetch("/api/Pipelines/active/")
@@ -157,9 +132,8 @@ class PipelineGroupPage extends React.Component {
                             <Row>
                                 <Col>
                                     <PipelineInstanceTable
+                                        airflow_base_url = {this.props.app_config.AIRFLOW_BASE_URL}
                                         pipeline_instances = {this.state.pipeline_group.pis}
-                                        get_dag_url = {this.get_dag_url}
-                                        get_dag_run_url = {this.get_dag_run_url}
                                     />
                                 </Col>
                             </Row>

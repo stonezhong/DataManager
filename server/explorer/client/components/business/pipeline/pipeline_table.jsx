@@ -18,6 +18,8 @@ import Spinner from 'react-bootstrap/Spinner'
 import {PipelineEditor} from './pipeline_editor.jsx'
 import {DataTable} from '/components/generic/datatable/main.jsx'
 
+import {AirflowDAGLink} from '/components/business/pipeline/airflow.jsx'
+
 import {
     pipeline_from_django_model,
 } from '/common_lib'
@@ -67,11 +69,10 @@ export class PipelineTable extends React.Component {
             <div>
                 {
                     (pipeline.dag_version > 0) &&
-                    <a
-                        href={`${this.props.airflow_base_url}/admin/airflow/graph?dag_id=${pipeline2.name}.${pipeline_id}&execution_date=`}
-                    >
-                        <img src="/static/images/airflow.jpeg" style={{height: "24px"}}/>
-                    </a>
+                    <AirflowDAGLink
+                        airflow_base_url={this.props.airflow_base_url}
+                        pipeline = {pipeline}
+                    />
                 }
                 {
                     (pipeline.dag_version < pipeline.version) &&
