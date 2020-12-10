@@ -5,7 +5,7 @@ import Card from 'react-bootstrap/Card'
 import Col from 'react-bootstrap/Col'
 import Row from 'react-bootstrap/Row'
 
-import {DatasetLink, AssetLinkFromDSIPath} from '/components/business/dataset/utils.jsx'
+import {AssetLinkFromDSIPath} from '/components/business/dataset/utils.jsx'
 import {AppIcon} from '/components/generic/icons/main.jsx'
 
 import './dataset.scss'
@@ -40,6 +40,17 @@ export class DatasetInstanceView extends React.Component {
             return this.render_lineage_info_application();
     }
 
+    render_producer_type() {
+        if (!this.props.dsi.application) {
+            return null;
+        }
+
+        if (this.props.dsi.application.id === this.props.execute_sql_app_id)
+            return "Spark-SQL";
+        else
+            return "Application";
+    }
+
     render_lineage_info_application() {
         return <div>
             <table className="dataset-lineage-attribute-grid">
@@ -56,43 +67,49 @@ export class DatasetInstanceView extends React.Component {
                             </pre>
                         </td>
                     </tr>
+                </tbody>
+            </table>
+        </div>;
+    }
+
+    render_lineage_info_execute_sql_step(step) {
+        return <div key={step.name}>
+            <h4>Step: {step.name}</h4>
+            <table className="dataset-lineage-sql-step-grid">
+                <tbody>
+                    {
+                        step.imports.map(imp => <tr>
+                            <td>
+                                Load view "{imp.alias}" from <AssetLinkFromDSIPath dsi_path={imp.dsi_name} />
+                            </td>
+                        </tr>)
+                    }
                     <tr>
-                        <td>Upstream Assets</td>
                         <td>
-                            {this.props.dsi.src_dataset_instances.map(src_dsi => <div key={src_dsi}>
-                                <AssetLinkFromDSIPath dsi_path={src_dsi} />
-                            </div>)}
+                            Run SQL Statement:<br /><br />
+                            <pre>{step.sql}</pre>
                         </td>
                     </tr>
-                    <tr>
-                        <td>Downstream Assets</td>
-                        <td>
-                            {this.props.dsi.dst_dataset_instances.map(dst_dsi => <div key={dst_dsi}>
-                                <AssetLinkFromDSIPath dsi_path={dst_dsi} />
-                            </div>)}
-                        </td>
-                    </tr>
+
+                    {("output" in step) && <tr><td>
+                        <div>
+                            Save to {step.output.location} as {step.output.type} in {step.output.write_mode} mode.
+                        </div>
+                        { step.output.register_dataset_instance && <div>
+                            Publish as <AssetLinkFromDSIPath dsi_path={step.output.register_dataset_instance} />
+                        </div>}
+                    </td></tr>}
                 </tbody>
             </table>
         </div>;
     }
 
     render_lineage_info_execute_sql() {
-        return null;
-    }
-
-    render_loader_name() {
-        if (!this.props.dsi.loader) {
-            return null;
-        }
-        return JSON.parse(this.props.dsi.loader).name;
-    }
-
-    render_loader_args() {
-        if (!this.props.dsi.loader) {
-            return null;
-        }
-        return <pre>{JSON.stringify(JSON.parse(this.props.dsi.loader).args, null, 2)}</pre>;
+        return <div>
+            {
+                JSON.parse(this.props.dsi.application_args).steps.map(step => this.render_lineage_info_execute_sql_step(step))
+            }
+        </div>;
     }
 
     render_dsi_status(dsi) {
@@ -144,7 +161,7 @@ export class DatasetInstanceView extends React.Component {
                                                     <td>Row Count</td>
                                                     <td>{this.props.dsi.row_count}</td>
                                                 </tr>
-                                                <tr>
+                                                {(this.props.dsi.locations.length > 0) && <tr>
                                                     <td>Locations</td>
                                                     <td>
                                                     {
@@ -154,14 +171,35 @@ export class DatasetInstanceView extends React.Component {
                                                         </div>)
                                                     }
                                                     </td>
-                                                </tr>
-                                                <tr>
+                                                </tr>}
+
+                                                {this.props.dsi.loader && <tr>
                                                     <td>Loader name</td>
-                                                    <td>{this.render_loader_name()}</td>
+                                                    <td>{JSON.parse(this.props.dsi.loader).name}</td>
+                                                </tr>}
+                                                {this.props.dsi.loader && <tr>
+                                                    <td>Loader args</td>
+                                                    <td>{<pre>{JSON.stringify(JSON.parse(this.props.dsi.loader).args, null, 2)}</pre>}</td>
+                                                </tr>}
+                                                <tr>
+                                                    <td>Producer type</td>
+                                                    <td>{this.render_producer_type()}</td>
                                                 </tr>
                                                 <tr>
-                                                    <td>Loader args</td>
-                                                    <td>{this.render_loader_args()}</td>
+                                                    <td>Upstream</td>
+                                                    <td>
+                                                        {this.props.dsi.src_dataset_instances.map(src_dsi => <div key={src_dsi}>
+                                                            <AssetLinkFromDSIPath dsi_path={src_dsi} />
+                                                        </div>)}
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Downstream</td>
+                                                    <td>
+                                                        {this.props.dsi.dst_dataset_instances.map(dst_dsi => <div key={dst_dsi}>
+                                                            <AssetLinkFromDSIPath dsi_path={dst_dsi} />
+                                                        </div>)}
+                                                    </td>
                                                 </tr>
                                             </tbody>
                                         </table>

@@ -1,5 +1,12 @@
 import React from 'react'
 
+/*********************************************************************************
+ * Purpose: Link to a dataset
+ *
+ * Props
+ *     ds       : dataset
+ *
+ */
 export class DatasetLink extends React.Component {
     render() {
         return <a href={`/explorer/dataset?id=${this.props.ds.id}`}>
@@ -9,7 +16,7 @@ export class DatasetLink extends React.Component {
 }
 
 /*********************************************************************************
- * Purpose: View a Dataset Schema
+ * Purpose: Link to a asset
  *
  * Props
  *     ds       : dataset
@@ -23,7 +30,7 @@ export class AssetLink extends React.Component {
 }
 
 /*********************************************************************************
- * Purpose: View a Dataset Schema
+ * Purpose: Link to a asset
  *
  * Props
  *     dsi_path : A full dsi path, may or may not have revision. E.g.: trading:1.0:1:/foo:0

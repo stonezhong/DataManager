@@ -1,0 +1,16 @@
+table.asset-general-info-table {
+    font-family:'courier new',monospace;
+    border: 1px solid rgb(211, 211, 211);
+    border-collapse: collapse;
+    width: 100%;
+
+    & > tbody > tr > td {
+        border: 1px solid rgb(211, 211, 211);
+        padding: 4px;
+    }
+
+    & > tbody > tr > td:first-child {
+        width: 120px;
+    }
+}
+
