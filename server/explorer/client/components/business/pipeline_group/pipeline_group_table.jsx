@@ -8,6 +8,7 @@ import * as Icon from 'react-bootstrap-icons'
 
 import {PipelineGroupEditor} from '/components/business/pipeline_group/pipeline_group_editor.jsx'
 import {DataTable} from '/components/generic/datatable/main.jsx'
+import {AppIcon} from '/components/generic/icons/main.jsx'
 
 import './pipeline_group.scss'
 
@@ -65,7 +66,7 @@ export class PipelineGroupTable extends React.Component {
         },
         finished:           {
             display: "Finished",
-            render_data: pipeline_group => <img src={pipeline_group.finished?"/static/images/checkmark-32.ico":"/static/images/x-mark-32.ico"} className="icon24"/>
+            render_data: pipeline_group => <AppIcon type={pipeline_group.finished?"checkmark":"dismiss"} className="icon24"/>
         },
     };
 

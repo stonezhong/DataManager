@@ -19,6 +19,7 @@ import {PipelineEditor} from './pipeline_editor.jsx'
 import {DataTable} from '/components/generic/datatable/main.jsx'
 
 import {AirflowDAGLink} from '/components/business/pipeline/airflow.jsx'
+import {AppIcon} from '/components/generic/icons/main.jsx'
 
 import {
     pipeline_from_django_model,
@@ -87,10 +88,7 @@ export class PipelineTable extends React.Component {
         return (
             <div>
                 {
-                    <img
-                        src={pipeline2.paused?"/static/images/x-mark-32.ico":"/static/images/checkmark-32.ico"}
-                        className="icon24"
-                    />
+                    <AppIcon type={pipeline2.paused?"dismiss":"checkmark"} className="icon24"/>
                 }
                 {
                     this.props.allowEdit &&

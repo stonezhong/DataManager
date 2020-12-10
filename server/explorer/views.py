@@ -246,6 +246,7 @@ def dataset_instance(request):
     app_context = {
         'dsi_list': dsi_list_rendered.data,
         'ds': ds_rendered.data,
+        'dsi_path': dsi_path,
         'execute_sql_app_id': str(execute_sql_app.id),
     }
 
