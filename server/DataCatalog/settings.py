@@ -177,4 +177,4 @@ AIRFLOW_BASE_URL = __DJANGO_CONFIG['airflow']['base_url']
 # AIRFLOW Virtual Environment Location
 AIRFLOW_VENV = "/root/.venvs/airflow"
 # AIRFLOW REST API URL, need to be accessible from the web server
-AIRFLOW_API_BASE_URL = "http://localhost:8080/api/experimental"
+AIRFLOW_API_BASE_URL = f"{AIRFLOW_BASE_URL}/api/experimental"
