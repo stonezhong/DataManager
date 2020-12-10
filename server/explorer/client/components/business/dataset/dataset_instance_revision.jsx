@@ -6,6 +6,7 @@ import Col from 'react-bootstrap/Col'
 import Row from 'react-bootstrap/Row'
 
 import {DatasetLink, AssetLinkFromDSIPath} from '/components/business/dataset/utils.jsx'
+import {AppIcon} from '/components/generic/icons/main.jsx'
 
 import './dataset.scss'
 
@@ -28,126 +29,152 @@ export class DatasetInstanceView extends React.Component {
         return <span>import view <code>${imp.alias}</code></span>;
     };
 
-    render() {
-        return (
-            <Card border={this.props.dsi.deleted_time?"warning":"success"}>
-                <Card.Body>
-                    { this.props.dsi.deleted_time && <Card.Title>
-                            Revision: {this.props.dsi.revision} <b>Deleted at {this.props.dsi.deleted_time}</b>
-                        </Card.Title>
-                    }
-                    { !this.props.dsi.deleted_time && <Card.Title>
-                            Revision: {this.props.dsi.revision}
-                        </Card.Title>
-                    }
+    render_lineage_info() {
+        if (!this.props.dsi.application) {
+            return null;
+        }
 
-                    <Row>
-                        <Col xs={3}>Dataset</Col>
-                        <Col>
-                            <DatasetLink ds={this.props.dataset} />
-                        </Col>
-                    </Row>
+        if (this.props.dsi.application.id === this.props.execute_sql_app_id)
+            return this.render_lineage_info_execute_sql();
+        else
+            return this.render_lineage_info_application();
+    }
 
-                    <Row>
-                        <Col xs={3}>Path</Col>
-                        <Col>{this.props.dsi.path}</Col>
-                    </Row>
-                    <Row>
-                        <Col xs={3}>Publish Time</Col>
-                        <Col>{this.props.dsi.publish_time}</Col>
-                    </Row>
-                    <Row>
-                        <Col xs={3}>Data Time</Col>
-                        <Col>{this.props.dsi.data_time}</Col>
-                    </Row>
-                    <Row>
-                        <Col xs={3}>Row Count</Col>
-                        <Col>{this.props.dsi.row_count}</Col>
-                    </Row>
-                    <Row>
-                        <Col xs={3}>Locations</Col>
-                        <Col>
-                            {
-                                this.props.dsi.locations.map(location => <div key={location.position}>
-                                    <span className="card-asset-type">{location.type}</span>
-                                    <span>{location.location}</span>
-                                </div>)
-                            }
-                        </Col>
-                    </Row>
-                    <Row>
-                        <Col xs={3}>From</Col>
-                        <Col>
+    render_lineage_info_application() {
+        return <div>
+            <table className="dataset-lineage-attribute-grid">
+                <tbody>
+                    <tr>
+                        <td>Application</td>
+                        <td>{this.props.dsi.application.name}</td>
+                    </tr>
+                    <tr>
+                        <td>Arguments</td>
+                        <td>
+                            <pre>
+                                { JSON.stringify(JSON.parse(this.props.dsi.application_args),null,2) }
+                            </pre>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Upstream Assets</td>
+                        <td>
                             {this.props.dsi.src_dataset_instances.map(src_dsi => <div key={src_dsi}>
                                 <AssetLinkFromDSIPath dsi_path={src_dsi} />
                             </div>)}
-                        </Col>
-                    </Row>
-                    <Row>
-                        <Col xs={3}>To</Col>
-                        <Col>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Downstream Assets</td>
+                        <td>
                             {this.props.dsi.dst_dataset_instances.map(dst_dsi => <div key={dst_dsi}>
                                 <AssetLinkFromDSIPath dsi_path={dst_dsi} />
                             </div>)}
-                        </Col>
-                    </Row>
-                    {
-                        this.props.dsi.application && this.props.dsi.application.id === this.props.execute_sql_app_id && <Row>
-                            <Col xs={3}>Application</Col>
-                            <Col>Spark-SQL</Col>
-                        </Row>
-                    }
-                    {
-                        this.props.dsi.application && this.props.dsi.application.id === this.props.execute_sql_app_id && this.app_args().steps.map(step => <div key={step.name}>
-                            <Row className="mt-4">
-                                <Col>
-                                    <h2>step: {step.name}</h2>
-                                    <div className="card-indent-level-1">
-                                        <h3>Import Views</h3>
-                                            { step.imports.map(imp => <span class="card-indent-level-1" key={imp.alias}>{ this.render_imp(imp) }</span>) }
-                                        <h3>SQL Query</h3>
-                                        <pre className="card-indent-level-1">
-                                            <code>
-                                                {step.sql}
-                                            </code>
-                                        </pre>
-                                        {step.alias && <h3>Export View: {step.alias}</h3>}
-                                        {step.output && <div>
-                                            <span className="card-prompt">Save Output</span><span>Yes</span><br />
-                                            <span className="card-prompt">Save To</span><span>{step.output.location}</span><br />
-                                            <span className="card-prompt">Save As</span><span>{step.output.type}</span><br />
-                                            <span className="card-prompt">Save Mode</span><span>{step.output.write_mode}</span><br />
-                                            {step.output.register_dataset_instance && <div>
-                                                <span className="card-prompt">Register Asset</span><span>{step.output.register_dataset_instance}</span><br />
-                                                <span className="card-prompt">Data Time</span><span>{step.output.data_time}</span><br />
-                                            </div>}
-                                        </div>}
-                                        {!step.output && <div>Save output: No</div>}
-                                    </div>
-                                </Col>
-                            </Row>
-                        </div>)
-                    }
-                    {
-                        this.props.dsi.application && this.props.dsi.application.id !== this.props.execute_sql_app_id && <Row>
-                            <Col xs={3}>Application</Col>
-                            <Col>{this.props.dsi.application.name}</Col>
-                        </Row>
-                    }
-                    {
-                        this.props.dsi.application && this.props.dsi.application.id !== this.props.execute_sql_app_id && <Row>
-                            <Col xs={3}>Application Args</Col>
-                            <Col>
-                                <code>
-                                    <pre>
-                                        { JSON.stringify(JSON.parse(this.props.dsi.application_args),null,2) }
-                                    </pre>
-                                </code>
-                            </Col>
-                        </Row>
-                    }
-                </Card.Body>
-            </Card>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>;
+    }
+
+    render_lineage_info_execute_sql() {
+        return null;
+    }
+
+    render_loader_name() {
+        if (!this.props.dsi.loader) {
+            return null;
+        }
+        return JSON.parse(this.props.dsi.loader).name;
+    }
+
+    render_loader_args() {
+        if (!this.props.dsi.loader) {
+            return null;
+        }
+        return <pre>{JSON.stringify(JSON.parse(this.props.dsi.loader).args, null, 2)}</pre>;
+    }
+
+    render_dsi_status(dsi) {
+        if (dsi.deleted_time)
+            return <div>
+                <AppIcon type="dismiss" className="icon24 mr-2"/>
+                <span className="asset-label-inactive">Deleted at {dsi.deleted_time}</span>
+            </div>;
+        else
+            return <div>
+                <AppIcon type="checkmark" className="icon24 mr-2"/>
+                <span className="asset-label-active">Active</span>
+            </div>;
+    }
+
+    render() {
+        return (
+            <div>
+                <h2>Revision {this.props.dsi.revision}</h2>
+                <Row>
+                    <Col>
+                        <Card border={this.props.dsi.deleted_time?"danger":"success"}>
+                            <Card.Body>
+                                <Row>
+                                    <Col>
+                                        <table className="dataset-attribute-grid">
+                                            <tbody>
+                                                <tr>
+                                                    <td>Status</td>
+                                                    <td>{this.render_dsi_status(this.props.dsi)}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Revision</td>
+                                                    <td>{this.props.dsi.revision}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Path</td>
+                                                    <td>{this.props.dsi.path}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Publish Time</td>
+                                                    <td>{this.props.dsi.publish_time}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Data Time</td>
+                                                    <td>{this.props.dsi.data_time}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Row Count</td>
+                                                    <td>{this.props.dsi.row_count}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Locations</td>
+                                                    <td>
+                                                    {
+                                                        this.props.dsi.locations.map(location => <div key={location.position}>
+                                                            <span className="card-asset-type">{location.type}</span>
+                                                            <span>{location.location}</span>
+                                                        </div>)
+                                                    }
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Loader name</td>
+                                                    <td>{this.render_loader_name()}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Loader args</td>
+                                                    <td>{this.render_loader_args()}</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </Col>
+                                    <Col>
+                                        { this.render_lineage_info() }
+                                    </Col>
+                                </Row>
+                            </Card.Body>
+                        </Card>
+                    </Col>
+                </Row>
+            </div>
         )
     }
 }

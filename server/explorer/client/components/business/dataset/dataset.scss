@@ -183,7 +183,34 @@ table.dataset-attribute-grid {
     }
 
     & > tbody > tr > td:first-child {
-        width: 200px;
+        width: 160px;
+        vertical-align: top;
+    }
+}
+
+table.dataset-lineage-attribute-grid {
+    font-family:'courier new',monospace;
+    border: 1px solid rgb(211, 211, 211);
+    border-collapse: collapse;
+    width: 100%;
+
+    & > tbody > tr > td {
+        border: 1px solid rgb(211, 211, 211);
+        padding: 4px;
     }
 
+    & > tbody > tr > td:first-child {
+        width: 200px;
+        vertical-align: top;
+    }
+}
+
+span.asset-label-active {
+    font-weight: bold;
+    color: green;
+}
+
+span.asset-label-inactive {
+    font-weight: bold;
+    color: red;
 }

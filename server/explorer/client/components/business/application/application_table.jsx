@@ -3,12 +3,13 @@ import React from 'react'
 import Button from 'react-bootstrap/Button'
 import Col from 'react-bootstrap/Col'
 import Row from 'react-bootstrap/Row'
-import Table from 'react-bootstrap/Table'
 import * as Icon from 'react-bootstrap-icons'
 
 import {ApplicationEditor} from './application_editor.jsx'
 import {DataTable} from '/components/generic/datatable/main.jsx'
 import {SimpleDialogBox} from '/components/generic/dialogbox/simple.jsx'
+
+import {AppIcon} from '/components/generic/icons/main.jsx'
 
 import "./application.scss"
 
@@ -68,11 +69,7 @@ export class ApplicationTable extends React.Component {
         );
     };
 
-    render_retired = application =>
-        <img
-            src={application.retired?"/static/images/x-mark-32.ico":"/static/images/checkmark-32.ico"}
-            className="icon24"
-        />;
+    render_retired = application => <AppIcon type={application.retired?"dismiss":"checkmark"} className="icon24"/>;
 
     columns = {
         tools:              {display: "", render_data: this.render_tools},

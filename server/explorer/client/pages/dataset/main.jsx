@@ -7,8 +7,6 @@ import Row from 'react-bootstrap/Row'
 import Container from 'react-bootstrap/Container'
 import Button from 'react-bootstrap/Button'
 import Modal from 'react-bootstrap/Modal'
-import Card from 'react-bootstrap/Card'
-import * as Icon from 'react-bootstrap-icons'
 
 const buildUrl = require('build-url');
 
@@ -124,7 +122,7 @@ class DatasetPage extends React.Component {
                 <Row>
                     <Col>
                         <h1 className="c-ib">
-                            Dataset {this.props.dataset.name}:{this.props.dataset.major_version}:{this.props.dataset.minor_version}
+                            Dataset
                         </h1>
                         <div className="c-vc c-ib">
                             <Button
