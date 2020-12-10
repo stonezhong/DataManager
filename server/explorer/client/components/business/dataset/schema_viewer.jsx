@@ -109,14 +109,11 @@ export class SchemaViewer extends React.Component {
     };
 
     debug = () => {
-        console.log(this.state.schema);
         const view_data = this.state.schema.fields.map(fld => this.get_field(fld));
-        console.log(view_data);
         const rows = [];
         for (const i in view_data) {
             this.append_tree_node_to_row(view_data[i], 0, rows);
         }
-        console.log(rows);
     };
 
     toggle_expand = (row) => {
