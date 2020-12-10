@@ -15,6 +15,7 @@ const buildUrl = require('build-url');
 import {DatasetInstanceTable} from '/components/business/dataset/dataset_instance_table.jsx'
 import {SchemaViewer, get_schema} from '/components/business/dataset/schema_viewer.jsx'
 import {DatasetEditor} from '/components/business/dataset/dataset_editor.jsx'
+import {DatasetViewer} from '/components/business/dataset/dataset_viewer.jsx'
 import {TopMessage} from '/components/generic/top_message/main.jsx'
 
 import {get_app_context, get_csrf_token, get_current_user, handle_json_response} from '/common_lib'
@@ -166,51 +167,7 @@ class DatasetPage extends React.Component {
                         </div>
                     </Col>
                 </Row>
-                {this.state.show_details && <Row>
-                    <Col xs={8}>
-                        <Card border="success">
-                            <Card.Body>
-                            <div
-                                dangerouslySetInnerHTML={{__html: this.props.dataset.description}}
-                            ></div>
-                            </Card.Body>
-                        </Card>
-                    </Col>
-                    <Col xs={4}>
-                        <Card border="success">
-                            <Card.Body>
-                                <Row>
-                                    <Col xs={4}>name</Col>
-                                    <Col>{this.props.dataset.name}</Col>
-                                </Row>
-                                <Row>
-                                    <Col xs={4}>Major Version</Col>
-                                    <Col>{this.props.dataset.major_version}</Col>
-                                </Row>
-                                <Row>
-                                    <Col xs={4}>Minor Version</Col>
-                                    <Col>{this.props.dataset.minor_version}</Col>
-                                </Row>
-                                <Row>
-                                    <Col xs={4}>Author</Col>
-                                    <Col>{this.props.dataset.author}</Col>
-                                </Row>
-                                <Row>
-                                    <Col xs={4}>Team</Col>
-                                    <Col>{this.props.dataset.team}</Col>
-                                </Row>
-                                <Row>
-                                    <Col xs={4}>Publish Time</Col>
-                                    <Col>{this.props.dataset.publish_time}</Col>
-                                </Row>
-                                <Row>
-                                    <Col xs={4}>Expiration Time</Col>
-                                    <Col>{this.props.dataset.expiration_time}</Col>
-                                </Row>
-                            </Card.Body>
-                        </Card>
-                    </Col>
-                </Row> }
+                <DatasetViewer dataset={this.props.dataset} show={this.state.show_details} />
                 <Row>
                     <Col>
                         <h2 className="c-ib">
