@@ -16,6 +16,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import {SequentialTaskEditor} from './task_editor.jsx'
 import {SimpleDialogBox} from '/components/generic/dialogbox/simple.jsx'
+import {ApplicationLink} from '/components/business/application/index.jsx'
 
 import "./pipeline.scss"
 
@@ -459,18 +460,7 @@ export class PipelineEditor extends React.Component {
                                                                     <td data-role="type">{task.type}</td>
                                                                     <td data-role="application">
                                                                         { this.getApplication(task) &&
-                                                                            <a
-                                                                                href="#"
-                                                                                onClick = {event => {
-                                                                                    event.preventDefault();
-                                                                                    this.show_help(
-                                                                                        this.getApplication(task).name,
-                                                                                        <code>{this.getApplication(task).description}</code>
-                                                                                    )
-                                                                                }}
-                                                                            >
-                                                                                {this.getApplication(task).name}
-                                                                            </a>
+                                                                            <ApplicationLink application={this.getApplication(task)} />
                                                                         }
                                                                     </td>
                                                                 </tr>

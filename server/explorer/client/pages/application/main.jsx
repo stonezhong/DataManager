@@ -6,8 +6,10 @@ import Col from 'react-bootstrap/Col'
 import Row from 'react-bootstrap/Row'
 import Button from 'react-bootstrap/Button'
 
-import {ApplicationViewer} from '/components/business/application/application_viewer.jsx'
-import {ApplicationEditor} from '/components/business/application/application_editor.jsx'
+import {
+    ApplicationViewer,
+    ApplicationEditor
+} from '/components/business/application/index.jsx'
 import {PageHeader} from '/components/generic/page_tools/index.jsx'
 import {saveApplication} from '/apis'
 

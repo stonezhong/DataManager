@@ -6,6 +6,17 @@ import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
 import Form from 'react-bootstrap/Form'
 import Modal from 'react-bootstrap/Modal'
+import Card from 'react-bootstrap/Card'
+
+import { CKEditor } from '@ckeditor/ckeditor5-react';
+import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
+
+import {DataTable} from '/components/generic/datatable/main.jsx'
+import {SimpleDialogBox} from '/components/generic/dialogbox/simple.jsx'
+import {AppIcon} from '/components/generic/icons/main.jsx'
+
+
+import "./application.scss"
 
 const _ = require("lodash");
 
@@ -88,7 +99,7 @@ export class ApplicationEditor extends React.Component {
                 show={this.state.show}
                 onHide={this.onClose}
                 backdrop="static"
-                size='lg'
+                size='xl'
                 scrollable
             >
                 <Modal.Header closeButton>
@@ -136,11 +147,14 @@ export class ApplicationEditor extends React.Component {
                             <Form.Group as={Row} controlId="description">
                                 <Form.Label column sm={2}>Description</Form.Label>
                                 <Col sm={10}>
-                                    <Form.Control as="textarea" rows={5}
-                                        disabled = {this.state.mode==='view'}
-                                        value={this.state.application.description}
-                                        onChange={(event) => {
-                                            const v = event.target.value;
+
+                                    <CKEditor
+                                        editor={ ClassicEditor }
+                                        data={this.state.application.description}
+                                        disabled={this.state.mode==='view'}
+                                        type="classic"
+                                        onChange={(event, editor) => {
+                                            const v = editor.getData();
                                             this.setState(
                                                 state => {
                                                     state.application.description = v;
@@ -207,3 +221,184 @@ export class ApplicationEditor extends React.Component {
         );
     }
 }
+
+/*********************************************************************************
+ * Purpose: Show list of applications
+ * TODO: pagination
+ *
+ * Props
+ *     applications : a list of applications
+ *     allowEdit    : if True, user is allowed to edit application.
+ *     allowNew     : if True, user is allowed to create new application
+ *     onSave       : a callback, called with user want to save or edit
+ *                    an application. onSave(mode, application) is called,
+ *                    mode is either "new" or "edit"
+ *
+ */
+export class ApplicationTable extends React.Component {
+    theApplicationEditorRef = React.createRef();
+    theDataTableRef     = React.createRef();
+    theDialogBoxRef     = React.createRef();
+
+    get_page = (offset, limit) => {
+        return this.props.get_page(offset, limit, {});
+    };
+
+    render_name = application => {
+        return <ApplicationLink application={application} />;
+    };
+
+    render_retired = application => <AppIcon type={application.retired?"dismiss":"checkmark"} className="icon24"/>;
+
+    columns = {
+        name:               {display: "Name", render_data: this.render_name},
+        author:             {display: "Author"},
+        team:               {display: "Team"},
+        retired:            {display: "Active", render_data: this.render_retired},
+    };
+
+    onSave = (mode, application) => {
+        return this.props.onSave(mode, application).then(
+            this.theDataTableRef.current.refresh
+        );
+    };
+
+    render() {
+        return (
+            <div>
+                <Row>
+                    <Col>
+                        <h1 className="c-ib">Applications</h1>
+                        {
+                            this.props.allowNew && <Button
+                                size="sm"
+                                className="c-vc ml-2"
+                                onClick={() => {
+                                    this.theApplicationEditorRef.current.openDialog("new");
+                                }}
+                            >
+                                Create
+                            </Button>
+                        }
+                    </Col>
+                </Row>
+
+                <DataTable
+                    ref={this.theDataTableRef}
+                    hover
+                    bordered
+                    className="application-table"
+                    columns = {this.columns}
+                    id_column = "id"
+                    size = {this.props.size}
+                    page_size={this.props.page_size}
+                    fast_step_count={10}
+                    get_page={this.get_page}
+                />
+                <ApplicationEditor
+                    ref={this.theApplicationEditorRef}
+                    onSave={this.onSave}
+                />
+                <SimpleDialogBox
+                    ref={this.theDialogBoxRef}
+                    backdrop="static"
+                    size='lg'
+                    scrollable
+                />
+            </div>
+        )
+    }
+}
+
+/*********************************************************************************
+ * Purpose: Show an application
+ *
+ * Props
+ *     application  : The application to show
+ *
+ */
+export class ApplicationViewer extends React.Component {
+    render() {
+        return (
+            <div>
+                <Row>
+                    <Col>
+                        <Card border="success">
+                            <Card.Body>
+                                <div
+                                    dangerouslySetInnerHTML={{__html: this.props.application.description}}
+                                ></div>
+                            </Card.Body>
+                        </Card>
+                    </Col>
+                </Row>
+                <Row className="mt-2">
+                    <Col>
+                    <Card border="success">
+                            <Card.Body>
+                                <table className="application-viewer-grid">
+                                    <tbody>
+                                        <tr>
+                                            <td>Name</td>
+                                            <td>{this.props.application.name}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Author</td>
+                                            <td>{this.props.application.author}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>team</td>
+                                            <td>{this.props.application.team}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Active</td>
+                                            <td>
+                                                <div>
+                                                    <AppIcon
+                                                        type={this.props.application.Retired?"dismiss":"checkmark"}
+                                                        className="icon16"
+                                                    />
+                                                    <span className="ml-2">
+                                                        {this.props.application.Retired?"Retired":""}
+                                                    </span>
+
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>Location</td>
+                                            <td>{this.props.application.app_location}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Sys App ID</td>
+                                            <td>{this.props.application.sys_app_id}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </Card.Body>
+                        </Card>
+                    </Col>
+                </Row>
+            </div>
+        )
+    }
+}
+
+/*********************************************************************************
+ * Purpose: Link to an application
+ *
+ * Props
+ *     application: The application to link to
+ *
+ */
+
+export class ApplicationLink extends React.Component {
+    render() {
+        return (
+            <a href={`/explorer/application?id=${this.props.application.id}`}>
+                { (this.props.application.sys_app_id === null)?this.props.application.name:<b>{this.props.application.name}</b> }
+            </a>
+        );
+    }
+}
+
