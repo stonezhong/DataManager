@@ -71,7 +71,7 @@ class DatasetsPage extends React.Component {
                                 onChange={(event) => {
                                     this.setState(
                                         {showExpired: event.target.checked},
-                                        this.theDatasetTableRef.current.refresh
+                                        this.theDatasetTableRef.current.reset
                                     )
                                 }}
                             />
