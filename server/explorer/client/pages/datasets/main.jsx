@@ -2,24 +2,34 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 
 import Container from 'react-bootstrap/Container'
+import Button from 'react-bootstrap/Button'
+import Col from 'react-bootstrap/Col'
+import Row from 'react-bootstrap/Row'
+import Form from 'react-bootstrap/Form'
+import {PageHeader} from '/components/generic/page_tools'
 
 import $ from 'jquery'
 const buildUrl = require('build-url');
 
-import {dt_2_utc_string, get_csrf_token, get_current_user, handle_json_response} from '/common_lib'
+import {get_csrf_token, get_current_user, handle_json_response} from '/common_lib'
 import {saveDataset} from '/apis'
 import {DatasetTable} from '/components/business/dataset/dataset_table.jsx'
+import {DatasetEditor} from '/components/business/dataset/dataset_editor.jsx'
 
 class DatasetsPage extends React.Component {
+    theDatasetEditorRef = React.createRef();
+    theDatasetTableRef  = React.createRef();
+
     state = {
         datasets: [],
         showExpired: false
     };
 
-    onSave = (mode, dataset) => saveDataset(get_csrf_token(), mode, dataset);
-
-
-
+    onSave = (mode, dataset) => {
+        return saveDataset(
+            get_csrf_token(), mode, dataset
+        ).then(this.theDatasetTableRef.current.refresh);
+    };
 
     get_page = (offset, limit, filter={}) => {
         const buildArgs = {
@@ -40,13 +50,44 @@ class DatasetsPage extends React.Component {
     render() {
         return (
             <Container fluid>
+                <Row>
+                    <Col>
+                        <PageHeader title="Datasets">
+                            {!!this.props.current_user &&
+                                <Button
+                                    size="sm"
+                                    className="ml-2"
+                                    onClick={() => {
+                                        this.theDatasetEditorRef.current.openDialog("new");
+                                    }}
+                                >
+                                    Create
+                                </Button>
+                            }
+                            <Form.Check type="checkbox" label="Show Expired Datasets"
+                                inline
+                                className="ml-2"
+                                checked={this.state.showExpired}
+                                onChange={(event) => {
+                                    this.setState(
+                                        {showExpired: event.target.checked},
+                                        this.theDatasetTableRef.current.refresh
+                                    )
+                                }}
+                            />
+                        </PageHeader>
+                    </Col>
+                </Row>
                 <DatasetTable
-                    allowNew={!!this.props.current_user}
-                    onSave={this.onSave}
-                    initShowExpired={false}
+                    ref={this.theDatasetTableRef}
+                    showExpired={this.state.showExpired}
                     get_page={this.get_page}
                     page_size={15}
                     size="sm"
+                />
+                <DatasetEditor
+                    ref={this.theDatasetEditorRef}
+                    onSave={this.onSave}
                 />
             </Container>
         )
