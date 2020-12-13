@@ -1,12 +1,8 @@
 import React from 'react'
 
 import Button from 'react-bootstrap/Button'
-import Col from 'react-bootstrap/Col'
-import Row from 'react-bootstrap/Row'
-import Form from 'react-bootstrap/Form'
 import * as Icon from 'react-bootstrap-icons'
 
-import {DatasetEditor} from './dataset_editor.jsx'
 import {SchemaViewer, get_schema} from './schema_viewer.jsx'
 import {DataTable} from '/components/generic/datatable/main.jsx'
 
@@ -29,16 +25,10 @@ import './dataset.scss'
  *                                    ...
  *                                ]
  *                            }
- *
- *     allowNew             : if True, user is allowed to create new dataset
- *     initShowExpired      : init value of showExpired, user can change it
- *     onSave               : a callback, called with user want to save or edit
- *                            a dataset. onSave(mode, dataset) is called,
- *                            mode is either "new" or "edit"
+ *     showExpired          : boolean, shall we display expired dataset?
  *
  */
 export class DatasetTable extends React.Component {
-    theDatasetEditorRef = React.createRef();
     theSchemaViewerRef  = React.createRef();
     theDataTableRef     = React.createRef();
 
@@ -66,8 +56,11 @@ export class DatasetTable extends React.Component {
     ;
 
     get_page = (offset, limit) => {
-        return this.props.get_page(offset, limit, {showExpired: this.state.showExpired});
+        return this.props.get_page(offset, limit, {showExpired: this.props.showExpired});
     };
+
+    refresh = () => this.theDataTableRef.current.refresh();
+    reset   = () => this.theDataTableRef.current.reset();
 
     columns = {
         name:               {display: "Name", render_data: this.render_name},
@@ -80,47 +73,10 @@ export class DatasetTable extends React.Component {
         minor_version:      {display: "Minor Version"},
     };
 
-    state = {
-        showExpired: this.props.initShowExpired
-    }
-
-    onSave = (mode, dataset) => {
-        return this.props.onSave(mode, dataset).then(this.theDataTableRef.current.refresh);
-    };
-
 
     render() {
         return (
             <div>
-                <Row>
-                    <Col>
-                        <h1 className="c-ib">Datasets</h1>
-                        <div className="c-vc c-ib">
-                            {
-                                this.props.allowNew && <Button
-                                    size="sm"
-                                    className="ml-2"
-                                    onClick={() => {
-                                        this.theDatasetEditorRef.current.openDialog("new");
-                                    }}
-                                >
-                                    Create
-                                </Button>
-                            }
-                            <Form.Check type="checkbox" label="Show Expired Datasets"
-                                inline
-                                className="ml-2"
-                                checked={this.state.showExpired}
-                                onChange={(event) => {
-                                    this.setState(
-                                        {showExpired: event.target.checked},
-                                        this.theDataTableRef.current.reset
-                                    )
-                                }}
-                            />
-                        </div>
-                    </Col>
-                </Row>
                 <DataTable
                     ref={this.theDataTableRef}
                     hover
@@ -134,10 +90,6 @@ export class DatasetTable extends React.Component {
                     get_page={this.get_page}
                 />
 
-                <DatasetEditor
-                    ref={this.theDatasetEditorRef}
-                    onSave={this.onSave}
-                />
                 <SchemaViewer
                     ref={this.theSchemaViewerRef}
                 />
