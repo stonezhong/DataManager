@@ -5,6 +5,7 @@ import Container from 'react-bootstrap/Container'
 
 import {ApplicationTable} from '/components/business/application'
 import {TopMessage} from '/components/generic/top_message/main.jsx'
+import {PageHeader} from '/components/generic/page_tools'
 
 import $ from 'jquery'
 const buildUrl = require('build-url');
@@ -13,9 +14,15 @@ import {get_csrf_token, get_current_user, handle_json_response} from '/common_li
 import {saveApplication} from '/apis'
 
 class ApplicationsPage extends React.Component {
-    theTopMessageRef = React.createRef();
+    theTopMessageRef        = React.createRef();
+    theApplicationEditorRef = React.createRef();
+    theApplicationTableRef  = React.createRef();
 
-    onSave = (mode, application) => saveApplication(get_csrf_token(), mode, application);
+    onSave = (mode, application) => {
+        return saveApplication(
+            get_csrf_token(), mode, application
+        ).then(this.theApplicationTableRef.current.refresh)
+    };
 
     get_page = (offset, limit, filter={}) => {
         const buildArgs = {
@@ -37,15 +44,46 @@ class ApplicationsPage extends React.Component {
     render() {
         return (
             <Container fluid>
-                <TopMessage ref={this.theTopMessageRef} />
-                <ApplicationTable
-                    allowEdit={!!this.props.current_user}
-                    allowNew={!!this.props.current_user}
+                <Row>
+                    <Col>
+                        <TopMessage ref={this.theTopMessageRef} />
+                    </Col>
+                </Row>
+
+                <Row>
+                    <Col>
+                        <PageHeader title="Applications">
+                            {
+                                !!this.props.current_user && <Button
+                                    size="sm"
+                                    className="c-vc ml-2"
+                                    onClick={() => {
+                                        this.theApplicationEditorRef.current.openDialog("new");
+                                    }}
+                                >
+                                    Create
+                                </Button>
+                            }
+                        </PageHeader>
+                    </Col>
+                </Row>
+
+                <Row>
+                    <Col>
+                        <ApplicationTable
+                            ref={theApplicationTableRef}
+                            get_page={this.get_page}
+                            page_size={15}
+                            size="sm"
+                        />
+                    </Col>
+                </Row>
+
+                <ApplicationEditor
+                    ref={this.theApplicationEditorRef}
                     onSave={this.onSave}
-                    get_page={this.get_page}
-                    page_size={15}
-                    size="sm"
                 />
+
             </Container>
         )
     }
