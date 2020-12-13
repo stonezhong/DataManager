@@ -228,17 +228,10 @@ export class ApplicationEditor extends React.Component {
  *
  * Props
  *     applications : a list of applications
- *     allowEdit    : if True, user is allowed to edit application.
- *     allowNew     : if True, user is allowed to create new application
- *     onSave       : a callback, called with user want to save or edit
- *                    an application. onSave(mode, application) is called,
- *                    mode is either "new" or "edit"
  *
  */
 export class ApplicationTable extends React.Component {
-    theApplicationEditorRef = React.createRef();
     theDataTableRef     = React.createRef();
-    theDialogBoxRef     = React.createRef();
 
     get_page = (offset, limit) => {
         return this.props.get_page(offset, limit, {});
@@ -257,32 +250,12 @@ export class ApplicationTable extends React.Component {
         retired:            {display: "Active", render_data: this.render_retired},
     };
 
-    onSave = (mode, application) => {
-        return this.props.onSave(mode, application).then(
-            this.theDataTableRef.current.refresh
-        );
-    };
+    refresh = () => this.theDataTableRef.current.refresh();
+    reset   = () => this.theDataTableRef.current.reset();
 
     render() {
         return (
             <div>
-                <Row>
-                    <Col>
-                        <h1 className="c-ib">Applications</h1>
-                        {
-                            this.props.allowNew && <Button
-                                size="sm"
-                                className="c-vc ml-2"
-                                onClick={() => {
-                                    this.theApplicationEditorRef.current.openDialog("new");
-                                }}
-                            >
-                                Create
-                            </Button>
-                        }
-                    </Col>
-                </Row>
-
                 <DataTable
                     ref={this.theDataTableRef}
                     hover
@@ -294,16 +267,6 @@ export class ApplicationTable extends React.Component {
                     page_size={this.props.page_size}
                     fast_step_count={10}
                     get_page={this.get_page}
-                />
-                <ApplicationEditor
-                    ref={this.theApplicationEditorRef}
-                    onSave={this.onSave}
-                />
-                <SimpleDialogBox
-                    ref={this.theDialogBoxRef}
-                    backdrop="static"
-                    size='lg'
-                    scrollable
                 />
             </div>
         )
