@@ -16,7 +16,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import {SequentialTaskEditor} from './task_editor.jsx'
 import {SimpleDialogBox} from '/components/generic/dialogbox/simple.jsx'
-import {ApplicationLink} from '/components/business/application/index.jsx'
+import {ApplicationLink} from '/components/business/application'
 
 import "./pipeline.scss"
 
