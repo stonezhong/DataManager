@@ -16,7 +16,7 @@ class DatasetsPage extends React.Component {
         showExpired: false
     };
 
-    onSave = (mode, dataset) => saveDataset(get_csrf_token(), mode, dataset)
+    onSave = (mode, dataset) => saveDataset(get_csrf_token(), mode, dataset);
 
 
 

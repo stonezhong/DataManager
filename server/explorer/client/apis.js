@@ -43,3 +43,43 @@ export function saveDataset(csrf_token, mode, dataset) {
         }).then(handle_json_response);
     }
 }
+
+export function saveApplication(csrf_token, mode, application) {
+    // csrf_token: as name indicates
+    // if mode is "new", we want to create a new application
+    // if mode is "edit", we want patch an existing application
+    if (mode === "new") {
+        // for new application, you do not need to pass "retired" -- it is false
+        const to_post = {
+            name            : application.name,
+            description     : application.description,
+            team            : application.team,
+            app_location    : application.app_location,
+        }
+
+        return fetch('/api/Applications/', {
+            method: 'post',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrf_token,
+            },
+            body: JSON.stringify(to_post)
+        }).then(handle_json_response)
+    } else if (mode === "edit") {
+        const to_patch = {
+            description     : application.description,
+            team            : application.team,
+            app_location    : application.app_location,
+            retired         : application.retired,
+        }
+        return fetch(`/api/Applications/${application.id}/`, {
+            method: 'post',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrf_token,
+                'X-Data-Manager-Use-Method': 'PATCH',
+            },
+            body: JSON.stringify(to_patch)
+        }).then(handle_json_response)
+    }
+}

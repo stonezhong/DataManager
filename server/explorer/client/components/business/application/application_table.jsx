@@ -35,36 +35,10 @@ export class ApplicationTable extends React.Component {
         return this.props.get_page(offset, limit, {});
     };
 
-    render_tools = application =>
-        <Button
-            variant="secondary"
-            size="sm"
-            onClick={event => {
-                this.theApplicationEditorRef.current.openDialog(
-                    this.props.allowEdit?"edit":"view", application
-                )
-            }}
-        >
-            { this.props.allowEdit?<Icon.Pencil />:<Icon.Info />}
-        </Button>;
-
     render_name = application => {
         return (
-            <a
-                href="#"
-                onClick={
-                    event => {
-                        event.preventDefault();
-                        this.theDialogBoxRef.current.openDialog(
-                            application.name,
-                            <code>{application.description}</code>
-                        )
-                    }
-                }
-            >
-                {
-                    (application.sys_app_id === null)?application.name:<b>{application.name}</b>
-                }
+            <a href={`/explorer/application?id=${application.id}`}>
+                { (application.sys_app_id === null)?application.name:<b>{application.name}</b> }
             </a>
         );
     };
@@ -72,15 +46,14 @@ export class ApplicationTable extends React.Component {
     render_retired = application => <AppIcon type={application.retired?"dismiss":"checkmark"} className="icon24"/>;
 
     columns = {
-        tools:              {display: "", render_data: this.render_tools},
         name:               {display: "Name", render_data: this.render_name},
         author:             {display: "Author"},
         team:               {display: "Team"},
         retired:            {display: "Active", render_data: this.render_retired},
     };
 
-    onSave = (mode, dataset) => {
-        Promise.resolve(this.props.onSave(mode, dataset)).then(
+    onSave = (mode, application) => {
+        return this.props.onSave(mode, application).then(
             this.theDataTableRef.current.refresh
         );
     };

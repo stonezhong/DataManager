@@ -1,32 +1,22 @@
 # [setup and deploy](setup.md)
 
-# Tips
-<details>
-<summary>Enable js debug</summary>
+# Enable JS Debugging
 
-see the following line in `webpack.config.js`:
-
+* modify `explorer/processors.py`, change to
 ```
-devtool: '#inline-source-map'
-```
-</details>
-
-<details>
-<summary>JS to import local library using absolute path</summary>
-
-- Advantage: You do not need to modify your code if you move your code location.
-
-E.g., you can do:
-```
-import {dt_2_utc_string, get_csrf_token} from '/common_lib'
+def environment(request):
+    return {
+        "ENV_is_production": False
+    }
 ```
 
-since we have below, any absolute path will be looked under ./explorer/static/js
+* update build script, change `build-js.sh`, change to
 ```
-    resolve: {
-        roots: [
-            path.resolve('./explorer/static/js'),
-        ],
-    },
+#!/bin/sh
+
+# npm run build-prod
+npm run build-dev
 ```
-</details>
+
+**Do not to change it back once debug is done!!**
+

@@ -280,6 +280,31 @@ def schedulers(request):
         }
     )
 
+def application(request):
+    application_id = request.GET['id']
+
+    application = Application.objects.get(pk=application_id)
+    s = ApplicationSerializer(application, many=False, context={"request": request})
+
+    app_context = {
+        'application': s.data
+    }
+
+    return render(
+        request,
+        'common_page.html',
+        context={
+            'user': request.user,
+            'sub_title': "Application",
+            'scripts':[
+                '/static/js-bundle/application.js'
+            ],
+            'nav_item_role': 'applications',
+            'app_config': get_app_config(),
+            'app_context': JSONRenderer().render(app_context).decode("utf-8"),
+        }
+    )
+
 # this is required by Let's Encrypt to get free SSL cert.
 # def letsencrypt(request):
 #     return HttpResponse("mlhSihbAVhD1xOT4H8RsFj5cVLepXtkG3Xc82plLLZQ.sywOEQ5dSXlmO1xrkMppiEh2IRAjylAg7cjNfrLejj0")
