@@ -15,6 +15,7 @@ import {SchemaViewer, get_schema} from '/components/business/dataset/schema_view
 import {DatasetEditor} from '/components/business/dataset/dataset_editor.jsx'
 import {DatasetViewer} from '/components/business/dataset/dataset_viewer.jsx'
 import {TopMessage} from '/components/generic/top_message/main.jsx'
+import {PageHeader} from '/components/generic/page_tools'
 
 import {get_app_context, get_csrf_token, get_current_user, handle_json_response} from '/common_lib'
 import {saveDataset} from '/apis'
@@ -121,10 +122,7 @@ class DatasetPage extends React.Component {
                 <TopMessage ref={this.theTopMessageRef} />
                 <Row>
                     <Col>
-                        <h1 className="c-ib">
-                            Dataset
-                        </h1>
-                        <div className="c-vc c-ib">
+                        <PageHeader title="Dataset">
                             <Button
                                 className="ml-2"
                                 variant="secondary"
@@ -162,7 +160,7 @@ class DatasetPage extends React.Component {
                             >
                                 Schema
                             </Button>}
-                        </div>
+                        </PageHeader>
                     </Col>
                 </Row>
                 <DatasetViewer dataset={this.props.dataset} show={this.state.show_details} />
