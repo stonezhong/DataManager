@@ -9,8 +9,8 @@ import Button from 'react-bootstrap/Button'
 import {
     ApplicationViewer,
     ApplicationEditor
-} from '/components/business/application/index.jsx'
-import {PageHeader} from '/components/generic/page_tools/index.jsx'
+} from '/components/business/application'
+import {PageHeader} from '/components/generic/page_tools'
 import {saveApplication} from '/apis'
 
 import $ from 'jquery'

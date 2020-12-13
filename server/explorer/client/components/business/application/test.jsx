@@ -2,7 +2,7 @@ import React from 'react'
 
 import Button from 'react-bootstrap/Button'
 
-import {ApplicationEditor} from './index.jsx'
+import {ApplicationEditor} from './index.js'
 
 export class TestApplicationEditor extends React.Component {
     testApplicationEditorRef = React.createRef();
