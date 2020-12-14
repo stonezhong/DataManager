@@ -154,8 +154,23 @@ def pipeline(request):
     pipeline = Pipeline.objects.get(pk=pipeline_id)
     s = PipelineSerializer(pipeline, context={"request": request})
 
+    # Get all application referenced in this pipeline and retrun those application
+    # as well
+    application_ids = []
+    ctx = json.loads(pipeline.context)
+    for task in ctx['tasks']:
+        if task['type']=='other':
+            application_ids.append(task['application_id'])
+    applications = Application.objects.filter(id__in=application_ids)
+    s_apps = ApplicationSerializer(applications, many=True, context={"request": request})
+
+    active_apps = Application.objects.filter(retired=False, sys_app_id__isnull=True)
+    s_active_apps = ApplicationSerializer(active_apps, many=True, context={"request": request})
+
     app_context = {
-        'pipeline': s.data
+        'pipeline': s.data,
+        'applications': s_apps.data,
+        'active_applications': s_active_apps.data,
     }
 
     return render(
@@ -164,7 +179,6 @@ def pipeline(request):
         context={
             'user': request.user,
             'sub_title': "Pipeline",
-            'pipeline_id': pipeline_id,
             'scripts':[
                 '/static/js-bundle/pipeline.js'
             ],

@@ -1,4 +1,4 @@
-import {handle_json_response, dt_2_utc_string} from '/common_lib'
+import {handle_json_response, dt_2_utc_string, pipeline_to_django_model} from '/common_lib'
 
 export function saveDataset(csrf_token, mode, dataset) {
     // csrf_token: as name indicates
@@ -82,4 +82,72 @@ export function saveApplication(csrf_token, mode, application) {
             body: JSON.stringify(to_patch)
         }).then(handle_json_response)
     }
+}
+
+export function savePipeline(csrf_token, mode, pipeline) {
+    const to_post = pipeline_to_django_model(pipeline);
+    if (mode == "new") {
+        return fetch('/api/Pipelines/', {
+            method: 'post',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrf_token,
+            },
+            body: JSON.stringify(to_post)
+        })
+            .then(handle_json_response)
+            .then(
+                pipeline_created => {
+                    if (pipeline.type == 'external') {
+                        return ;
+                    } else {
+                        // this is sequential
+                        // we will create DAG
+                        return fetch(`/api/Pipelines/${pipeline_created.id}/create_dag/`, {
+                            method: 'post',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': csrf_token,
+                            },
+                        }).then(handle_json_response);
+                    }
+                }
+            )
+    } else {
+        // we are editing an existing pipeline
+        return fetch(`/api/Pipelines/${pipeline.id}/`, {
+            method: 'put',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrf_token,
+            },
+            body: JSON.stringify(to_post)
+        }).then(handle_json_response);
+    }
+}
+
+export function pausePipeline(csrf_token, pipeline_id) {
+    // called when user want to pause a pipeline
+    return fetch(`/api/Pipelines/${pipeline_id}/`, {
+        method: 'post',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrf_token,
+            'X-Data-Manager-Use-Method': 'PATCH',
+        },
+        body: JSON.stringify({paused: true})
+    }).then(handle_json_response)
+}
+
+export function unpausePipeline(csrf_token, pipeline_id) {
+    // called when user want to unpause a pipeline
+    return fetch(`/api/Pipelines/${pipeline_id}/`, {
+        method: 'post',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrf_token,
+            'X-Data-Manager-Use-Method': 'PATCH',
+        },
+        body: JSON.stringify({paused: false})
+    }).then(handle_json_response)
 }

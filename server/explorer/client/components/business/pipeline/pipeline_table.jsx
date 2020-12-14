@@ -9,16 +9,12 @@
 
 import React from 'react'
 
-import Button from 'react-bootstrap/Button'
-import Col from 'react-bootstrap/Col'
-import Row from 'react-bootstrap/Row'
-import * as Icon from 'react-bootstrap-icons'
 import Spinner from 'react-bootstrap/Spinner'
 
-import {PipelineEditor} from './pipeline_editor.jsx'
 import {DataTable} from '/components/generic/datatable/main.jsx'
 
 import {AirflowDAGLink} from '/components/business/pipeline/airflow.jsx'
+import {PipelineLink} from '/components/business/pipeline/pipeline_link.jsx'
 import {AppIcon} from '/components/generic/icons/main.jsx'
 
 import {
@@ -31,35 +27,13 @@ const _ = require("lodash");
 
 /*************************************************************************
  * props
- *     applications:    list of all applications available. (needed when create pipline using app)
- *     get_page    :    A function to get the page
- *     allowEdit   :    if True, user is allowed to edit pipeline.
- *     allowNew    :    if True, user is allowed to create new pipeline
- *     onSave      :    a callback, called with user want to save or edit
- *                      a pipeline. onSave(mode, pipeline) is called,
- *     onPause     :    onPause(pipeline_id) is called with user want to pause a pipeline
- *     onUnpause   :    onUnpause(pipeline_id) is called with user want to unpause a pipeline
- * airflow_base_url:    the base url for airflow
+ *     applications     : list of all applications available. (needed when create pipline using app)
+ *     get_page         : A function to get the page
+ *     airflow_base_url : the base url for airflow
  *
  */
 export class PipelineTable extends React.Component {
-    thePipelineEditorRef = React.createRef();
     theDataTableRef      = React.createRef();
-
-    render_tools = pipeline =>
-        <Button
-            variant="secondary"
-            size="sm"
-            variant="secondary"
-            onClick={event => {
-                this.thePipelineEditorRef.current.openDialog(
-                    this.props.allowEdit?"edit":"view",
-                    pipeline_from_django_model(pipeline)
-                );
-            }}
-        >
-            { this.props.allowEdit?<Icon.Pencil />:<Icon.Info />}
-        </Button>;
 
     render_type = pipeline => pipeline_from_django_model(pipeline).type;
 
@@ -87,45 +61,13 @@ export class PipelineTable extends React.Component {
         const pipeline2 = pipeline_from_django_model(pipeline);
         return (
             <div>
-                {
-                    <AppIcon type={pipeline2.paused?"dismiss":"checkmark"} className="icon24"/>
-                }
-                {
-                    this.props.allowEdit &&
-                    <Button
-                        variant="secondary"
-                        size="sm"
-                        className="ml-2"
-                        onClick={event => {
-                            if (pipeline2.paused) {
-                                this.onUnpause(pipeline2.id);
-                            } else {
-                                this.onPause(pipeline2.id);
-                            }
-                        }}
-                    >
-                        {pipeline2.paused?"Activate":"Pause"}
-                    </Button>
-                }
+                <AppIcon type={pipeline2.paused?"dismiss":"checkmark"} className="icon16"/>
+                <span className="ml-2">{pipeline2.paused?"Paused":""}</span>
             </div>
         );
     };
 
-    onPause = pipeline_id => {
-        this.props.onPause(
-            pipeline_id
-        ).then(this.theDataTableRef.current.refresh)
-    };
-
-    onUnpause = pipeline_id => {
-        this.props.onUnpause(
-            pipeline_id
-        ).then(this.theDataTableRef.current.refresh);
-    };
-
-    onSave = (mode, pipeline) => {
-        this.props.onSave(mode, pipeline).then(this.theDataTableRef.current.refresh);
-    };
+    render_name = pipeline => <PipelineLink pipeline={pipeline} />
 
     get_page = (offset, limit) => {
         return this.props.get_page(
@@ -133,9 +75,11 @@ export class PipelineTable extends React.Component {
         );
     };
 
+    refresh = () => this.theDataTableRef.current.refresh();
+    reset   = () => this.theDataTableRef.current.reset();
+
     columns = {
-        tools:              {display: "", render_data: this.render_tools},
-        name:               {display: "Name"},
+        name:               {display: "Name", render_data: this.render_name},
         type:               {display: "Type", render_data: this.render_type},
         airflow_dag:        {display: "Airflow DAG", render_data: this.render_airflow_dag},
         author:             {display: "Author"},
@@ -147,23 +91,6 @@ export class PipelineTable extends React.Component {
     render() {
         return (
             <div>
-                <Row>
-                    <Col>
-                        <h1 className="c-ib">Pipelines</h1>
-                        {
-                            this.props.allowNew && <Button
-                                size="sm"
-                                className="c-vc ml-2"
-                                onClick={() => {
-                                    this.thePipelineEditorRef.current.openDialog("new");
-                                }}
-                            >
-                                Create
-                            </Button>
-                        }
-                    </Col>
-                </Row>
-
                 <DataTable
                     ref={this.theDataTableRef}
                     hover
@@ -176,13 +103,6 @@ export class PipelineTable extends React.Component {
                     fast_step_count={10}
                     get_page={this.get_page}
                 />
-
-                <PipelineEditor
-                    ref={this.thePipelineEditorRef}
-                    onSave={this.onSave}
-                    applications={this.props.applications}
-                />
-
             </div>
         );
     }
