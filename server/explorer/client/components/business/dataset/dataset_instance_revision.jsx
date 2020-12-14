@@ -7,6 +7,7 @@ import Row from 'react-bootstrap/Row'
 
 import {AssetLinkFromDSIPath} from '/components/business/dataset/utils.jsx'
 import {AppIcon} from '/components/generic/icons/main.jsx'
+import {ApplicationLink} from '/components/business/application'
 
 import './dataset.scss'
 
@@ -57,7 +58,9 @@ export class DatasetInstanceView extends React.Component {
                 <tbody>
                     <tr>
                         <td>Application</td>
-                        <td>{this.props.dsi.application.name}</td>
+                        <td>
+                            <ApplicationLink application={this.props.dsi.application} />
+                        </td>
                     </tr>
                     <tr>
                         <td>Arguments</td>

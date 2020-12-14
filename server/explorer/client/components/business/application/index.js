@@ -12,7 +12,6 @@ import { CKEditor } from '@ckeditor/ckeditor5-react';
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 
 import {DataTable} from '/components/generic/datatable/main.jsx'
-import {SimpleDialogBox} from '/components/generic/dialogbox/simple.jsx'
 import {AppIcon} from '/components/generic/icons/main.jsx'
 
 
@@ -241,7 +240,12 @@ export class ApplicationTable extends React.Component {
         return <ApplicationLink application={application} />;
     };
 
-    render_retired = application => <AppIcon type={application.retired?"dismiss":"checkmark"} className="icon24"/>;
+    render_retired = application => (
+        <div>
+            <AppIcon type={application.retired?"dismiss":"checkmark"} className="icon16"/>
+            <span className="ml-2">{application.retired?"Retired":""}</span>
+        </div>
+    );
 
     columns = {
         name:               {display: "Name", render_data: this.render_name},
@@ -297,7 +301,7 @@ export class ApplicationViewer extends React.Component {
                 </Row>
                 <Row className="mt-2">
                     <Col>
-                    <Card border="success">
+                        <Card border="success">
                             <Card.Body>
                                 <table className="application-viewer-grid">
                                     <tbody>
@@ -318,11 +322,11 @@ export class ApplicationViewer extends React.Component {
                                             <td>
                                                 <div>
                                                     <AppIcon
-                                                        type={this.props.application.Retired?"dismiss":"checkmark"}
+                                                        type={this.props.application.retired?"dismiss":"checkmark"}
                                                         className="icon16"
                                                     />
                                                     <span className="ml-2">
-                                                        {this.props.application.Retired?"Retired":""}
+                                                        {this.props.application.retired?"Retired":""}
                                                     </span>
 
                                                 </div>

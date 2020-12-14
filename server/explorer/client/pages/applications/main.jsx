@@ -2,8 +2,12 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 
 import Container from 'react-bootstrap/Container'
+import Col from 'react-bootstrap/Col'
+import Row from 'react-bootstrap/Row'
+import Button from 'react-bootstrap/Button'
 
-import {ApplicationTable} from '/components/business/application'
+import {ApplicationTable, ApplicationEditor} from '/components/business/application'
+
 import {TopMessage} from '/components/generic/top_message/main.jsx'
 import {PageHeader} from '/components/generic/page_tools'
 
@@ -71,7 +75,7 @@ class ApplicationsPage extends React.Component {
                 <Row>
                     <Col>
                         <ApplicationTable
-                            ref={theApplicationTableRef}
+                            ref={this.theApplicationTableRef}
                             get_page={this.get_page}
                             page_size={15}
                             size="sm"
