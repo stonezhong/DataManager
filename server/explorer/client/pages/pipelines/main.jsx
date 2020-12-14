@@ -1,89 +1,34 @@
 import $ from 'jquery';
-const buildUrl = require('build-url');
 
 import React from 'react'
 import ReactDOM from 'react-dom'
 
+import Col from 'react-bootstrap/Col'
+import Row from 'react-bootstrap/Row'
 import Container from 'react-bootstrap/Container'
+import Button from 'react-bootstrap/Button'
 
 import {PipelineTable} from '/components/business/pipeline/pipeline_table.jsx'
+import {PipelineEditor} from '/components/business/pipeline/pipeline_editor.jsx'
+import {PageHeader} from '/components/generic/page_tools'
+
 import {
-    get_csrf_token, pipeline_to_django_model, pipeline_from_django_model,
-    get_app_context, get_current_user, get_app_config, handle_json_response
+    get_csrf_token, get_app_context, get_current_user, get_app_config, handle_json_response
 } from '/common_lib'
 
+import {savePipeline} from '/apis'
+
+const buildUrl = require('build-url');
+
+
 class PipelinesPage extends React.Component {
-    state = {
-        pipelines: [],
-    };
+    thePipelineEditorRef    = React.createRef();
+    thePipelineTableRef     = React.createRef();
 
-    onPause = (pipeline_id) => {
-        // called when user want to pause a pipeline
-        return fetch(`/api/Pipelines/${pipeline_id}/`, {
-            method: 'post',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': get_csrf_token(),
-                'X-Data-Manager-Use-Method': 'PATCH',
-            },
-            body: JSON.stringify({paused: true})
-        }).then(handle_json_response)
-    }
-
-    onUnpause = (pipeline_id) => {
-        // called when user want to unpause a pipeline
-        return fetch(`/api/Pipelines/${pipeline_id}/`, {
-            method: 'post',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': get_csrf_token(),
-                'X-Data-Manager-Use-Method': 'PATCH',
-            },
-            body: JSON.stringify({paused: false})
-        }).then(handle_json_response)
-    }
-
-    // called when PipelineEditor saved a pipeline in memory
     onSave = (mode, pipeline) => {
-        const to_post = pipeline_to_django_model(pipeline);
-        if (mode == "new") {
-            return fetch('/api/Pipelines/', {
-                method: 'post',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': get_csrf_token(),
-                },
-                body: JSON.stringify(to_post)
-            })
-                .then(handle_json_response)
-                .then(
-                    pipeline_created => {
-                        if (pipeline.type == 'external') {
-                            return ;
-                        } else {
-                            // this is sequential
-                            // we will create DAG
-                            return fetch(`/api/Pipelines/${pipeline_created.id}/create_dag/`, {
-                                method: 'post',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'X-CSRFToken': get_csrf_token(),
-                                },
-                            }).then(handle_json_response);
-                        }
-                    }
-                )
-        } else {
-            // we are editing an existing pipeline
-            return fetch(`/api/Pipelines/${pipeline.id}/`, {
-                method: 'put',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': get_csrf_token(),
-                },
-                body: JSON.stringify(to_post)
-            }).then(handle_json_response);
-        }
+        return savePipeline(
+            get_csrf_token(), mode, pipeline
+        ).then(this.thePipelineTableRef.current.refresh);
     };
 
     get_page = (offset, limit, filter={}) => {
@@ -101,17 +46,41 @@ class PipelinesPage extends React.Component {
     render() {
         return (
             <Container fluid>
-                <PipelineTable
-                    allowEdit={!!this.props.current_user}
-                    allowNew={!!this.props.current_user}
-                    applications={this.props.applications}
-                    onPause={this.onPause}
-                    onUnpause={this.onUnpause}
+                <Row>
+                    <Col>
+                        <PageHeader title="Pipelines">
+                            {
+                                !!this.props.current_user && <Button
+                                    size="sm"
+                                    className="ml-2"
+                                    onClick={() => {
+                                        this.thePipelineEditorRef.current.openDialog(
+                                            "new"
+                                        );
+                                    }}
+                                >
+                                    Create
+                                </Button>
+                            }
+                        </PageHeader>
+                    </Col>
+                </Row>
+                <Row>
+                    <Col>
+                        <PipelineTable
+                            ref={this.thePipelineTableRef}
+                            applications={this.props.applications}
+                            airflow_base_url={this.props.airflow_base_url}
+                            get_page={this.get_page}
+                            page_size={15}
+                            size="sm"
+                        />
+                    </Col>
+                </Row>
+                <PipelineEditor
+                    ref={this.thePipelineEditorRef}
                     onSave={this.onSave}
-                    airflow_base_url={this.props.airflow_base_url}
-                    get_page={this.get_page}
-                    page_size={15}
-                    size="sm"
+                    applications={this.props.applications}
                 />
             </Container>
         );

@@ -25,9 +25,6 @@ div.pipeline-table {
         & > table {
             & > thead {
                 & > tr {
-                    & > th[data-role='tools'] {
-                        width: 40px;
-                    }
                     & > th[data-role='type'] {
                         width: 100px;
                         text-align: center;
@@ -49,7 +46,7 @@ div.pipeline-table {
                         text-align: center;
                     }
                     & > th[data-role='paused'] {
-                        width: 120px;
+                        width: 174px;
                         text-align: center;
                     }
                 }
@@ -138,3 +135,50 @@ div.pipeline-table {
         }
     }
 }
+
+table.pipeline-basic-attribute-grid {
+    font-family:'courier new',monospace;
+    border: 1px solid rgb(211, 211, 211);
+    border-collapse: collapse;
+    width: 100%;
+    background-color: white;
+
+    & > tbody > tr > td {
+        border: 1px solid rgb(211, 211, 211);
+        padding: 4px;
+    }
+
+    & > tbody > tr > td:first-child {
+        width: 160px;
+        vertical-align: top;
+    }
+}
+
+table.pipeline-task-info-grid {
+    font-family:'courier new',monospace;
+    border: 1px solid rgb(211, 211, 211);
+    border-collapse: collapse;
+    width: 50%;
+    background-color: white;
+
+    & > tbody > tr > td {
+        border: 1px solid rgb(211, 211, 211);
+        padding: 4px;
+    }
+
+    & > tbody > tr > td:first-child {
+        width: 160px;
+        vertical-align: top;
+    }
+}
+
+div.step_panel {
+    background-color: #EEEEEE;
+}
+
+div.step_content_section {
+    font-family:'courier new',monospace;
+}
+
+
+
