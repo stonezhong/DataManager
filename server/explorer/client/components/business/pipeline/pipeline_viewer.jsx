@@ -204,6 +204,10 @@ export class PipelineViewer extends React.Component {
                             <td>{this.props.pipeline.name}</td>
                         </tr>
                         <tr>
+                            <td>Description</td>
+                            <td>{this.props.pipeline.description}</td>
+                        </tr>
+                        <tr>
                             <td>Author</td>
                             <td>{this.props.pipeline.author}</td>
                         </tr>
