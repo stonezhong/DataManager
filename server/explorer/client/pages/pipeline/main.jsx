@@ -13,7 +13,7 @@ import {PipelineViewer} from '/components/business/pipeline/pipeline_viewer.jsx'
 import {PipelineEditor} from '/components/business/pipeline/pipeline_editor.jsx'
 import {PageHeader} from '/components/generic/page_tools'
 
-import {get_csrf_token, get_app_context, get_current_user, pipeline_from_django_model} from '/common_lib'
+import {get_csrf_token, get_app_context, get_app_config, get_current_user, pipeline_from_django_model} from '/common_lib'
 import {savePipeline, pausePipeline, unpausePipeline} from '/apis'
 
 const _ = require("lodash");
@@ -24,6 +24,8 @@ const _ = require("lodash");
  * Props
  *      pipeline : the pipeline to view
  *      current_user: the user who is viewing
+ *      dag_svg: the svg string for the dag
+ *      airflow_base_url: base url for airflow
  */
 class PipelinePage extends React.Component {
     thePipelineEditorRef = React.createRef();
@@ -89,6 +91,8 @@ class PipelinePage extends React.Component {
                         <PipelineViewer
                             pipeline={this.props.pipeline}
                             applications_by_id={this.props.applications_by_id}
+                            dag_svg = {this.props.dag_svg}
+                            airflow_base_url = {this.props.airflow_base_url}
                         />
                     </Col>
                 </Row>
@@ -109,7 +113,8 @@ $(function() {
     const current_user = get_current_user()
     const app_context = get_app_context();
     const applications_by_id = _.keyBy(app_context.applications, "id");
-
+    const dag_svg = app_context.dag_svg;
+    const app_config = get_app_config();
 
     ReactDOM.render(
         <PipelinePage
@@ -117,6 +122,8 @@ $(function() {
             pipeline={app_context.pipeline}
             applications_by_id={applications_by_id}
             active_applications={app_context.active_applications}
+            dag_svg = {dag_svg}
+            airflow_base_url = {app_config.AIRFLOW_BASE_URL}
         />,
         document.getElementById('app')
     );

@@ -24,6 +24,7 @@ from django.conf import settings
 import explorer.airflow_lib as airflow_lib
 
 import jinja2
+from graphviz import Digraph
 
 def get_app_config():
     config = {
@@ -148,6 +149,23 @@ def pipelines(request):
         }
     )
 
+# Input a pipeline
+# return a SVG based on task dependency
+def get_task_dep_svg(pipeline):
+    context = json.loads(pipeline.context)
+
+    g = Digraph('G', format='svg')
+    for task in context['tasks']:
+        g.attr('node', URL=f"#task-{task['name']}")
+        g.node(task['name'], task['name'])
+
+    for dep in context['dependencies']:
+        g.edge(dep['dst'], dep['src'])
+
+    r = g.pipe().decode("utf-8")
+    return r
+
+
 def pipeline(request):
     pipeline_id = request.GET['id']
 
@@ -171,6 +189,7 @@ def pipeline(request):
         'pipeline': s.data,
         'applications': s_apps.data,
         'active_applications': s_active_apps.data,
+        "dag_svg": get_task_dep_svg(pipeline),
     }
 
     return render(
