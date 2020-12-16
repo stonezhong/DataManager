@@ -8,6 +8,7 @@ import Row from 'react-bootstrap/Row'
 
 import {AppIcon} from '/components/generic/icons/main.jsx'
 import {ApplicationLink} from '/components/business/application'
+import {AirflowDAGLink} from '/components/business/pipeline/airflow.jsx'
 
 /*********************************************************************************
  * Purpose: View a pipeline
@@ -17,6 +18,7 @@ import {ApplicationLink} from '/components/business/application'
  *                         these are applications being referenced in this pipeline
  *
  *     pipeline          : pipeline model
+ *     dag_svg           : string, svg for the dag
  *
  */
 export class PipelineViewer extends React.Component {
@@ -234,6 +236,15 @@ export class PipelineViewer extends React.Component {
                             </td>
                         </tr>
                         <tr>
+                            <td>AirflowDAG</td>
+                            <td>
+                                <AirflowDAGLink
+                                    airflow_base_url = {this.props.airflow_base_url}
+                                    pipeline = {this.props.pipeline}
+                                />
+                            </td>
+                        </tr>
+                        <tr>
                             <td>Required Assets</td>
                             <td>
                                 {ctx.requiredDSIs.map(dsi_path => <div key={dsi_path}>{dsi_path}</div>)}
@@ -246,9 +257,7 @@ export class PipelineViewer extends React.Component {
                 {
                     (ctx.type === 'simple-flow') && <div>
                         <h2>Tasks</h2>
-                        <ul>
-                        { ctx.tasks.map(task => <li><a href={`#task-${task.name}`}>{task.name}</a></li>) }
-                        </ul>
+                        <div dangerouslySetInnerHTML={{__html: this.props.dag_svg}} />
                     </div>
                 }
 

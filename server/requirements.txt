@@ -7,3 +7,4 @@ django-webpack-loader==0.7.0
 requests==2.24.0
 schedule==0.6.0
 Jinja2==2.11.2
+graphviz==0.15
