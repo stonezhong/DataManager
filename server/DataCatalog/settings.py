@@ -106,7 +106,8 @@ DATABASES = {
         'NAME'    : __DB_CONFIG['db_name'],
         'USER'    : __DB_CONFIG['username'],
         'PASSWORD': __DB_CONFIG['password'],
-        'HOST'    : __DB_CONFIG['server']
+        'HOST'    : __DB_CONFIG['server'],
+        'PORT'    : __DB_CONFIG.get('port', 3306),
     }
 }
 
