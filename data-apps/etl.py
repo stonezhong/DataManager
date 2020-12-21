@@ -78,10 +78,12 @@ def main():
     return
 
 def get_config(args):
-    config_filename = args.config_filename or os.path.join(BASE_DIR, "config.json")
-    with open(config_filename, "r") as f:
-        return json.load(f)
-
+    configs_filename = os.path.expanduser("~/.dmbuild/data-apps/configs.json")
+    with open(configs_filename, "r") as f:
+        configs = json.load(f)
+        active_config = configs["active"]
+        print(f"Using config: {active_config}")
+        return configs[active_config]
 
 # build an application
 def do_build(args):
