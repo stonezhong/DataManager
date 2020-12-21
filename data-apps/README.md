@@ -31,11 +31,8 @@ pip install -r requirements.txt
 
 - You need to enter this virtual environment when you run etl.py latter.
 
-## update your `config.json`
-- If you are using spark cluster, see `config_hdfs.json`
-- If you want to use local pyspark, see `config_local.json`
-- You need to copy one of the above file to `config.json`
-- If you are using local pyspark, you also need to install JRE 1.8 and `pyspark` package
+## you need to have config at ~/.dmbuild/data-apps/configs.json
+- I have the same configs at configs directory
 </details>
 
 # build
