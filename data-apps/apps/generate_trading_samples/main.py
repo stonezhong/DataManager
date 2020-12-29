@@ -39,7 +39,7 @@ def main(spark, input_args, sysops={}):
     market = app_args.get('market')
     data_root = app_args.get("data_root")
 
-    ask = sysops['ask']
+    ask = sysops.get('ask')
     if input_args.get('dm_offline'):
         loader = Loader(spark, ask=ask)
     else:

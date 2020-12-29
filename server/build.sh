@@ -1,6 +1,12 @@
 #!/bin/sh
 
-. ~/.dmbuild/server/settings
+
+if [ -z "${DM_STAGE}" ]; then
+    echo "DM_STAGE not set"
+    echo "Example:"
+    echo "DM_STAGE=beta ./build.sh"
+    exit 1
+fi
 
 echo "*********************************"
 echo "*                               *"

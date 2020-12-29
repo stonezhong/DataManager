@@ -114,7 +114,7 @@ def execute_step(spark, step, application_id, loader, team, app_args, pipeline_g
 def main(spark, input_args, sysops={}):
     print("running App: execute_sql")
 
-    ask = sysops['ask']
+    ask = sysops.get('ask')
     team = input_args['team']
     if input_args.get('dm_offline'):
         loader = Loader(spark, ask=ask)
