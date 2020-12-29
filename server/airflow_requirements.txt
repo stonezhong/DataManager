@@ -1,1 +1,3 @@
-spark-etl==0.0.11
+spark-etl==0.0.30
+dc-client==0.0.13
+dm-job-lib==0.0.30

@@ -11,24 +11,34 @@ from jinja2 import Template
 import MySQLdb
 import pytz
 
+from dc_client import DataCatalogClient
+from dm_job_lib import Loader
 
 AIRFLOW_HOME = os.environ["AIRFLOW_HOME"]
+ENV_HOME = os.environ["ENV_HOME"]
 
 logger = logging.getLogger(__name__)
 
-# Load a json config file
-def load_json_config(name):
-    with open(os.path.join(AIRFLOW_HOME, "configs", name), "r") as f:
+def load_dmapps_config(name):
+    config_filename = os.path.join(ENV_HOME, "configs", "dmapps", name)
+    with open(config_filename, "r") as f:
         return json.load(f)
 
+
+def load_dm_config(name):
+    config_filename = os.path.join(ENV_HOME, "configs", "dm", name)
+    with open(config_filename, "r") as f:
+        return json.load(f)
+
+
 def get_mysql_connection():
-    mysql_cfg = load_json_config("mysql.json")
+    mysql_cfg = load_dm_config("db.json")
 
     conn = MySQLdb.connect(
-        host    = mysql_cfg['hostname'],
+        host    = mysql_cfg['server'],
         user    = mysql_cfg['username'],
         passwd  = mysql_cfg['password'],
-        db      = mysql_cfg['db'],
+        db      = mysql_cfg['db_name'],
         charset = mysql_cfg['charset'],
     )
 
@@ -43,11 +53,11 @@ def get_application_location(application_id):
     app_location = None
 
     with get_mysql_connection() as cur:
-        cur.execute("SELECT app_location FROM main_application WHERE id='%s'" % (app_id))
+        cur.execute("SELECT app_location, name FROM main_application WHERE id='%s'" % (app_id))
         for row in cur:
-            return row[0]
+            return row[0], row[1]
 
-    return None
+    return None, None
 
 
 def get_execute_sql_app_location():
@@ -55,22 +65,23 @@ def get_execute_sql_app_location():
     app_location = None
 
     with get_mysql_connection() as cur:
-        cur.execute("SELECT id, app_location FROM main_application WHERE sys_app_id=1")
+        cur.execute("SELECT id, app_location, name FROM main_application WHERE sys_app_id=1")
         for row in cur:
-            return row[0], row[1]
+            return row[0], row[1], row[2]
 
-    return None, None
+    return None, None, None
 
 
 def get_pipeline_details(pipeline_id):
     # Get pipeline context, version and dag_version
     with get_mysql_connection() as cur:
-        cur.execute("SELECT context, version, dag_version FROM main_pipeline WHERE id='%s'" % (pipeline_id))
+        cur.execute("SELECT context, version, dag_version, team FROM main_pipeline WHERE id='%s'" % (pipeline_id))
         for row in cur:
             pipeline_context = json.loads(row[0])
             pipeline_version = row[1]
             dag_version = row[2]
-            return pipeline_context, pipeline_version, dag_version
+            team = row[3]
+            return pipeline_context, pipeline_version, dag_version, team
 
     return None, None, None
 
@@ -134,8 +145,101 @@ def get_job_submitter(job_submitter_config):
 
 
 class ExecuteTask:
-    def __init__(self, task_ctx):
+    def __init__(self, task_ctx, team):
         self.task_ctx = task_ctx
+        self.team = team
+
+
+    def handle_dm(self, ask):
+        if ask.get("topic") == "register_asset":
+            return True, self.handle_register_asset(ask['payload'])
+        if ask.get("topic") == "register_view":
+            return True, self.handle_register_view(ask['payload'])
+        if ask.get("topic") == "get_asset":
+            return True, self.handle_get_asset(ask['payload'])
+        return False, None
+
+
+    def handle_get_asset(self, asset_to_get):
+        dc_config = load_dm_config("dc_config.json")
+
+        dcc = DataCatalogClient(
+            url_base = dc_config['url_base'],
+            auth = (dc_config['username'], dc_config['password'])
+        )
+        dataset_name    = asset_to_get['dataset_name']
+        major_version   = asset_to_get['major_version']
+        minor_version   = asset_to_get['minor_version']
+        path            = asset_to_get['path']
+        revision        = asset_to_get.get('revision')
+
+        di = dcc.get_dataset_instance(
+            dataset_name, major_version, int(minor_version), path, revision=revision
+        )
+        return di
+
+
+    def handle_register_view(self, view_to_register):
+        dc_config = load_dm_config("dc_config.json")
+
+        dcc = DataCatalogClient(
+            url_base = dc_config['url_base'],
+            auth = (dc_config['username'], dc_config['password'])
+        )
+
+        loader = Loader(None, dcc=dcc)
+
+        asset_path          = view_to_register["asset_path"]
+        team                = view_to_register["team"]
+        loader_name         = view_to_register["loader_name"]
+        loader_args         = view_to_register["loader_args"]
+        row_count           = view_to_register["row_count"]
+        schema              = view_to_register["schema"]
+        data_time           = view_to_register.get("data_time")
+        data_time           = datetime.strptime(data_time, "%Y-%m-%d %H:%M:%S")
+        src_asset_paths     = view_to_register["src_asset_paths"]
+        application_id      = view_to_register["application_id"]
+        application_args    = view_to_register["application_args"]
+
+        return loader.register_view(
+            asset_path, team, loader_name, loader_args, row_count, schema, 
+            data_time = data_time,
+            src_asset_paths = src_asset_paths,
+            application_id = application_id,
+            application_args = application_args
+        )
+
+
+    def handle_register_asset(self, asset_to_register):
+        dc_config = load_dm_config("dc_config.json")
+
+        dcc = DataCatalogClient(
+            url_base = dc_config['url_base'],
+            auth = (dc_config['username'], dc_config['password'])
+        )
+
+        loader = Loader(None, dcc=dcc)
+
+        asset_path          = asset_to_register["asset_path"]
+        team                = asset_to_register["team"]
+        file_type           = asset_to_register["file_type"]
+        location            = asset_to_register["location"]
+        row_count           = asset_to_register["row_count"]
+        schema              = asset_to_register["schema"]
+        data_time           = asset_to_register.get("data_time")
+        data_time           = datetime.strptime(data_time, "%Y-%m-%d %H:%M:%S")
+        src_asset_paths     = asset_to_register.get("src_asset_paths", [])
+        application_id      = asset_to_register.get("application_id")
+        application_args    = asset_to_register.get("application_args")
+
+        return loader.register_asset(
+            asset_path, team, file_type, location, row_count, schema, 
+            data_time = data_time,
+            src_asset_paths = src_asset_paths,
+            application_id = application_id,
+            application_args = application_args
+        )
+
 
     def __call__(self, ds, **kwargs):
         # task_ctx is json stored in context field in pipeline model
@@ -158,24 +262,35 @@ class ExecuteTask:
             pipeline_group_context['xcom'][task.task_id] = ti.xcom_pull(task_ids=task.task_id)
         log_info_with_title("pipeline group context context after xcom", pipeline_group_context)
 
-        dc_config = load_json_config("dc_config.json")
+        spark_etl_cfg = load_dmapps_config("config.json")
+        dm_offline = spark_etl_cfg.get("dm_offline")
+        dc_config = load_dm_config("dc_config.json")
+        print(f"dm_offline = {dm_offline}")
 
         if self.task_ctx['type'] == 'other':
             task_args_str = Template(self.task_ctx['args']).render(pipeline_group_context)
+            task_args = json.loads(task_args_str)
             args = {
                 "pipeline_group_context": pipeline_group_context,
                 "application_id": self.task_ctx['application_id'],
-                "app_args": json.loads(task_args_str),
-                "dc_config": dc_config,
+                "app_args": task_args,
+                "team": self.team,
             }
-            appLocation = get_application_location(self.task_ctx['application_id'])
+            if dm_offline:
+                args['dm_offline'] = True
+                # When data manager is off-line from spark-job, then it is useless
+                # to inject dc_config to the job
+            else:
+                args['dc_config'] = dc_config
+
+            appLocation, appName = get_application_location(self.task_ctx['application_id'])
             log_info_with_title("app_args", args['app_args'])
         elif self.task_ctx['type'] == 'dummy':
             logger.info("Dummy task")
             logger.info("Done")
             return
         else:
-            application_id, appLocation = get_execute_sql_app_location()
+            application_id, appLocation, appName = get_execute_sql_app_location()
             if appLocation is None:
                 logger.error("Unable to find Execute SQL system app")
                 raise Exception(f"Unable to find Execute SQL system app")
@@ -187,17 +302,26 @@ class ExecuteTask:
                 "app_args": {
                     "steps": task_ctx['steps'],
                 },
-                "dc_config": dc_config,
+                "team": self.team
             }
+            if dm_offline:
+                args['dm_offline'] = True
+            else:
+                args['dc_config'] = dc_config
+
             log_info_with_title("app_args", args['app_args'])
 
 
-        spark_etl_cfg = load_json_config("spark_etl.json")
         job_submitter = get_job_submitter(spark_etl_cfg['job_submitter'])
-        ret = job_submitter.run(
-            appLocation,
-            options=spark_etl_cfg.get("job_run_options", {}),
-            args=args)
+        options=spark_etl_cfg.get("job_run_options", {})
+        options['display_name'] = appName
+
+        if dm_offline:
+            handlers = [lambda ask: self.handle_dm(ask)]
+        else:
+            handlers = [ ]
+        ret = job_submitter.run(appLocation, options=options, args=args, handlers=handlers)
+        
         logger.info("Done")
         return ret
 
@@ -228,13 +352,14 @@ def on_dag_run_failure(context):
 
 def create_simple_flow_dag(pipeline_id, dag_id):
     logger.info(f"Creating dag, pipeline_id={pipeline_id}, dag_id={dag_id}")
-    pipeline_context, pipeline_version, dag_version = get_pipeline_details(pipeline_id)
+    pipeline_context, pipeline_version, dag_version, team = get_pipeline_details(pipeline_id)
     if pipeline_context is None:
         raise Exception(f"Pipeline {pipeline_id} does not exist!")
 
     log_info_with_title("Pipeline context", pipeline_context)
     logger.info(f"Pipeline version: {pipeline_version}")
     logger.info(f"DAG version     : {dag_version}")
+    logger.info(f"team            : {team}")
 
     task_dict = {}
 
@@ -260,7 +385,7 @@ def create_simple_flow_dag(pipeline_id, dag_id):
         job_task = PythonOperator(
             task_id = task_ctx['name'],
             provide_context = True,
-            python_callable = ExecuteTask(task_ctx),
+            python_callable = ExecuteTask(task_ctx, team),
             dag=dag,
         )
         task_dict[task_ctx['name']] = job_task
