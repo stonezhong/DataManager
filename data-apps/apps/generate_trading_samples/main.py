@@ -5,8 +5,7 @@ import json
 from pyspark.sql import SparkSession, SQLContext, Row
 from dc_client import DataCatalogClient
 
-from dm_job_lib import load_asset, print_json, write_asset, register_dataset_instance, \
-    register_dataset_instance_for_view
+from dm_job_lib import Loader, print_json
 
 
 STOCK_LIST = {
@@ -26,17 +25,10 @@ STOCK_LIST = {
 # app_args:  application args, stored in pipline context
 # pipeline_group_context: the pipeline group's context
 ##################################################################
-def main(spark, input_args):
+def main(spark, input_args, sysops={}):
     print("Generate sample trading data")
 
-    dc_config = input_args['dc_config']
-    dcc = DataCatalogClient(
-        url_base = dc_config['url_base'],
-        auth = (dc_config['username'], dc_config['password'])
-    )
-
     print_json("input_args", input_args)
-
     pipeline_group_context = input_args['pipeline_group_context']
     dt = pipeline_group_context['dt']
     print(f"dt = {dt}")
@@ -46,6 +38,17 @@ def main(spark, input_args):
     action = app_args['action']
     market = app_args.get('market')
     data_root = app_args.get("data_root")
+
+    ask = sysops['ask']
+    if input_args.get('dm_offline'):
+        loader = Loader(spark, ask=ask)
+    else:
+        dc_config = input_args['dc_config']
+        dcc = DataCatalogClient(
+            url_base = dc_config['url_base'],
+            auth = (dc_config['username'], dc_config['password'])
+        )
+        loader = Loader(spark, dcc=dcc)
 
     if action == 'import-data':
         random.seed()
@@ -69,11 +72,10 @@ def main(spark, input_args):
         print(f"Writing to {file_to_write}")
 
         data_time = datetime.strptime(dt, "%Y-%m-%d")
-        dsi = register_dataset_instance(
-            dcc, f'tradings:1.0:1:/{dt}_{market}',
-            'parquet',
-            file_to_write,
-            df,
+        dsi = loader.register_asset(
+            f'tradings:1.0:1:/{dt}_{market}', 'trading',
+            'parquet', file_to_write,
+            df.count(), df.schema.jsonValue(),
             data_time = data_time,
             application_id = application_id,
             application_args = json.dumps(app_args),
@@ -82,30 +84,21 @@ def main(spark, input_args):
             'dsi_path': f'tradings:1.0:1:/{dt}_{market}:{dsi["revision"]}'
         }
     elif action == 'create-view':
-        loader = app_args['loader']
-        loader_name = loader['name']
-        loader_args = loader['args']
-        # register the view after all the market are uploaded
-        dc_config = input_args['dc_config']
-        pipeline_group_context = input_args['pipeline_group_context']
-        dt = pipeline_group_context['dt']
-
-        dcc = DataCatalogClient(
-            url_base = dc_config['url_base'],
-            auth = (dc_config['username'], dc_config['password'])
-        )
-
+        view_loader = app_args['loader']
+        view_loader_name = view_loader['name']
+        view_loader_args = view_loader['args']
 
         data_time = datetime.strptime(dt, "%Y-%m-%d")
-
-        register_dataset_instance_for_view(
-            spark, dcc, f'tradings:1.0:1:/{dt}',
-            loader_name,
-            loader_args,
+        df = loader.load_view(view_loader_name, view_loader_args)
+        loader.register_view(
+            f'tradings:1.0:1:/{dt}',
+            'trading',
+            view_loader_name, view_loader_args,
+            df.count(), df.schema.jsonValue(),
             data_time = data_time,
-            src_dsi_paths = loader_args['dsi_paths'],
+            src_asset_paths = view_loader_args['dsi_paths'],
             application_id = application_id,
-            application_args = json.dumps(app_args),
+            application_args = json.dumps(app_args)
         )
 
     print("Done")

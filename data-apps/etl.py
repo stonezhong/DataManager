@@ -10,6 +10,8 @@ import importlib
 from spark_etl import Application
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+APP_NAME = BASE_DIR.split("/")[-2]
+ENV_HOME = os.environ.get('ENV_HOME')
 
 def get_current_version(app_name):
     with open(os.path.join(BASE_DIR, ".builds", app_name, "manifest.json"), "r") as f:
@@ -78,12 +80,9 @@ def main():
     return
 
 def get_config(args):
-    configs_filename = os.path.expanduser("~/.dmbuild/data-apps/configs.json")
-    with open(configs_filename, "r") as f:
-        configs = json.load(f)
-        active_config = configs["active"]
-        print(f"Using config: {active_config}")
-        return configs[active_config]
+    config_filename = os.path.join(ENV_HOME, "configs", "dmapps", "config.json")
+    with open(config_filename, "r") as f:
+        return json.load(f)
 
 # build an application
 def do_build(args):

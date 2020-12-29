@@ -1,5 +1,5 @@
 {
-    "display_name": "Application execute SQL statements task",
+    "display_name": "Execute Spark-SQL",
     "version": "1.0.0.0",
     "name": "execute_sql"
 }
