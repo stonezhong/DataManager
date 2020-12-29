@@ -22,7 +22,7 @@ class Loader:
             else:
                 df = df.union(self.load_asset(dsi_path))
         return df
-    
+
     def get_loader(self, name):
         if name == "union":
             return self.union_loader
@@ -45,7 +45,7 @@ class Loader:
         # dcc: data catalog client
         dataset_name, major_version, minor_version, path, revision = (dsi_path.split(":") + [None])[:5]
         if self.dcc:
-            di = dcc.get_dataset_instance(
+            di = self.dcc.get_dataset_instance(
                 dataset_name, major_version, int(minor_version), path, revision=revision
             )
         else:
@@ -59,7 +59,7 @@ class Loader:
                     "revision": revision
                 }
             })
-        
+
         if di is None:
             raise Exception(f"data with path {dsi_path} does not exist!")
 
@@ -83,7 +83,7 @@ class Loader:
         loader_name = loader['name']
         loader_args = loader['args']
         return self.load_view(loader_name, loader_args), f"{dataset_name}:{major_version}:{minor_version}:{path}:{di['revision']}"
-    
+
     def write_asset(self, df, table, mode='overwrite'):
         # table is compatible with DatasetLocation
         table_type = table['type']
@@ -110,7 +110,7 @@ class Loader:
             effective_data_time = datetime.utcnow()
         else:
             effective_data_time = data_time
-        
+
         if self.dcc is None:
             return self.ask({
                 "topic": "register_asset",
@@ -160,7 +160,7 @@ class Loader:
             effective_data_time = datetime.utcnow()
         else:
             effective_data_time = data_time
-        
+
         if self.dcc is None:
             return self.ask({
                 "topic": "register_view",
