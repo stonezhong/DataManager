@@ -1,0 +1,29 @@
+|
++-- __stage__
+|     |
+|     +-- {dt}
+|         |
+|         +-- raw
+|         |   |
+|         |   +-- IAD (X_Y.json.gz), where X, Y are numbers
+|         |   |
+|         |   +-- PHX (X_Y.json.gz), where X, Y are numbers
+|         |
+|         +-- summary
+|             |
+|             +-- IAD (X_Y.json), where X, Y are numbers
+|             |
+|             +-- PHX (X_Y.json), where X, Y are numbers
+|
++-- {dt}
+      |
+      +-- raw
+      |     |
+      |     +-- {dt}.parquet
+      |
+      +-- summary
+            |
+            +-- IAD (X_Y.json), where X, Y are numbers
+            |
+            +-- PHX (X_Y.json), where X, Y are numbers
+

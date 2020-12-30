@@ -1,0 +1,8 @@
+{
+    "action": "stage-json",
+    "region": "IAD",
+    "bucket": "power",
+    "dt": "2020-11-10",
+    "watermark": 1000000000,
+    "partition_count": 2
+}
