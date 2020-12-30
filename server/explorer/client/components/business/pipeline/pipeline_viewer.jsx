@@ -144,6 +144,16 @@ export class PipelineViewer extends React.Component {
                             <td>Application</td>
                         </tr>
                         <tr>
+                            <td>Spark Options</td>
+                            <td>
+                                {task.spark_opts &&
+                                <pre>
+                                    { JSON.stringify(JSON.parse(task.spark_opts),null,2) }
+                                </pre>
+                                }
+                            </td>
+                        </tr>
+                        <tr>
                             <td>Description</td>
                             <td>
                                 {task.description}
