@@ -117,6 +117,7 @@ def main(spark, input_args, sysops={}):
     ask = sysops.get('ask')
     team = input_args['team']
     if input_args.get('dm_offline'):
+        ask.initialize(spark)
         loader = Loader(spark, ask=ask)
     else:
         dc_config = input_args['dc_config']

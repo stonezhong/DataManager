@@ -1,0 +1,5 @@
+{
+    "action": "generate-parquet",
+    "bucket": "power",
+    "dt": "2020-11-10"
+}
