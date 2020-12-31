@@ -267,6 +267,8 @@ class ExecuteTask:
         dc_config = load_dm_config("dc_config.json")
         print(f"dm_offline = {dm_offline}")
 
+        task_spark_options = None
+
         if self.task_ctx['type'] == 'other':
             task_args_str = Template(self.task_ctx['args']).render(pipeline_group_context)
             task_args = json.loads(task_args_str)
@@ -285,6 +287,10 @@ class ExecuteTask:
 
             appLocation, appName = get_application_location(self.task_ctx['application_id'])
             log_info_with_title("app_args", args['app_args'])
+
+            task_spark_options_str = self.task_ctx.get("spark_opts")
+            if task_spark_options_str:
+                task_spark_options = json.loads(task_spark_options_str)
         elif self.task_ctx['type'] == 'dummy':
             logger.info("Dummy task")
             logger.info("Done")
@@ -311,10 +317,16 @@ class ExecuteTask:
 
             log_info_with_title("app_args", args['app_args'])
 
+            task_spark_options_str = self.task_ctx.get("spark_opts")
+            if task_spark_options_str:
+                task_spark_options = json.loads(task_spark_options_str)
 
         job_submitter = get_job_submitter(spark_etl_cfg['job_submitter'])
         options=spark_etl_cfg.get("job_run_options", {})
         options['display_name'] = appName
+
+        if task_spark_options:
+            options.update(task_spark_options)
 
         if dm_offline:
             handlers = [lambda ask: self.handle_dm(ask)]
