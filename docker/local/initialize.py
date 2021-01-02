@@ -67,7 +67,7 @@ def execute_sql(mysql_cfg, statement):
 
     # print(f"Executing SQL: {statement}")
     conn = MySQLdb.connect(
-        host    = mysql_cfg['hostname'],
+        host    = mysql_cfg['server'],
         user    = mysql_cfg['username'],
         passwd  = mysql_cfg['password'],
     )
