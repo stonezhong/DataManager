@@ -1,0 +1,36 @@
+{
+    "hosts": {
+        "dmdemo2": {
+            "ssh_host"  : "dmdemo2",
+            "env_home"  : "/home/opc/mordor",
+            "virtualenv": "/usr/bin/virtualenv",
+            "python3"   : "/usr/bin/python3"
+        }
+    },
+    "deployments": {
+        "dm_test": {
+            "stage"       : "test",
+            "name"        : "dm",
+            "home_dir"    : "/Users/shizhong/dm/DataManager/server",
+            "deploy_to"   : [ "dmdemo2" ],
+            "use_python3" : true,
+            "config"      : {
+                "db.json": "copy",
+                "django.json": "copy",
+                "scheduler.json": "copy",
+                "logging.json": "copy",
+                "dc_config.json": "copy"
+            }
+        },
+        "dmapps_test": {
+            "stage"       : "test",
+            "name"        : "dmapps",
+            "home_dir"    : "/Users/shizhong/dm/DataManager/data-apps",
+            "deploy_to"   : [ "dmdemo2" ],
+            "use_python3" : true,
+            "config"      : {
+                "config.json": "copy"
+            }
+        }
+    }
+}
