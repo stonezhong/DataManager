@@ -74,6 +74,11 @@ export class SchemaViewer extends React.Component {
                 if (altField.type === 'struct') {
                     fields = altField.fields;
                 }
+            } else if (field.type.type === "struct") {
+                data.type = "struct";
+                data.is_array = false;
+                data.nullable = field.nullable;
+                fields = field.type.fields;
             } else {
                 // won't handle
             }
@@ -133,6 +138,8 @@ export class SchemaViewer extends React.Component {
         for (const i in view_data) {
             this.append_tree_node_to_row(view_data[i], 0, rows);
         }
+
+        console.log(view_data);
 
         return rows.map(row => {
             return (
