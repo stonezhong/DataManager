@@ -1,0 +1,40 @@
+{
+    "log_config": {
+        "version": 1,
+        "disable_existing_loggers": true,
+        "formatters": {
+            "standard": {
+                "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+            }
+        },
+        "handlers": {
+            "consoleHandler": {
+                "class": "logging.StreamHandler",
+                "level": "DEBUG",
+                "formatter": "standard",
+                "stream": "ext://sys.stdout"
+            },
+            "fileHandler": {
+                "class": "logging.handlers.TimedRotatingFileHandler",
+                "level": "DEBUG",
+                "formatter": "standard",
+                "filename": "{{ log_dir }}/scheduler.log",
+                "interval": 1,
+                "when": "midnight"
+            }
+        },
+        "loggers": {
+            "": {
+                "handlers": ["fileHandler", "consoleHandler"],
+                "level":    "DEBUG",
+                "propagate": true
+            },
+            "oci": {
+                "propagate": false
+            },
+            "urllib3": {
+                "propagate": false
+            }
+        }
+    }
+}
