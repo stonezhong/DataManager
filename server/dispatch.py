@@ -94,11 +94,17 @@ export AIRFLOW_HOME=$HOME/airflow/home
     # Install airflow
     # download the constraints file
     # if you are not using python 3.6, you need to update this part
-    subprocess.check_call([
-        "wget",
-        "-O", "constraints-3.6.txt",
-        "https://raw.githubusercontent.com/apache/airflow/constraints-1.10.12/constraints-3.6.txt"
-    ])
+    proxy = input("proxy? ")
+    if proxy:
+        subprocess.check_call(
+            f"https_proxy={proxy} wget -O constraints-3.6.txt https://raw.githubusercontent.com/apache/airflow/constraints-1.10.12/constraints-3.6.txt",
+            shell=True
+        )
+    else:
+        subprocess.check_call(
+            "wget -O constraints-3.6.txt https://raw.githubusercontent.com/apache/airflow/constraints-1.10.12/constraints-3.6.txt",
+            shell=True
+        )
 
     subprocess.check_call([
         AIRFLOW_PIP,
