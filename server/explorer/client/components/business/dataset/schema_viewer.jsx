@@ -139,8 +139,6 @@ export class SchemaViewer extends React.Component {
             this.append_tree_node_to_row(view_data[i], 0, rows);
         }
 
-        console.log(view_data);
-
         return rows.map(row => {
             return (
                 this.should_show(row, rows) &&
