@@ -1,8 +1,26 @@
-# Data Manager for Data Lake
+# Indexes
+* [Brief](#Brief)
+* [Overall Working Model](#overall-working-model)
+* [Supported Platforms](#supported-platforms)
+* [Features](#Features)
+    * [Cloud Provider Agnostic](#cloud-provider-agnostic)
+    * [Create Data Pipeline with UI](#create-data-pipeline-with-ui)
+    * [Schedule Pipelines with UI](#schedule-pipelines-with-ui)
+    * [Data Catalog](#data-catalog)
+    * [Data Lineage](#data-lineage)
+    * [Pipeline / Asset dependency](#pipeline-asset-dependency)
+    * [View Schema for Dataset](#view-schema-for-dataset)
+    * [Assets are immutable](#assets-are-immutable)
+    * [Decouple asset’s name from storage location](#decouple-assets-name-from-storage-location)
 
-Manages data assets and ETL pipelines for Apache Spark based Data Lake.
+# Brief
 
-## Here is a list of platform we supports:
+Data Manager is a one stop shop as Apache Spark based data lake management platform. It covers all the needs for data team that is using Apache Spark for batching process. However, data visualization and notebook (like JupyterHub) is not included in Data Manager. For more informations, please read [Data Manager wiki Pages](https://github.com/stonezhong/DataManager/wiki)
+
+# Overall Working Model
+![Pipeline Execution Diagram](https://raw.githubusercontent.com/stonezhong/DataManager/master/docs/images/pipeline_diagram.png)
+
+# Supported Platforms
 <table>
     <tr>
         <td>
@@ -76,65 +94,78 @@ Manages data assets and ETL pipelines for Apache Spark based Data Lake.
     </tr>
 </table>
 
-# Index
-* Data Manager Feature
-    * [Data Catalog](#Data-Catalog)
-    * [Asset Tracking and data linage](#Asset-Tracking-and-data-linage)
-    * [Uniformed Spark Job Layer](#Uniformed-Spark-Job-Layer)
-    * [UI for Building ETL Pipeline](#UI-for-Building-ETL-Pipeline)
-* [Data Manager wiki](https://github.com/stonezhong/DataManager/wiki)
+# Features
 
+## Cloud Provider Agnostic
+Data Manager support many Apache Spark providers, including AWS EMR, Microsoft Azure HDInsight, etc. For complete list, see [readme.md](https://github.com/stonezhong/DataManager).
+
+* Pipelines, Data Applications are sit on top of an abstraction layer that hides the cloud provider details. 
+* Moving your Data Manager based data lake from one cloud provider to another just need configuration change, no code change is required.
+
+We achieved this by introducing “job deployer” and “job submitter” via python package [spark-etl](https://github.com/stonezhong/spark_etl).
+* By using “spark_etl.vendors.oracle.DataflowDeployer” and “spark_etl.vendors.oracle.DataflowJobSubmitter”, your can run Data Manager in OCI DataFlow, here is an [example](https://github.com/stonezhong/spark_etl/blob/master/examples/config_oci.json).
+* By using “spark_etl.vendors.local.LocalDeployer” and “spark_etl.vendors.local.PySparkJobSubmitter”, you can run Data Manager with PySpack with your laptop, here is an [example](https://github.com/stonezhong/spark_etl/blob/master/examples/config_local.json)
+* By using "spark_etl.deployers.HDFSDeployer" and "spark_etl.job_submitters.livy_job_submitter.LivyJobSubmitter", you can run Data Manager with your on premise spark cluster, here is an [example](https://github.com/stonezhong/spark_etl/blob/master/examples/config_hdfs.json)
+
+Even you are using a public cloud for your production data lake, you can test your pipeline and data application using PySpark on your laptop with down scaled sample data with exactly the same code.
+
+## Create Data Pipeline with UI
+It allows non-programmer to create pipeline via UI, the pipeline can have multiple “tasks”, each task is either executing a series of Spark-SQL statements or launching a Data Application.
+
+![alt text](http://data-manager-docs.s3-website-us-west-2.amazonaws.com/pipeline-ui.png "Pipeline UI")
+
+## Schedule Pipelines with UI
+User can schedule the execution of pipeline with UI. It will execute all the pipelines related to the category of the scheduler, when these pipelines are invoked, they will use shared context defined in this scheduler.
+
+![alt text](http://data-manager-docs.s3-website-us-west-2.amazonaws.com/scheduler-ui.png "Scheduler UI")
 
 ## Data Catalog
-<details>
-<summary>Keep track all datasets</summary>
+It provides a data catalog which tracks all datasets and assets. The data catalog has a REST API for client to query and register dataset and asset.
 
-* List all datasets
-* Choose a dataset, you can view the schema of it.
+## Data Lineage
 
-Screenshot for list datasets:
-<img src="docs/images/list_datasets.png" />
+Data Manager keeps track the data lineage info. When you view an asset, you will see:
+* The actual SQL statement that produces this asset if the asset is produced by Spark-SQL task
+* The application name and arguments if the asset is produced by a data application
+* Upstream assets, list of assets being used when producing this asset
+* Downstream assets, list of assets that require this asset when produced
 
-Screenshot for show schema of a dataset:
-<img src="docs/images/show_schema.png" />
-</details>
+With these information, you understands where data comes from, where data goes to and how it is produced.
 
+![alt text](http://data-manager-docs.s3-website-us-west-2.amazonaws.com/data-lineage-ui.png "Data Lineage UI")
 
-## Asset Tracking
+## Pipeline / Asset dependency
 
-<details>
-<summary>List all assets</summary>
-Data Manage can show you all the asset of a dataset.
+You can specify a list of assets as “require” for a pipeline. The scheduler will only invoke the pipeline when all the required assets shows up.
 
-<img src="docs/images/list_assets.png" />
-</details>
+Note, the required asset here in the example is <code>tradings:1.0:1:/{{dt}}</code>, this is actually a jinja template. "dt" is part of the rendering context belongs to the scheduler.
 
-<details>
-<summary>Support for views</summary>
-"asset" can be materized file, such as parquet, json or csv file, "asset" can also be a "view", which through a "loader", you can get the dataframe as well.
-In this example, the asset <code>tradings:1.0:1:/2020-11-20</code> is a view, it unions 2 other assets
-<img src="docs/images/asset_as_view.png" />
-</details>
+![alt text](http://data-manager-docs.s3-website-us-west-2.amazonaws.com/asset-dependency.png "Pipeline / Asset Dependency")
 
+## View Schema for Dataset
 
-## Uniformed Spark Job Layer
+In the Dataset Browser UI, you can see the schema for any dataset. Here is an example:
 
-<details>
-<summary>dm-job-lib</summary>
+![alt text](http://data-manager-docs.s3-website-us-west-2.amazonaws.com/view-schema.png "View Schema")
 
-Through [dm-job-lib](client/dm-job-lib), user's application can load asset, write asset, and register asset.
+## Assets are immutable
+Assets are immutable, if you want to republish an asset (maybe the earlier asset has a data-bug), it will bump the revision. If you cache the asset or derived data from the asset, you can check the asset revision to decide whether you need to update your cache.
 
-* Application using dm-job-lib to load, write assets are decoupled from specific cloud provider and can migrate to other platform easily.
-* Application using dm-job-lib can be tested using PySPark with small scale of data easily.
-</details>
+Each asset, only the latest revision might be active, and the metadata tracks all the revisions.
 
-<details>
-<summary>uniformed tool to build, deploy and run job for all platforms</summary>
+This page also shows the revision history, so you can see if the asset has been corrected or not, and when.
 
-Please checkout [data-appls]
-</details>
+![alt text](http://data-manager-docs.s3-website-us-west-2.amazonaws.com/asset-revisions.png "View Schema")
 
-## UI for Building ETL Pipeline
-Pleaee see the youtube video for details.
+## Decouple asset’s name from storage location
 
-[![Data Manager Demo](https://img.youtube.com/vi/SLPCHyqxhKk/0.jpg)](https://www.youtube.com/watch?v=SLPCHyqxhKk "Data Manager Demo")
+As you can see, below is a task inside a pipeline, it imports an asset <code>tradings:1.0:1/{{dt}}</code> and call it “tradings”, then run a SQL statement. User do not even need to know where is the storage location of the asset, Data Manager automatically resolve the asset name to storage location and load the asset from it.
+
+This also make it easy to migrate data lake between cloud providers since your pipeline is not tied to the storage location of assets.
+
+![alt text](http://data-manager-docs.s3-website-us-west-2.amazonaws.com/sql-task-basic-info.png "SQL Task - Basic Info")
+![alt text](http://data-manager-docs.s3-website-us-west-2.amazonaws.com/sql-task-sql.png "SQL Task - SQL Statement")
+
+If you go to the asset page, it shows the storage location for asset, for example:
+
+![alt text](http://data-manager-docs.s3-website-us-west-2.amazonaws.com/asset-list.png "Asset List")
