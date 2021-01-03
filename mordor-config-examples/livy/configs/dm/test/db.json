@@ -1,0 +1,8 @@
+{
+    "server":   "mysql1",
+    "username": "stonezhong",
+    "password": "****",
+    "db_name":  "mordortest-dm",
+    "airflow_db_name": "mordortest-airflow",
+    "charset":  "utf8"
+}

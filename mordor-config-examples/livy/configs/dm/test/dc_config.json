@@ -1,5 +1,5 @@
 {
-    "url_base": "http://dmdemo2:8888/api",
+    "url_base": "http://mordortest:8888/api",
     "username": "stonezhong",
     "password": "****"
 }
