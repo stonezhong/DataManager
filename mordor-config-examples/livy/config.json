@@ -1,0 +1,36 @@
+{
+    "hosts": {
+        "mordortest": {
+            "ssh_host"  : "mordortest",
+            "env_home"  : "/root/mordor",
+            "virtualenv": "/usr/bin/virtualenv",
+            "python3"   : "/usr/bin/python3"
+        }
+    },
+    "deployments": {
+        "dm_test": {
+            "stage"       : "test",
+            "name"        : "dm",
+            "home_dir"    : "/home/stonezhong/DATA_DISK/projects/DataManager/server",
+            "deploy_to"   : [ "mordortest" ],
+            "use_python3" : true,
+            "config"      : {
+                "db.json": "copy",
+                "django.json": "copy",
+                "scheduler.json": "copy",
+                "logging.json": "copy",
+                "dc_config.json": "copy"
+            }
+        },
+        "dmapps_test": {
+            "stage"       : "test",
+            "name"        : "dmapps",
+            "home_dir"    : "/home/stonezhong/DATA_DISK/projects/DataManager/data-apps",
+            "deploy_to"   : [ "mordortest" ],
+            "use_python3" : true,
+            "config"      : {
+                "config.json": "copy"
+            }
+        }
+    }
+}
