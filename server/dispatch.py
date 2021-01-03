@@ -24,6 +24,7 @@ AIRFLOW_DAGS_DIR        = os.path.join(AIRFLOW_HOME_DIR, "dags")
 AIRFLOW_CFG             = os.path.join(AIRFLOW_HOME_DIR, "airflow.cfg")
 OLD_AIRFLOW_CFG         = os.path.join(AIRFLOW_HOME_DIR, "airflow.cfg.old")
 MYSQL_CFG_FILENAME      = os.path.expandvars("$ENV_HOME/configs/dm/db.json")
+DJANGO_CFG_FILENAME     = os.path.expandvars("$ENV_HOME/configs/dm/django.json")
 BASHRC                  = os.path.expanduser("~/.bashrc")
 AIRFLOW_PIP             = os.path.join(AIRFLOW_VENV_DIR, 'bin', 'pip')
 AIRFLOW_REQUIREMENTS    = os.path.expandvars("$ENV_HOME/apps/dm/current/airflow_requirements.txt")
@@ -128,6 +129,8 @@ def config_airflow_venv():
 
     with open(MYSQL_CFG_FILENAME, "r") as f:
         mysql_cfg = json.load(f)
+    with open(DJANGO_CFG_FILENAME, "r") as f:
+        django_cfg = json.load(f)
 
     airflow_db_name = mysql_cfg['airflow_db_name']
 
@@ -159,6 +162,8 @@ def config_airflow_venv():
         if section == "[webserver]":
             if line.startswith("rbac = "):
                 return "rbac = True"
+            if line.startswith("base_url = "):
+                return f"base_url = {django_cfg['airflow']['base_url']}"
             return line
 
         return line
