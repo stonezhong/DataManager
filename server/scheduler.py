@@ -148,6 +148,7 @@ def event_handler(scheduled_event):
         context=scheduled_event.context,
         finished=False,
         manual=False,
+        due = scheduled_event.due,
     )
     pg.save()
 
