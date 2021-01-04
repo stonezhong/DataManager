@@ -230,6 +230,10 @@ class DataLocationViewSet(viewsets.ModelViewSet):
 class PipelineViewSet(viewsets.ModelViewSet):
     queryset = Pipeline.objects.all()
     serializer_class = PipelineSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = {
+        'retired'           : ['exact'],
+    }
 
     @transaction.atomic
     def create(self, request):

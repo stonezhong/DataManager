@@ -151,3 +151,16 @@ export function unpausePipeline(csrf_token, pipeline_id) {
         body: JSON.stringify({paused: false})
     }).then(handle_json_response)
 }
+
+export function retirePipeline(csrf_token, pipeline_id) {
+    // called when user want to retire a pipeline
+    return fetch(`/api/Pipelines/${pipeline_id}/`, {
+        method: 'post',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrf_token,
+            'X-Data-Manager-Use-Method': 'PATCH',
+        },
+        body: JSON.stringify({retired: true})
+    }).then(handle_json_response)
+}

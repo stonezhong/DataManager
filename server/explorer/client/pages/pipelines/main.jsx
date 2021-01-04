@@ -37,6 +37,7 @@ class PipelinesPage extends React.Component {
             queryParams: {
                 offset: offset,
                 limit : limit,
+                retired: "False"
             }
         };
         const url = buildUrl('', buildArgs);

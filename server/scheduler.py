@@ -84,6 +84,12 @@ def handle_pipeline_instance_created(pi):
         print("")
         return
 
+    pi_prior = pi.get_prior_instance()
+    if pi_prior and pi_prior.status != PipelineInstance.FINISHED_STATUS:
+        print("Pipeline's prior instance is not finished, so skip for now")
+        print("")
+        return
+
     ready = True
     for rdit in pipeline_ctx.get('requiredDSIs', []):
         tmp = jinja2.Template(rdit)

@@ -514,6 +514,9 @@ class PipelineGroup(models.Model):
     finished            = models.BooleanField(null=False)
     manual              = models.BooleanField(null=False)  # is this manually created?
 
+    # only non-manual pipeline group has due, it is the due for the timer
+    due                 = models.DateTimeField(null=True)                                         # required
+
     # attach bunch of pipelines to this pipeline group
     def attach(self, pipeline_ids):
         now = datetime.utcnow().replace(tzinfo=pytz.UTC)
@@ -615,6 +618,21 @@ class PipelineInstance(models.Model):
     started_time        = models.DateTimeField(null=True)
     finished_time       = models.DateTimeField(null=True)
     failed_time         = models.DateTimeField(null=True)
+
+    # get the prior pipeline instance of the same pipeline
+    # for the same schedule, same pipeline, we should invoke one at a time
+    def get_prior_instance(self):
+        q = PipelineInstance.objects.select_related("group").filter(
+            pipeline=self.pipeline
+        ).filter(
+            group__due__lt = self.group.due
+        ).order_by("-group__due")[:1]
+
+
+        if len(q) == 0:
+            return None
+        return q[0]
+
 
 class Timer(models.Model):
     id                  = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)

@@ -14,7 +14,7 @@ import {PipelineEditor} from '/components/business/pipeline/pipeline_editor.jsx'
 import {PageHeader} from '/components/generic/page_tools'
 
 import {get_csrf_token, get_app_context, get_app_config, get_current_user, pipeline_from_django_model} from '/common_lib'
-import {savePipeline, pausePipeline, unpausePipeline} from '/apis'
+import {savePipeline, pausePipeline, unpausePipeline, retirePipeline} from '/apis'
 
 const _ = require("lodash");
 
@@ -44,6 +44,12 @@ class PipelinePage extends React.Component {
 
     unpausePipelineAndRefresh = (pipeline_id) => {
         return unpausePipeline(get_csrf_token(), pipeline_id).then(() => {
+            location.reload();
+        });
+    };
+
+    retirePipelineAndRefresh = (pipeline_id) => {
+        return retirePipeline(get_csrf_token(), pipeline_id).then(() => {
             location.reload();
         });
     };
@@ -83,6 +89,18 @@ class PipelinePage extends React.Component {
                                     }}
                                 >
                                     {this.props.pipeline.paused?"Unpause":"Pause"}
+                                </Button>
+                            }
+                            {!!this.props.current_user && !this.props.pipeline.retired &&
+                                <Button
+                                    className="ml-2"
+                                    variant="secondary"
+                                    size="sm"
+                                    onClick={event => {
+                                        this.retirePipelineAndRefresh(this.props.pipeline.id);
+                                    }}
+                                >
+                                    Retire
                                 </Button>
                             }
                         </PageHeader>
