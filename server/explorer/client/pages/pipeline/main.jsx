@@ -69,20 +69,22 @@ class PipelinePage extends React.Component {
                                     Edit
                                 </Button>
                             }
-                            <Button
-                                className="ml-2"
-                                variant="secondary"
-                                size="sm"
-                                onClick={event => {
-                                    if (this.props.pipeline.paused) {
-                                        this.unpausePipelineAndRefresh(this.props.pipeline.id);
-                                    } else {
-                                        this.pausePipelineAndRefresh(this.props.pipeline.id);
-                                    }
-                                }}
-                            >
-                                {this.props.pipeline.paused?"Unpause":"Pause"}
-                            </Button>
+                            {!!this.props.current_user &&
+                                <Button
+                                    className="ml-2"
+                                    variant="secondary"
+                                    size="sm"
+                                    onClick={event => {
+                                        if (this.props.pipeline.paused) {
+                                            this.unpausePipelineAndRefresh(this.props.pipeline.id);
+                                        } else {
+                                            this.pausePipelineAndRefresh(this.props.pipeline.id);
+                                        }
+                                    }}
+                                >
+                                    {this.props.pipeline.paused?"Unpause":"Pause"}
+                                </Button>
+                            }
                         </PageHeader>
                     </Col>
                 </Row>
