@@ -163,7 +163,7 @@ def event_handler(scheduled_event):
             group = pg,
             context = "{}", # placeholder
             status = PipelineInstance.CREATED_STATUS,
-            created_time = now,
+            created_time = now
         )
         pipeline_instance.save()
 
