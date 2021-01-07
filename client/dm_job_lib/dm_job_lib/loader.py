@@ -65,18 +65,60 @@ class Loader:
 
         loader_str = di.get("loader")
         if not loader_str:
+            # we only load from 1st location
             if len(di['locations']) == 0:
                 raise Exception(f"data with path {dsi_path} does not exist!")
             location = di['locations'][0]
-            table_type = location['type']
-            table_path = location['location']
-            if table_type == "json":
-                df = self.spark.read.json(table_path)
-            elif table_type == "parquet":
-                df = self.spark.read.parquet(table_path)
-            else:
-                raise Exception(f"Unrecognized table type: {table_type}")
-            return df, f"{dataset_name}:{major_version}:{minor_version}:{path}:{di['revision']}"
+            repo = location.get("repo")
+
+            if repo is None or (repo['type'] == 1 or repo['type'] == 2):
+                table_type = location['type']
+                if repo is None:
+                    table_path = location['location']
+                else:
+                    repo_context = json.loads(repo['context'])
+                    base_url = repo_context['base_url']
+                    if base_url.endswith('/'):
+                        base_url = base_url[:-1]
+                    table_path = base_url + location['location']
+
+                if table_type == "json":
+                    df = self.spark.read.json(table_path)
+                elif table_type == "parquet":
+                    df = self.spark.read.parquet(table_path)
+                else:
+                    raise Exception(f"Unrecognized table type: {table_type}")
+                return df, f"{dataset_name}:{major_version}:{minor_version}:{path}:{di['revision']}"
+
+            # JDBC case
+            if repo['type'] == 3:
+                repo_context = json.loads(repo['context'])
+                url = repo_context['url']
+                user = repo_context['user']
+                password = repo_context['password']
+                query = repo_context.get('query')
+                dbtable = repo_context.get('dbtable')
+                if dbtable is not None:
+                    df = spark.read \
+                        .format("jdbc") \
+                        .option("url", url) \
+                        .option("dbtable", dbtable) \
+                        .option("user", user) \
+                        .option("password", password) \
+                        .load()
+                    return df, f"{dataset_name}:{major_version}:{minor_version}:{path}:{di['revision']}"
+                if query is not None:
+                    df = spark.read \
+                        .format("jdbc") \
+                        .option("url", url) \
+                        .option("query", query) \
+                        .option("user", user) \
+                        .option("password", password) \
+                        .load()
+                    return df, f"{dataset_name}:{major_version}:{minor_version}:{path}:{di['revision']}"
+                raise Exception("Neither query nor dbtable is provided")
+
+            raise Exception(f"Unrecognized repo type: {repo['type']}")
 
         loader = json.loads(loader_str)
         # we can use a loader
@@ -84,18 +126,73 @@ class Loader:
         loader_args = loader['args']
         return self.load_view(loader_name, loader_args), f"{dataset_name}:{major_version}:{minor_version}:{path}:{di['revision']}"
 
-    def write_asset(self, df, table, mode='overwrite'):
-        # table is compatible with DatasetLocation
-        table_type = table['type']
-        table_path = table['location']
-        # TODO: make coalesce configurable
+    def _write_to_fs(self, df, table_type, table_path, mode, coalesce):
+        if coalesce is not None:
+            df = df.coalesce(coalesce)
 
         if table_type == "json":
-            df.coalesce(1).write.mode(mode).format('json').save(table_path)
+            df.write.mode(mode).format('json').save(table_path)
         elif table_type == "parquet":
-            df.coalesce(1).write.mode(mode).format('parquet').save(table_path)
+            df.write.mode(mode).format('parquet').save(table_path)
         else:
             raise Exception(f"Unrecognized table type: {table_type}")
+
+    def write_asset_ex(self, df, location, mode='error', coalesce=1):
+        # possible mode
+        #   append
+        #   overwrite
+        #   ignore
+        #   error
+        # table is compatible with DatasetLocation
+        table_path = location['location']
+        table_type = location.get('type')
+        repo_name = location.get('repo_name')
+
+        if repo_name is None:
+            self._write_to_fs(df, table_type, table_path, mode, coalesce)
+            return
+
+        if self.dcc:
+            repo = self.dcc.get_data_repo(repo_name)
+        else:
+            repo = self.ask({
+                "topic": "get_repo",
+                "payload": {
+                    "repo_name": repo_name,
+                }
+            })
+
+        if repo['type'] == 1 or repo['type'] == 2:
+            repo_context = json.loads(repo['context'])
+            base_url = repo_context['base_url']
+            if base_url.endswith('/'):
+                base_url = base_url[:-1]
+            table_path = base_url + location['location']
+
+            self._write_to_fs(df, table_type, table_path, mode, coalesce)
+            return
+
+        if repo['type'] == 3:
+            repo_context = json.loads(repo['context'])
+            url = repo_context['url']
+            user = repo_context['user']
+            password = repo_context['password']
+            dbtable = table_path
+            df.write \
+                .format("jdbc") \
+                .mode(mode) \
+                .option("url", url) \
+                .option("dbtable", dbtable) \
+                .option("user", user) \
+                .option("password", password) \
+                .save()
+            return
+
+        raise Exception("Unrecognized repo type")
+
+
+    def write_asset(self, df, location, mode='error'):
+        write_asset_ex(df, location, mode=mode, coalesce=1)
 
 
     ##############################################################################

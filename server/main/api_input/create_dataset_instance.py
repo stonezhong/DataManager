@@ -6,10 +6,13 @@ import pytz
 
 class CreateDatasetInstanceInput:
     class _BriefLocation:
-        def __init__(self, type, location, size):
+        def __init__(self, type, location, size, repo_name):
+            # if repo_name is None, the location is a repo-less location
+            # such as hdfs://...
             self.type = type
             self.location = location
             self.size = size
+            self.repo_name = repo_name
 
     @classmethod
     def from_json(cls, data):
@@ -48,7 +51,7 @@ class CreateDatasetInstanceInput:
         locations = []
         for entry in data["locations"]:
             locations.append(cls._BriefLocation(
-                entry["type"], entry["location"], entry.get("size")
+                entry["type"], entry["location"], entry.get("size"), entry.get("repo_name")
             ))
         self.locations = locations
 

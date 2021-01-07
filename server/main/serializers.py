@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 
 from .models import Dataset, DatasetInstance, DataLocation, Pipeline, \
     PipelineGroup, PipelineInstance, Application, Timer, ScheduledEvent, \
-    DatasetInstanceDep
+    DatasetInstanceDep, DataRepo
 
 class ApplicationSerializer(serializers.ModelSerializer):
     author = serializers.ReadOnlyField(source='author.username')
@@ -50,20 +50,32 @@ class DatasetSerializer(serializers.ModelSerializer):
             'author', 'team', 'schema', 'sample_data'
         ]
 
+class DataRepoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DataRepo
+        fields = [
+            'url',
+            'id', 'name', 'description', 'type', 'context'
+        ]
 
 class DataLocationSerializer(serializers.ModelSerializer):
     class Meta:
         model = DataLocation
         fields = [
             'url',
-            'id', 'dataset_instance', 'type', 'location', 'size', 'offset'
+            'id', 'dataset_instance', 'type', 'repo', 'location', 'size', 'offset'
         ]
 
 class NestDataLocationSerializer(serializers.ModelSerializer):
+    repo = DataRepoSerializer(
+        many=False,
+        read_only=True
+    )
+
     class Meta:
         model = DataLocation
         fields = [
-            'location', 'type', 'size', 'offset'
+            'repo', 'location', 'type', 'size', 'offset'
         ]
 
 class DatasetInstanceSerializer(serializers.ModelSerializer):

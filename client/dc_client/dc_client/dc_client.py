@@ -209,6 +209,8 @@ class DataCatalogClient(object):
                 The location of the data, for example, s3://mybicket/foo.parquet
             size: integer
                 Optional. The storage size of the data in this location.
+            repo_name: string
+                Optional. The name of the data repo
         src_dsi_paths: [string]
             list of dataset instances path that this asset depend on. the path MUST contain revision.
         application_id: string, optional
@@ -263,7 +265,7 @@ class DataCatalogClient(object):
         return ret
 
     def delete_dataset_instance(self, id):
-        """Data a dataset instance by id.
+        """Delete a dataset instance by id.
 
         Parameters
         ----------
@@ -273,3 +275,25 @@ class DataCatalogClient(object):
         url = "{}/DatasetInstances/{id}".format(self.url_base)
         r = self.session.delete(url=url)
         r.raise_for_status()
+
+    def get_data_repo(self, name):
+        """Get a data repo by name.
+        Data repo's name is unique
+
+        Parameters
+        ----------
+        name: str
+            The data repo name.
+        """
+        url = "{}/DataRepo/".format(self.url_base)
+        params = {
+            'name': name,
+        }
+        r = self.session.get(url=url, params = params)
+        r.raise_for_status()
+
+        d = r.json()
+        if d['count'] > 0:
+            return d['results'][0]
+
+        return None
