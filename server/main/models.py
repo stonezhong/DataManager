@@ -397,12 +397,12 @@ class DatasetInstance(models.Model):
         repo_dict = {} # key is repo name
         # save locations
         for offset, location in enumerate(locations):
-            repo_name = location.get('repo_name')
+            repo_name = location.repo_name
             if repo_name is None:
                 repo = None
             else:
                 if repo_name not in repo_dict:
-                    repo = DataRepo.get_by_name()
+                    repo = DataRepo.get_by_name(repo_name)
                     if repo is None:
                         raise InvalidOperationException("Invalid repo name: {}".format(repo_name))
                     repo_dict[repo_name] = repo

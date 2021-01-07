@@ -1,6 +1,7 @@
 from django.contrib.auth.models import User
-from main.models import Dataset, DatasetInstance
+from main.models import Dataset, DatasetInstance, DataRepo
 from datetime import datetime, timedelta
+import json
 
 import pytz
 
@@ -17,7 +18,19 @@ class DatasetInstanceTestCase(TestCase):
             password='12345'
         )
 
-    def create_dsis(self):
+    def create_dsis(self, repo_name=None):
+        if repo_name is not None:
+            context = {
+                "base_dir": "/beta/data"
+            }
+            repo = DataRepo(
+                name=repo_name,
+                description="",
+                type=DataRepo.RepoType.LFS.value,
+                context=json.dumps(context)
+            )
+            repo.save()
+
         ds = Dataset.create(
             self.user,
             "test-name", "1.0", 1,
@@ -36,7 +49,7 @@ class DatasetInstanceTestCase(TestCase):
             self.now,
             [
                 CreateDatasetInstanceInput._BriefLocation(
-                    "parquet", "hdfs://data/foo.parquet", 100
+                    "parquet", "hdfs://data/foo.parquet", 100, repo_name
                 )
             ]
         )
@@ -51,7 +64,7 @@ class DatasetInstanceTestCase(TestCase):
             self.now,
             [
                 CreateDatasetInstanceInput._BriefLocation(
-                    "parquet", "hdfs://data/bar.parquet", 100
+                    "parquet", "hdfs://data/bar.parquet", 100, repo_name
                 )
             ],
             src_dsi_paths = [
@@ -72,6 +85,23 @@ class DatasetInstanceTestCase(TestCase):
         self.assertEqual(dsi.revision, 0)
         self.assertEqual(dsi.row_count, 100)
         self.assertEqual(dsi.loader, None)
+        for location in dsi.locations.all():
+            self.assertIsNone(location.repo)
+
+    def test_create_with_repo(self):
+        ds, dsi, _ = self.create_dsis('myrepo')
+        self.assertEqual(dsi.dataset.id, ds.id)
+        self.assertEqual(dsi.parent_instance, None)
+        self.assertEqual(dsi.name, "foo")
+        self.assertEqual(dsi.path, "/foo")
+        self.assertEqual(dsi.publish_time, self.now)
+        self.assertEqual(dsi.data_time, self.now)
+        self.assertEqual(dsi.deleted_time, None)
+        self.assertEqual(dsi.revision, 0)
+        self.assertEqual(dsi.row_count, 100)
+        self.assertEqual(dsi.loader, None)
+        for location in dsi.locations.all():
+            self.assertEqual(location.repo.name, "myrepo")
 
     # scenario: create a dataset with the existing path bumps the revision
     def test_create_bump_revision(self):
@@ -86,7 +116,7 @@ class DatasetInstanceTestCase(TestCase):
             self.now,
             [
                 CreateDatasetInstanceInput._BriefLocation(
-                    "parquet", "hdfs://data/bar.parquet", 100
+                    "parquet", "hdfs://data/bar.parquet", 100, None
                 )
             ],
             src_dsi_paths = [
@@ -121,7 +151,7 @@ class DatasetInstanceTestCase(TestCase):
                 self.now,
                 [
                     CreateDatasetInstanceInput._BriefLocation(
-                        "parquet", "hdfs://data/foo.parquet", 100
+                        "parquet", "hdfs://data/foo.parquet", 100, None
                     )
                 ],
             )
