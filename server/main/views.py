@@ -19,11 +19,12 @@ import jinja2
 import json
 
 from .models import Dataset, DatasetInstance, DataLocation, Pipeline, \
-    PipelineGroup, PipelineInstance, Application, Timer, ScheduledEvent
+    PipelineGroup, PipelineInstance, Application, Timer, ScheduledEvent, \
+    DataRepo
 from .serializers import DatasetSerializer, DatasetInstanceSerializer, \
     DataLocationSerializer, PipelineSerializer, PipelineGroupSerializer, \
     PipelineInstanceSerializer, ApplicationSerializer, PipelineGroupDetailsSerializer, \
-    TimerSerializer, ScheduledEventSerializer
+    TimerSerializer, ScheduledEventSerializer, DataRepoSerializer
 from .api_input import CreateDatasetInput, CreateDatasetInstanceInput, \
     CreatePipelineInput, CreateApplicationInput, CreateTimerInput, \
     SetSchemaAndSampleDataInput
@@ -401,3 +402,12 @@ class ScheduledEventViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend, OrderingFilter]
     filterset_fields = ['acked']
     ordering_fields = ['due']
+
+class DataRepoViewSet(viewsets.ModelViewSet):
+    queryset = DataRepo.objects.all()
+    serializer_class = DataRepoSerializer
+
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = {
+        'name'              : ['exact'],
+    }

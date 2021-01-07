@@ -88,6 +88,9 @@ models = {
                 "items": {
                     "type": "object",
                     "properties": {
+                        "repo_name": {
+                            "type": "string"
+                        },
                         "type": {
                             "type": "string"
                         },

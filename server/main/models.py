@@ -394,11 +394,23 @@ class DatasetInstance(models.Model):
         )
         di.save()
 
+        repo_dict = {} # key is repo name
         # save locations
         for offset, location in enumerate(locations):
+            repo_name = location.get('repo_name')
+            if repo_name is None:
+                repo = None
+            else:
+                if repo_name not in repo_dict:
+                    repo = DataRepo.get_by_name()
+                    if repo is None:
+                        raise InvalidOperationException("Invalid repo name: {}".format(repo_name))
+                    repo_dict[repo_name] = repo
+                repo = repo_dict[repo_name]
             dl = DataLocation(
                 dataset_instance = di,
                 type = location.type,
+                repo = repo,
                 location = location.location,
                 offset = offset,
                 size = location.size,
@@ -485,6 +497,27 @@ class DatasetInstanceDep(models.Model):
         ]
 
 
+class DataRepo(models.Model):
+
+    class RepoType(Enum):
+        LFS     = 1     # Local file system
+        HDFS    = 2     # HDFS and all connectors supported by HDFS, such as S3, oci, etc
+        JDBC    = 3     # via JDBC connector
+
+    id          = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name        = models.CharField(max_length=255, blank=True, unique=True)
+    description = models.TextField(blank=True)
+    type        = models.IntegerField(null=False)
+    context     = models.TextField(blank=True)
+
+    @classmethod
+    def get_by_name(cls, name):
+        repos = DataRepo.objects.filter(name=name)
+        if len(repos) == 0:
+            return None
+        return repos[0]
+
+
 class DataLocation(models.Model):
     id                  = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     dataset_instance    = models.ForeignKey(
@@ -494,6 +527,12 @@ class DataLocation(models.Model):
         related_name = 'locations'
     )                                                                                       # required
     type                = models.CharField(max_length=64, blank=True)                       # required
+    repo                = models.ForeignKey(
+        DataRepo,
+        on_delete=models.PROTECT,
+        null=True,
+        related_name='locations'
+    )
     location            = models.CharField(max_length=1024, blank=True)                     # required
     offset              = models.IntegerField(null=False)
 
