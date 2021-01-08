@@ -37,6 +37,7 @@ module.exports = env => ({
         "dataset_instance"  : '/pages/dataset_instance/main.jsx',
         "schedulers"        : '/pages/schedulers/main.jsx',
         "datarepos"         : '/pages/datarepos/main.jsx',
+        "datarepo"          : '/pages/datarepo/main.jsx',
         "test"              : '/pages/test/main.jsx',
     },
     output: {

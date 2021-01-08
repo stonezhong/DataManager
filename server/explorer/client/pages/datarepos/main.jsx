@@ -53,7 +53,8 @@ class DataReposPage extends React.Component {
                     <Col>
                         <PageHeader title="Data Repositories">
                             {
-                                !!this.props.current_user && <Button
+                                !!this.props.current_user && this.props.current_user.is_superuser &&
+                                <Button
                                     size="sm"
                                     className="c-vc ml-2"
                                     onClick={() => {

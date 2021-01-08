@@ -2,6 +2,7 @@ import React from 'react'
 
 import Button from 'react-bootstrap/Button'
 import Container from 'react-bootstrap/Container'
+import Card from 'react-bootstrap/Card'
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
 import Form from 'react-bootstrap/Form'
@@ -35,9 +36,12 @@ export class DataRepoTable extends React.Component {
         return this.props.get_page(offset, limit, {});
     };
 
+    render_name = datarepo => {
+        return <DataRepoLink datarepo={datarepo} />;
+    };
 
     columns = {
-        name:               {display: "Name"},
+        name:               {display: "Name", render_data: this.render_name},
         type:               {display: "Type"},
         context:            {display: "Details"},
     };
@@ -262,6 +266,77 @@ export class DataRepoEditor extends React.Component {
                     <Button variant="secondary" onClick={this.onClose}>Close</Button>
                 </Modal.Footer>
             </Modal>
+        );
+    }
+}
+
+/*********************************************************************************
+ * Purpose: Show a data repo
+ *
+ * Props
+ *     datarepo  : The data repo to show
+ *
+ */
+export class DataRepoViewer extends React.Component {
+    render() {
+        return (
+            <div>
+                <Row>
+                    <Col>
+                        <Card border="success">
+                            <Card.Body>
+                                <div
+                                    dangerouslySetInnerHTML={{__html: this.props.datarepo.description}}
+                                ></div>
+                            </Card.Body>
+                        </Card>
+                    </Col>
+                </Row>
+                <Row className="mt-2">
+                    <Col>
+                        <Card border="success">
+                            <Card.Body>
+                                <table className="datarepo-viewer-grid">
+                                    <tbody>
+                                        <tr>
+                                            <td>Name</td>
+                                            <td>{this.props.datarepo.name}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Type</td>
+                                            <td>{this.props.datarepo.type}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Details</td>
+                                            <td>
+                                                <pre>{this.props.datarepo.context}</pre>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </Card.Body>
+                        </Card>
+                    </Col>
+                </Row>
+            </div>
+        )
+    }
+}
+
+/*********************************************************************************
+ * Purpose: Link to a data repo
+ *
+ * Props
+ *     datarepo: The data repo to link to
+ *
+ */
+
+export class DataRepoLink extends React.Component {
+    render() {
+        return (
+            <a href={`/explorer/datarepo?id=${this.props.datarepo.id}`}>
+                { this.props.datarepo.name }
+            </a>
         );
     }
 }

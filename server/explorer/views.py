@@ -13,10 +13,10 @@ from django.urls import reverse
 from django.http import HttpResponse
 
 from main.models import Dataset, Pipeline, PipelineGroup, PipelineInstance, \
-    Application, DatasetInstance
+    Application, DatasetInstance, DataRepo
 from main.serializers import PipelineSerializer, DatasetSerializer, \
     ApplicationSerializer, PipelineGroupDetailsSerializer, \
-    DatasetInstanceSerializer
+    DatasetInstanceSerializer, DataRepoSerializer
 
 from rest_framework.renderers import JSONRenderer
 
@@ -339,9 +339,6 @@ def application(request):
     )
 
 def datarepos(request):
-    if not request.user.is_superuser:
-        return HttpResponseNotFound('<h1>No Page Here</h1>')
-
     return render(
         request,
         'common_page.html',
@@ -353,6 +350,31 @@ def datarepos(request):
             ],
             'nav_item_role': 'datarepos',
             'app_config': get_app_config()
+        }
+    )
+
+def datarepo(request):
+    datarepo_id = request.GET['id']
+
+    datarepo = DataRepo.objects.get(pk=datarepo_id)
+    s = DataRepoSerializer(datarepo, many=False, context={"request": request})
+
+    app_context = {
+        'datarepo': s.data
+    }
+
+    return render(
+        request,
+        'common_page.html',
+        context={
+            'user': request.user,
+            'sub_title': "Data Repositorie",
+            'scripts':[
+                '/static/js-bundle/datarepo.js'
+            ],
+            'nav_item_role': 'datarepos',
+            'app_config': get_app_config(),
+            'app_context': JSONRenderer().render(app_context).decode("utf-8"),
         }
     )
 
