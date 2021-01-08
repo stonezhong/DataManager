@@ -201,7 +201,7 @@ class Loader:
     ##############################################################################
     def register_asset(self, asset_path, team, file_type, location, row_count, schema,
                        data_time = None, src_asset_paths = [],
-                       application_id = None, application_args = None):
+                       application_id = None, application_args = None, repo_name = None):
 
         if data_time is None:
             effective_data_time = datetime.utcnow()
@@ -233,6 +233,7 @@ class Loader:
             dataset_name, major_version, int(minor_version),
             path,
             [{
+                'repo_name': repo_name,
                 'type': file_type,
                 'location': location
             }],
