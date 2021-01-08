@@ -1,0 +1,54 @@
+div.datarepo-table {
+    width: 1000px;
+
+    & > div {
+        height: 680px;
+        overflow-y: auto;
+
+        & > table {
+            & > thead {
+                & > tr {
+                    & > th[data-role='name'] {
+                        width: 250px;
+                    }
+                    & > th[data-role='type'] {
+                        width: 120px;
+                        text-align: center;
+                    }
+                }
+            }
+            & > tbody {
+                & > tr {
+                    & > td {
+                        height: 40px;
+                        vertical-align: middle;
+                    }
+                    & > td[data-role='type'] {
+                        text-align: center;
+                    }
+                    & > td[data-role='context'] {
+                        font-family: monospace;
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+table.datarepo-viewer-grid {
+    font-family:'courier new',monospace;
+    border: 1px solid rgb(211, 211, 211);
+    border-collapse: collapse;
+    width: 100%;
+
+    & > tbody > tr > td {
+        border: 1px solid rgb(211, 211, 211);
+        padding: 4px;
+    }
+
+    & > tbody > tr > td:first-child {
+        width: 160px;
+        vertical-align: top;
+    }
+}

@@ -128,7 +128,9 @@ export function is_valid_datetime(s, allow_empty=false) {
 }
 
 export function handle_json_response(res) {
-    if (res.status !== 200) {
+    // 201 is returned when you successfully created an object
+    // 200 is general success
+    if ((res.status != 200) && (res.status != 201)) {
         throw new Error(`server error: ${res.statusText}`);
     }
     return res.json();
