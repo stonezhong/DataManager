@@ -8,6 +8,7 @@ import Row from 'react-bootstrap/Row'
 import {AssetLinkFromDSIPath} from '/components/business/dataset/utils.jsx'
 import {AppIcon} from '/components/generic/icons/main.jsx'
 import {ApplicationLink} from '/components/business/application'
+import {DataRepoLink} from '/components/business/datarepo'
 
 import './dataset.scss'
 
@@ -169,6 +170,11 @@ export class DatasetInstanceView extends React.Component {
                                                     <td>
                                                     {
                                                         this.props.dsi.locations.map(location => <div key={location.position}>
+                                                            {
+                                                                location.repo && <span className="card-asset-type">
+                                                                    <DataRepoLink datarepo={location.repo} />
+                                                                </span>
+                                                            }
                                                             <span className="card-asset-type">{location.type}</span>
                                                             <span>{location.location}</span>
                                                         </div>)

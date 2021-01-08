@@ -9,6 +9,12 @@ body {
 
 .c-location-table {
   margin-bottom: 0;
+  tbody > tr > td:nth-child(1) {
+      width: 150px;
+  }
+  tbody > tr > td:nth-child(2) {
+    width: 80px;
+  }
 }
 
 .c-vc {

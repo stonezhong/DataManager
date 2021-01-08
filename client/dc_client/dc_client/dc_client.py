@@ -285,7 +285,7 @@ class DataCatalogClient(object):
         name: str
             The data repo name.
         """
-        url = "{}/DataRepo/".format(self.url_base)
+        url = "{}/DataRepos/".format(self.url_base)
         params = {
             'name': name,
         }

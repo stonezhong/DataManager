@@ -1,6 +1,7 @@
 import random
 from datetime import datetime
 import json
+import os
 
 from pyspark.sql import SparkSession, SQLContext, Row
 from dc_client import DataCatalogClient
@@ -29,15 +30,13 @@ def main(spark, input_args, sysops={}):
     print("Generate sample trading data")
 
     print_json("input_args", input_args)
-    pipeline_group_context = input_args['pipeline_group_context']
-    dt = pipeline_group_context['dt']
-    print(f"dt = {dt}")
+    application_id = input_args['application_id']
 
     app_args = input_args['app_args']
-    application_id = input_args['application_id']
+    dt = app_args['dt']
+    print(f"dt = {dt}")
+
     action = app_args['action']
-    market = app_args.get('market')
-    data_root = app_args.get("data_root")
 
     ask = sysops.get('ask')
     if input_args.get('dm_offline'):
@@ -52,6 +51,7 @@ def main(spark, input_args, sysops={}):
         loader = Loader(spark, dcc=dcc)
 
     if action == 'import-data':
+        market = app_args['market']
         random.seed()
         Trade = Row("market", "type", "symbol", "amount", "price", "commission")
         trades = []
@@ -67,19 +67,27 @@ def main(spark, input_args, sysops={}):
             trades.append(trade)
 
         df = spark.createDataFrame(trades)
-        file_to_write = f"{data_root}/tradings/{dt}/{market}.parquet"
-        df.write.mode("overwrite").parquet(file_to_write)
-
-        print(f"Writing to {file_to_write}")
+        location_to_write = os.path.join(app_args['base_location'], "tradings", dt, f"{market}.parquet")
+        loader.write_asset_ex(
+            df,
+            {
+                "repo_name": app_args["repo"],
+                "location": location_to_write,
+                "type": "parquet"
+            },
+            mode="overwrite",
+            coalesce=1
+        )
 
         data_time = datetime.strptime(dt, "%Y-%m-%d")
         dsi = loader.register_asset(
             f'tradings:1.0:1:/{dt}_{market}', 'trading',
-            'parquet', file_to_write,
+            'parquet', location_to_write,
             df.count(), df.schema.jsonValue(),
             data_time = data_time,
             application_id = application_id,
             application_args = json.dumps(app_args),
+            repo_name = app_args['repo']
         )
         return {
             'dsi_path': f'tradings:1.0:1:/{dt}_{market}:{dsi["revision"]}'

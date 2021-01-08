@@ -9,6 +9,7 @@ import * as Icon from 'react-bootstrap-icons'
 import {DataTable} from '/components/generic/datatable/main.jsx'
 import {SimpleDialogBox} from '/components/generic/dialogbox/simple.jsx'
 import {AssetLink, AssetLinkFromDSIPath} from '/components/business/dataset/utils.jsx'
+import {DataRepoLink} from '/components/business/datarepo'
 
 import './dataset.scss'
 
@@ -35,6 +36,11 @@ export class DatasetInstanceTable extends React.Component {
                 {dataset_instance.locations.map((location)=>{
                     return (
                         <tr key={location.offset}>
+                            <td><small><code>
+                                {
+                                    location.repo && <DataRepoLink datarepo={location.repo} />
+                                }
+                            </code></small></td>
                             <td><small><code>{location.type}</code></small></td>
                             <td><small><code>{location.location}</code></small></td>
                             <td><small><code>{location.size}</code></small></td>
