@@ -14,7 +14,7 @@ router.register('PipelineInstances', views.PipelineInstanceViewSet)
 router.register('Applications', views.ApplicationViewSet)
 router.register('Timers', views.TimerViewSet)
 router.register('ScheduledEvents', views.ScheduledEventViewSet)
-router.register('DataRepo', views.DataRepoViewSet)
+router.register('DataRepos', views.DataRepoViewSet)
 
 urlpatterns = [
     url(r'', include(router.urls)),

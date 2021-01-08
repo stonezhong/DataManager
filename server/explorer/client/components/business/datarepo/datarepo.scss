@@ -1,0 +1,37 @@
+div.datarepo-table {
+    width: 1000px;
+
+    & > div {
+        height: 680px;
+        overflow-y: auto;
+
+        & > table {
+            & > thead {
+                & > tr {
+                    & > th[data-role='name'] {
+                        width: 250px;
+                    }
+                    & > th[data-role='type'] {
+                        width: 120px;
+                        text-align: center;
+                    }
+                }
+            }
+            & > tbody {
+                & > tr {
+                    & > td {
+                        height: 40px;
+                        vertical-align: middle;
+                    }
+                    & > td[data-role='type'] {
+                        text-align: center;
+                    }
+                    & > td[data-role='context'] {
+                        font-family: monospace;
+                    }
+                }
+            }
+        }
+    }
+}
+

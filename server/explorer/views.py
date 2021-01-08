@@ -338,6 +338,24 @@ def application(request):
         }
     )
 
+def datarepos(request):
+    if not request.user.is_superuser:
+        return HttpResponseNotFound('<h1>No Page Here</h1>')
+
+    return render(
+        request,
+        'common_page.html',
+        context={
+            'user': request.user,
+            'sub_title': "Data Repositories",
+            'scripts':[
+                '/static/js-bundle/datarepos.js'
+            ],
+            'nav_item_role': 'datarepos',
+            'app_config': get_app_config()
+        }
+    )
+
 # this is required by Let's Encrypt to get free SSL cert.
 # def letsencrypt(request):
 #     return HttpResponse("mlhSihbAVhD1xOT4H8RsFj5cVLepXtkG3Xc82plLLZQ.sywOEQ5dSXlmO1xrkMppiEh2IRAjylAg7cjNfrLejj0")

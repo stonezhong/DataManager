@@ -164,3 +164,43 @@ export function retirePipeline(csrf_token, pipeline_id) {
         body: JSON.stringify({retired: true})
     }).then(handle_json_response)
 }
+
+export function saveDataRepo(csrf_token, mode, datarepo) {
+    // csrf_token: as name indicates
+    // if mode is "new", we want to create a new data repo
+    // if mode is "edit", we want patch an existing data repo
+    if (mode === "new") {
+        // for new application, you do not need to pass "retired" -- it is false
+        const to_post = {
+            name            : datarepo.name,
+            description     : datarepo.description,
+            type            : datarepo.type,
+            context         : datarepo.context,
+        }
+
+        return fetch('/api/DataRepos/', {
+            method: 'post',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrf_token,
+            },
+            body: JSON.stringify(to_post)
+        }).then(handle_json_response)
+    } else if (mode === "edit") {
+        // change repo name is not allowed
+        const to_patch = {
+            description     : datarepo.description,
+            type            : datarepo.type,
+            context         : datarepo.context,
+        }
+        return fetch(`/api/DataRepos/${datarepo.id}/`, {
+            method: 'post',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrf_token,
+                'X-Data-Manager-Use-Method': 'PATCH',
+            },
+            body: JSON.stringify(to_patch)
+        }).then(handle_json_response)
+    }
+}

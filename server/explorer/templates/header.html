@@ -35,6 +35,11 @@
             <li class="nav-item" role="schedulers">
                 <a class="nav-link" href="/explorer/schedulers">Schedulers</a>
             </li>
+            {% if user.is_superuser %}
+            <li class="nav-item" role="datarepos">
+                <a class="nav-link" href="/explorer/datarepos">Data Reposities</a>
+            </li>
+            {% endif %}
             <li class="nav-item" role="document">
                 <a class="nav-link" href="https://github.com/stonezhong/DataManager/wiki/Document-one-page" target="_blank">Document</a>
             </li>

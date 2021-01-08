@@ -13,6 +13,7 @@ urlpatterns = [
     path('application', views.application, name='application'),
     path('asset', views.dataset_instance, name='asset'),
     path('schedulers', views.schedulers, name='schedulers'),
+    path('datarepos', views.datarepos, name='datarepos'),
     path('logout', views.logout, name='logout'),
     path('login', views.login, name='login'),
     path('test', views.test, name='test'), # for testing UI components
