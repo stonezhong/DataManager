@@ -12,6 +12,8 @@ from django.db import transaction
 from django.urls import reverse
 from django.http import HttpResponse
 
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
+
 from main.models import Dataset, Pipeline, PipelineGroup, PipelineInstance, \
     Application, DatasetInstance, DataRepo
 from main.serializers import PipelineSerializer, DatasetSerializer, \
@@ -354,29 +356,31 @@ def datarepos(request):
     )
 
 def datarepo(request):
-    datarepo_id = request.GET['id']
+    try:
+        datarepo_id = request.GET['id']
+        datarepo = DataRepo.objects.get(pk=datarepo_id)
+        s = DataRepoSerializer(datarepo, many=False, context={"request": request})
 
-    datarepo = DataRepo.objects.get(pk=datarepo_id)
-    s = DataRepoSerializer(datarepo, many=False, context={"request": request})
-
-    app_context = {
-        'datarepo': s.data
-    }
-
-    return render(
-        request,
-        'common_page.html',
-        context={
-            'user': request.user,
-            'sub_title': "Data Repositorie",
-            'scripts':[
-                '/static/js-bundle/datarepo.js'
-            ],
-            'nav_item_role': 'datarepos',
-            'app_config': get_app_config(),
-            'app_context': JSONRenderer().render(app_context).decode("utf-8"),
+        app_context = {
+            'datarepo': s.data
         }
-    )
+
+        return render(
+            request,
+            'common_page.html',
+            context={
+                'user': request.user,
+                'sub_title': "Data Repositorie",
+                'scripts':[
+                    '/static/js-bundle/datarepo.js'
+                ],
+                'nav_item_role': 'datarepos',
+                'app_config': get_app_config(),
+                'app_context': JSONRenderer().render(app_context).decode("utf-8"),
+            }
+        )
+    except (ObjectDoesNotExist, ValidationError, ):
+        return HttpResponseNotFound("Page not found")
 
 # this is required by Let's Encrypt to get free SSL cert.
 # def letsencrypt(request):

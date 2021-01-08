@@ -21,6 +21,23 @@ import "./datarepo.scss"
 
 const _ = require("lodash");
 
+const REPO_TYPE_BY_ID = {
+    1: "Local File System",
+    2: "Hadoop File System",
+    3: "JDBC Data Source"
+}
+
+function mask_password_for_repo_context(context) {
+    const obj_context = JSON.parse(context);
+    if ('password' in obj_context) {
+        obj_context.password = '****';
+    }
+    return JSON.stringify(obj_context, null, 2);
+}
+
+function get_repo_context_for_display(context) {
+    return <pre>{ mask_password_for_repo_context(context) }</pre>
+}
 
 /*********************************************************************************
  * Purpose: Show list of data repos
@@ -40,10 +57,16 @@ export class DataRepoTable extends React.Component {
         return <DataRepoLink datarepo={datarepo} />;
     };
 
+    render_type = datarepo => {
+        return REPO_TYPE_BY_ID[datarepo.type];
+    };
+
+    render_context = datarepo => get_repo_context_for_display(datarepo.context);
+
     columns = {
-        name:               {display: "Name", render_data: this.render_name},
-        type:               {display: "Type"},
-        context:            {display: "Details"},
+        name:               {display: "Name",       render_data: this.render_name},
+        type:               {display: "Type",       render_data: this.render_type},
+        context:            {display: "Details",    render_data: this.render_context},
     };
 
     refresh = () => this.theDataTableRef.current.refresh();
@@ -107,10 +130,13 @@ export class DataRepoEditor extends React.Component {
 
     openDialog = (mode, datarepo) => {
         if (mode === "view" || mode === "edit") {
+            const datarepo2 = _.cloneDeep(datarepo);
+            datarepo2.context = mask_password_for_repo_context(datarepo2.context);
+
             this.setState({
                 show: true,
                 mode: mode,
-                datarepo: datarepo
+                datarepo: datarepo2
             })
         } else if (mode === "new") {
             this.setState({
@@ -197,9 +223,11 @@ export class DataRepoEditor extends React.Component {
                                                     )
                                                 }}
                                             >
-                                                <option key="lfs" value="1">Local File System</option>
-                                                <option key="hdfs" value="2">Hadoop File System</option>
-                                                <option key="jdbc" value="3">JDBC Data Source</option>
+                                                {
+                                                    Object.keys(REPO_TYPE_BY_ID).map(
+                                                        i => <option key={REPO_TYPE_BY_ID[i]} value={i}>{REPO_TYPE_BY_ID[i]}</option>
+                                                    )
+                                                }
                                             </Form.Control>
                                         </Col>
                                     </Form.Group>
@@ -304,12 +332,14 @@ export class DataRepoViewer extends React.Component {
                                         </tr>
                                         <tr>
                                             <td>Type</td>
-                                            <td>{this.props.datarepo.type}</td>
+                                            <td>{REPO_TYPE_BY_ID[this.props.datarepo.type]}</td>
                                         </tr>
                                         <tr>
                                             <td>Details</td>
                                             <td>
-                                                <pre>{this.props.datarepo.context}</pre>
+                                                {
+                                                    get_repo_context_for_display(this.props.datarepo.context)
+                                                }
                                             </td>
                                         </tr>
                                     </tbody>
