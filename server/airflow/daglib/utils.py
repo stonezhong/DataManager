@@ -157,6 +157,8 @@ class ExecuteTask:
             return True, self.handle_register_view(ask['payload'])
         if ask.get("topic") == "get_asset":
             return True, self.handle_get_asset(ask['payload'])
+        if ask.get("topic") == "get_repo":
+            return True, self.handle_get_repo(ask['payload'])
         return False, None
 
 
@@ -220,6 +222,7 @@ class ExecuteTask:
 
         loader = Loader(None, dcc=dcc)
 
+        repo_name           = asset_to_register["repo_name"]
         asset_path          = asset_to_register["asset_path"]
         team                = asset_to_register["team"]
         file_type           = asset_to_register["file_type"]
@@ -237,9 +240,18 @@ class ExecuteTask:
             data_time = data_time,
             src_asset_paths = src_asset_paths,
             application_id = application_id,
-            application_args = application_args
+            application_args = application_args,
+            repo_name = repo_name
         )
 
+    def handle_get_repo(self, get_repo):
+        dc_config = load_dm_config("dc_config.json")
+        dcc = DataCatalogClient(
+            url_base = dc_config['url_base'],
+            auth = (dc_config['username'], dc_config['password'])
+        )
+        repo_name           = get_repo["repo_name"]
+        return dcc.get_data_repo(repo_name)
 
     def __call__(self, ds, **kwargs):
         # task_ctx is json stored in context field in pipeline model
