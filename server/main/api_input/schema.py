@@ -89,7 +89,7 @@ models = {
                     "type": "object",
                     "properties": {
                         "repo_name": {
-                            "type": "string"
+                            "type": ["string", "null"]
                         },
                         "type": {
                             "type": "string"

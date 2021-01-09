@@ -2,3 +2,7 @@ spark-etl==0.0.38
 
 # add pyspark if you need to run locally
 # pyspark==3.0.1
+
+# if you deploy to oci, you need following packages
+# oci
+# oci-core

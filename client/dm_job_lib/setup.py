@@ -11,7 +11,7 @@ with open(os.path.join(HERE, "README.md"), "r") as f:
 # This call to setup() does all the work
 setup(
     name="dm-job-lib",
-    version="0.0.33",
+    version="0.0.34",
     description="Data Manager Job Library",
     long_description=README,
     long_description_content_type="text/markdown",

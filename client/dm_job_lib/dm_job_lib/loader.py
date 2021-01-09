@@ -215,6 +215,7 @@ class Loader:
                     "asset_path": asset_path,
                     "team": team,
                     "file_type": file_type,
+                    "repo_name": repo_name,
                     "location": location,
                     "row_count": row_count,
                     "schema": schema,
