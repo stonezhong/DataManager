@@ -149,110 +149,6 @@ class ExecuteTask:
         self.task_ctx = task_ctx
         self.team = team
 
-
-    def handle_dm(self, ask):
-        if ask.get("topic") == "register_asset":
-            return True, self.handle_register_asset(ask['payload'])
-        if ask.get("topic") == "register_view":
-            return True, self.handle_register_view(ask['payload'])
-        if ask.get("topic") == "get_asset":
-            return True, self.handle_get_asset(ask['payload'])
-        if ask.get("topic") == "get_repo":
-            return True, self.handle_get_repo(ask['payload'])
-        return False, None
-
-
-    def handle_get_asset(self, asset_to_get):
-        dc_config = load_dm_config("dc_config.json")
-
-        dcc = DataCatalogClient(
-            url_base = dc_config['url_base'],
-            auth = (dc_config['username'], dc_config['password'])
-        )
-        dataset_name    = asset_to_get['dataset_name']
-        major_version   = asset_to_get['major_version']
-        minor_version   = asset_to_get['minor_version']
-        path            = asset_to_get['path']
-        revision        = asset_to_get.get('revision')
-
-        di = dcc.get_dataset_instance(
-            dataset_name, major_version, int(minor_version), path, revision=revision
-        )
-        return di
-
-
-    def handle_register_view(self, view_to_register):
-        dc_config = load_dm_config("dc_config.json")
-
-        dcc = DataCatalogClient(
-            url_base = dc_config['url_base'],
-            auth = (dc_config['username'], dc_config['password'])
-        )
-
-        loader = Loader(None, dcc=dcc)
-
-        asset_path          = view_to_register["asset_path"]
-        team                = view_to_register["team"]
-        loader_name         = view_to_register["loader_name"]
-        loader_args         = view_to_register["loader_args"]
-        row_count           = view_to_register["row_count"]
-        schema              = view_to_register["schema"]
-        data_time           = view_to_register.get("data_time")
-        data_time           = datetime.strptime(data_time, "%Y-%m-%d %H:%M:%S")
-        src_asset_paths     = view_to_register["src_asset_paths"]
-        application_id      = view_to_register["application_id"]
-        application_args    = view_to_register["application_args"]
-
-        return loader.register_view(
-            asset_path, team, loader_name, loader_args, row_count, schema, 
-            data_time = data_time,
-            src_asset_paths = src_asset_paths,
-            application_id = application_id,
-            application_args = application_args
-        )
-
-
-    def handle_register_asset(self, asset_to_register):
-        dc_config = load_dm_config("dc_config.json")
-
-        dcc = DataCatalogClient(
-            url_base = dc_config['url_base'],
-            auth = (dc_config['username'], dc_config['password'])
-        )
-
-        loader = Loader(None, dcc=dcc)
-
-        repo_name           = asset_to_register["repo_name"]
-        asset_path          = asset_to_register["asset_path"]
-        team                = asset_to_register["team"]
-        file_type           = asset_to_register["file_type"]
-        location            = asset_to_register["location"]
-        row_count           = asset_to_register["row_count"]
-        schema              = asset_to_register["schema"]
-        data_time           = asset_to_register.get("data_time")
-        data_time           = datetime.strptime(data_time, "%Y-%m-%d %H:%M:%S")
-        src_asset_paths     = asset_to_register.get("src_asset_paths", [])
-        application_id      = asset_to_register.get("application_id")
-        application_args    = asset_to_register.get("application_args")
-
-        return loader.register_asset(
-            asset_path, team, file_type, location, row_count, schema, 
-            data_time = data_time,
-            src_asset_paths = src_asset_paths,
-            application_id = application_id,
-            application_args = application_args,
-            repo_name = repo_name
-        )
-
-    def handle_get_repo(self, get_repo):
-        dc_config = load_dm_config("dc_config.json")
-        dcc = DataCatalogClient(
-            url_base = dc_config['url_base'],
-            auth = (dc_config['username'], dc_config['password'])
-        )
-        repo_name           = get_repo["repo_name"]
-        return dcc.get_data_repo(repo_name)
-
     def __call__(self, ds, **kwargs):
         # task_ctx is json stored in context field in pipeline model
         task = kwargs['task']
@@ -341,7 +237,12 @@ class ExecuteTask:
             options.update(task_spark_options)
 
         if dm_offline:
-            handlers = [lambda ask: self.handle_dm(ask)]
+            dcc = DataCatalogClient(
+                url_base = dc_config['url_base'],
+                auth = (dc_config['username'], dc_config['password'])
+            )
+            loader = Loader(None, dcc=dcc)
+            handlers = [ loader.get_answer_handler() ]
         else:
             handlers = [ ]
         ret = job_submitter.run(appLocation, options=options, args=args, handlers=handlers)

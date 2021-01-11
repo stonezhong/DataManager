@@ -3,6 +3,11 @@ from datetime import datetime
 
 from dc_client import DataCatalogClient
 
+ASK_TOPIC_REGISTER_ASSET  = "register_asset"
+ASK_TOPIC_REGISTER_VIEW   = "register_view"
+ASK_TOPIC_GET_ASSET       = "get_asset"
+ASK_TOPIC_GET_DATA_REPO   = "get_data_repo"
+
 class Loader:
     # You need to either provide dcc, so we will talk to DM REST API
     # Or if DM is not reachable, you can pass the ask function
@@ -39,7 +44,19 @@ class Loader:
         # dcc: data catalog client
         df, _ = self.load_asset_ex(dsi_path)
         return df
-
+    
+    def ask_question(self, topic, payload):
+        answer = self.ask({
+            "topic": topic,
+            "payload": payload
+        })
+        status = answer.get("status")
+        if status != "ok":
+            exception_name = answer.get("exception_name")
+            exception_msg = answer.get("exception_msg")
+            raise Exception("Ask is not answered, status: {status}, exception_name: {exception_name}, exception_msg: {exception_msg}")
+        return answer['reply']
+    
     def load_asset_ex(self, dsi_path):
         # same as load_asset, but it return the asset path with revision as well
         # dcc: data catalog client
@@ -49,16 +66,16 @@ class Loader:
                 dataset_name, major_version, int(minor_version), path, revision=revision
             )
         else:
-            di = self.ask({
-                "topic": "get_asset",
-                "payload": {
+            di = self.ask_question(
+                ASK_TOPIC_GET_ASSET,
+                {
                     "dataset_name": dataset_name,
                     "major_version": major_version,
                     "minor_version": int(minor_version),
                     "path": path,
                     "revision": revision
                 }
-            })
+            )
 
         if di is None:
             raise Exception(f"data with path {dsi_path} does not exist!")
@@ -155,12 +172,12 @@ class Loader:
         if self.dcc:
             repo = self.dcc.get_data_repo(repo_name)
         else:
-            repo = self.ask({
-                "topic": "get_repo",
-                "payload": {
+            repo = self.ask_question(
+                ASK_TOPIC_GET_DATA_REPO,
+                {
                     "repo_name": repo_name,
                 }
-            })
+            )
 
         if repo['type'] == 1 or repo['type'] == 2:
             repo_context = json.loads(repo['context'])
@@ -209,9 +226,9 @@ class Loader:
             effective_data_time = data_time
 
         if self.dcc is None:
-            return self.ask({
-                "topic": "register_asset",
-                "payload": {
+            return self.ask_question(
+                ASK_TOPIC_REGISTER_ASSET,
+                {
                     "asset_path": asset_path,
                     "team": team,
                     "file_type": file_type,
@@ -224,7 +241,7 @@ class Loader:
                     "application_id": application_id,
                     "application_args": application_args,
                 }
-            })
+            )
 
         dataset_name, major_version, minor_version, path = asset_path.split(":")
         ds = self.dcc.get_dataset(dataset_name, major_version, int(minor_version))
@@ -261,9 +278,9 @@ class Loader:
             effective_data_time = data_time
 
         if self.dcc is None:
-            return self.ask({
-                "topic": "register_view",
-                "payload": {
+            return self.ask_question(
+                ASK_TOPIC_REGISTER_VIEW,
+                {
                     "asset_path": asset_path,
                     "team": team,
                     "loader_name": loader_name,
@@ -275,7 +292,7 @@ class Loader:
                     "application_id": application_id,
                     "application_args": application_args,
                 }
-            })
+            )
 
         dataset_name, major_version, minor_version, path = asset_path.split(":")
         ds = self.dcc.get_dataset(dataset_name, major_version, int(minor_version))
@@ -301,3 +318,84 @@ class Loader:
             ""  # no sample data for now
         )
         return dsi
+    
+    def get_answer_handler(self):
+        return AskHandler(self)
+    
+
+class AskHandler:
+    def __init__(self, loader):
+        self.loader = loader
+
+    def handle_register_asset(self, asset_to_register):
+        repo_name           = asset_to_register["repo_name"]
+        asset_path          = asset_to_register["asset_path"]
+        team                = asset_to_register["team"]
+        file_type           = asset_to_register["file_type"]
+        location            = asset_to_register["location"]
+        row_count           = asset_to_register["row_count"]
+        schema              = asset_to_register["schema"]
+        data_time           = asset_to_register.get("data_time")
+        data_time           = datetime.strptime(data_time, "%Y-%m-%d %H:%M:%S")
+        src_asset_paths     = asset_to_register.get("src_asset_paths", [])
+        application_id      = asset_to_register.get("application_id")
+        application_args    = asset_to_register.get("application_args")
+
+        return self.loader.register_asset(
+            asset_path, team, file_type, location, row_count, schema, 
+            data_time = data_time,
+            src_asset_paths = src_asset_paths,
+            application_id = application_id,
+            application_args = application_args,
+            repo_name = repo_name
+        )
+
+    def handle_register_view(self, view_to_register):
+        asset_path          = view_to_register["asset_path"]
+        team                = view_to_register["team"]
+        loader_name         = view_to_register["loader_name"]
+        loader_args         = view_to_register["loader_args"]
+        row_count           = view_to_register["row_count"]
+        schema              = view_to_register["schema"]
+        data_time           = view_to_register.get("data_time")
+        data_time           = datetime.strptime(data_time, "%Y-%m-%d %H:%M:%S")
+        src_asset_paths     = view_to_register["src_asset_paths"]
+        application_id      = view_to_register["application_id"]
+        application_args    = view_to_register["application_args"]
+
+        return self.loader.register_view(
+            asset_path, team, loader_name, loader_args, row_count, schema, 
+            data_time = data_time,
+            src_asset_paths = src_asset_paths,
+            application_id = application_id,
+            application_args = application_args
+        )
+
+    def handle_get_asset(self, asset_to_get):
+        dataset_name    = asset_to_get['dataset_name']
+        major_version   = asset_to_get['major_version']
+        minor_version   = asset_to_get['minor_version']
+        path            = asset_to_get['path']
+        revision        = asset_to_get.get('revision')
+
+        di = self.loader.dcc.get_dataset_instance(
+            dataset_name, major_version, int(minor_version), path, revision=revision
+        )
+        return di
+
+
+    def handle_get_repo(self, get_repo):
+        repo_name           = get_repo["repo_name"]
+        return self.loader.dcc.get_data_repo(repo_name)
+
+
+    def __call__(self, ask):
+        if ask.get("topic") == ASK_TOPIC_REGISTER_ASSET:
+            return True, self.handle_register_asset(ask['payload'])
+        if ask.get("topic") == ASK_TOPIC_REGISTER_VIEW:
+            return True, self.handle_register_view(ask['payload'])
+        if ask.get("topic") == ASK_TOPIC_GET_ASSET:
+            return True, self.handle_get_asset(ask['payload'])
+        if ask.get("topic") == ASK_TOPIC_GET_DATA_REPO:
+            return True, self.handle_get_repo(ask['payload'])
+        return False, None
