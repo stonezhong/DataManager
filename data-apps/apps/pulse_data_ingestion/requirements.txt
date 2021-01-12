@@ -1,7 +1,1 @@
 simplejson==3.17.0
-oci==2.14.3
-oci-core==0.0.6
-dm-job-lib==0.0.31
-dc-client==0.0.13
-requests==2.24.0
-Jinja2==2.11.2

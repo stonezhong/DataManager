@@ -1,4 +1,4 @@
-spark-etl==0.0.39
+spark-etl==0.0.40
 
 # add pyspark if you need to run locally
 # pyspark==3.0.1
