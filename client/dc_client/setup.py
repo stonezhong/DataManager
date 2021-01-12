@@ -1,5 +1,5 @@
 import os
-from setuptools import setup
+from setuptools import setup, find_packages
 
 # The directory containing this file
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -23,6 +23,7 @@ setup(
         "License :: OSI Approved :: MIT License",
         "Programming Language :: Python :: 3",
     ],
-    packages=["dc_client"],
+    package_dir = {'': 'src'},
+    packages=find_packages(where='src'),
     install_requires=["requests"],
 )
