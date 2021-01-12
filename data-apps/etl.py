@@ -87,6 +87,9 @@ def get_config(args):
 # build an application
 def do_build(args):
     print(f"Building application: {args.app_name}")
+
+    config = get_config(args)
+
     app_dir     = os.path.join(BASE_DIR, "apps", args.app_name)
     build_dir   = os.path.join(BASE_DIR, ".builds", args.app_name)
 
@@ -96,7 +99,7 @@ def do_build(args):
         os.remove(f)
 
     app = Application(app_dir)
-    app.build(build_dir)
+    app.build(build_dir, default_libs=config.get("default_libs", []))
     print("Build application: done!")
 
 
