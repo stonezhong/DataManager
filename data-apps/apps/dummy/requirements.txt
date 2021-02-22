@@ -1,3 +1,0 @@
-Jinja2==2.11.2
-dc-client==0.0.13
-dm-job-lib==0.0.15

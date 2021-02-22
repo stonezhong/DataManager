@@ -61,13 +61,15 @@ def main():
         "-p", "--app-name", help="Application name"
     )
     parser.add_argument(
-        "-c", "--config_filename", help="Config filename"
-    )
-    parser.add_argument(
         "--version", help="Application version"
     )
     parser.add_argument(
         "--run-args", help="Arguments for run, a filename to a json"
+    )
+    parser.add_argument(
+        "--cli-mode",
+        action="store_true",
+        help="Using cli mode?"
     )
     args = parser.parse_args()
     if args.action == "build":
@@ -84,6 +86,25 @@ def get_config(args):
     with open(config_filename, "r") as f:
         return json.load(f)
 
+def get_common_requirements():
+    common_req_filename = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        "apps",
+        "common_requirements.txt"
+    )
+    if not os.path.isfile(common_req_filename):
+        return []
+
+    packages = []
+    with open(common_req_filename, "rt") as f:
+        for line in f:
+            if line.startswith("#"):
+                continue
+            l = line.strip()
+            if len(l) > 0:
+                packages.append(l)
+    return packages
+
 # build an application
 def do_build(args):
     print(f"Building application: {args.app_name}")
@@ -99,7 +120,7 @@ def do_build(args):
         os.remove(f)
 
     app = Application(app_dir)
-    app.build(build_dir, default_libs=config.get("default_libs", []))
+    app.build(build_dir, default_libs=get_common_requirements())
     print("Build application: done!")
 
 
@@ -138,7 +159,8 @@ def do_run(args):
     ret = job_submitter.run(
         f"{deploy_dir}/{version}",
         options=config.get("job_run_options", {}),
-        args=run_args_value
+        args=run_args_value,
+        cli_mode=args.cli_mode
     )
     print("Run application: done!")
     print(f"return = {ret}")
