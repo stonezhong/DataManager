@@ -67,3 +67,9 @@ pip install -r requirements.txt
 # generate top 3 stocks by trading volumn, write to dataset top_picks
 ./etl.py -a run -p execute_sql --run-args tests/execute_sql.json
 ```
+
+# spark_cli
+```
+This application allows you to interact with spark job interactively.
+./etl.py -a run -p spark_cli --cli-mode
+```

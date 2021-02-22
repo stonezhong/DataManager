@@ -1,0 +1,9 @@
+spark-etl==0.0.82
+dm-job-lib==0.0.36
+Jinja2==2.11.2
+
+# required packages if you are using Oracle OCI
+# oci-core==0.0.13
+
+# required packages if you are using AWS EMR
+# boto3==1.17.11
