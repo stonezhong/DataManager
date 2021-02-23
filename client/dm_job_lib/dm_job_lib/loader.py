@@ -69,9 +69,9 @@ class Loader:
                     table_path = base_url + location['location']
 
                 if table_type == "json":
-                    df = self.spark.read.json(table_path)
+                    df = spark.read.json(table_path)
                 elif table_type == "parquet":
-                    df = self.spark.read.parquet(table_path)
+                    df = spark.read.parquet(table_path)
                 else:
                     raise Exception(f"Unrecognized table type: {table_type}")
                 return df, f"{dataset_name}:{major_version}:{minor_version}:{path}:{di['revision']}"
@@ -207,8 +207,8 @@ class Loader:
         self.dcc.set_dataset_schema_and_sample_data(
             ds['id'],
             json.dumps(schema),
+            "",  # no sample data for now
             spark=spark
-            ""  # no sample data for now
         )
         return dsi
 
@@ -244,8 +244,8 @@ class Loader:
         self.dcc.set_dataset_schema_and_sample_data(
             ds['id'],
             json.dumps(schema),
+            "",   # no sample data for now
             spark=spark
-            ""  # no sample data for now
         )
         return dsi
 

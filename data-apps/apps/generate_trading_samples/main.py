@@ -4,7 +4,7 @@ import json
 import os
 
 from pyspark.sql import SparkSession, SQLContext, Row
-from dc_client import DataCatalogClient
+from dc_client import DataCatalogClient, DataCatalogClientProxy
 
 from dm_job_lib import Loader, print_json
 
@@ -38,17 +38,16 @@ def main(spark, input_args, sysops={}):
 
     action = app_args['action']
 
-    ask = sysops.get('ask')
     if input_args.get('dm_offline'):
-        ask.initialize(spark)
-        loader = Loader(spark, ask=ask)
+        dcc = DataCatalogClientProxy(sysops['channel'])
     else:
         dc_config = input_args['dc_config']
         dcc = DataCatalogClient(
             url_base = dc_config['url_base'],
             auth = (dc_config['username'], dc_config['password'])
         )
-        loader = Loader(spark, dcc=dcc)
+
+    loader = Loader(dcc=dcc)
 
     if action == 'import-data':
         market = app_args['market']
@@ -69,6 +68,7 @@ def main(spark, input_args, sysops={}):
         df = spark.createDataFrame(trades)
         location_to_write = os.path.join(app_args['base_location'], "tradings", dt, f"{market}.parquet")
         loader.write_asset_ex(
+            spark,
             df,
             {
                 "repo_name": app_args["repo"],
@@ -76,18 +76,19 @@ def main(spark, input_args, sysops={}):
                 "type": "parquet"
             },
             mode="overwrite",
-            coalesce=1
+            coalesce=1,
         )
 
         data_time = datetime.strptime(dt, "%Y-%m-%d")
         dsi = loader.register_asset(
+            spark,
             f'tradings:1.0:1:/{dt}_{market}', 'trading',
             'parquet', location_to_write,
             df.count(), df.schema.jsonValue(),
             data_time = data_time,
             application_id = application_id,
             application_args = json.dumps(app_args),
-            repo_name = app_args['repo']
+            repo_name = app_args['repo'],
         )
         return {
             'dsi_path': f'tradings:1.0:1:/{dt}_{market}:{dsi["revision"]}'
@@ -98,8 +99,9 @@ def main(spark, input_args, sysops={}):
         view_loader_args = view_loader['args']
 
         data_time = datetime.strptime(dt, "%Y-%m-%d")
-        df = loader.load_view(view_loader_name, view_loader_args)
+        df = loader.load_view(spark, view_loader_name, view_loader_args)
         loader.register_view(
+            spark,
             f'tradings:1.0:1:/{dt}',
             'trading',
             view_loader_name, view_loader_args,
@@ -107,7 +109,7 @@ def main(spark, input_args, sysops={}):
             data_time = data_time,
             src_asset_paths = view_loader_args['dsi_paths'],
             application_id = application_id,
-            application_args = json.dumps(app_args)
+            application_args = json.dumps(app_args),
         )
 
     print("Done")

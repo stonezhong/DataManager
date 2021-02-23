@@ -1,6 +1,6 @@
 spark-etl==0.0.82
 dc-client==0.0.108
-dm-job-lib==0.0.37
+dm-job-lib==0.0.40
 Jinja2==2.11.2
 
 # required packages if you are using Oracle OCI
