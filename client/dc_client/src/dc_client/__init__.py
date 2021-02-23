@@ -1,1 +1,1 @@
-from .dc_client import DataCatalogClient
+from .dc_client import DataCatalogClient, DataCatalogClientProxy, dc_job_handler
