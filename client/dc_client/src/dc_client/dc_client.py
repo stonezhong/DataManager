@@ -25,7 +25,7 @@ class DataCatalogClient:
         if auth is not None:
             self.session.auth = auth
 
-    def get_dataset(self, name, major_version, minor_version=None):
+    def get_dataset(self, name, major_version, minor_version=None, spark=None):
         """Get dataset.
 
         Parameters
@@ -37,6 +37,7 @@ class DataCatalogClient:
         minor_version: integer
             Optional. If present, we will get dataset that match the minor_version,
             otherwise, we will get the dataset with the highest minor_version.
+        spark: placeholder, to keep the API compatible
         """
 
         url = "{}/Datasets/".format(self.url_base)
@@ -65,7 +66,7 @@ class DataCatalogClient:
 
         return None
 
-    def create_dataset(self, name, major_version, minor_version, description, team):
+    def create_dataset(self, name, major_version, minor_version, description, team, spark=None):
         """Create a dataset.
 
         Parameters
@@ -80,6 +81,7 @@ class DataCatalogClient:
             The description of the dataset. HTML code is allow.
         team: str
             The team who own the dataset.
+        spark: placeholder, to keep the API compatible
         """
         url = "{}/Datasets/".format(self.url_base)
         data = {
@@ -94,7 +96,7 @@ class DataCatalogClient:
         r.raise_for_status()
         return r.json()
 
-    def set_dataset_schema_and_sample_data(self, id, schema, sample_data=""):
+    def set_dataset_schema_and_sample_data(self, id, schema, sample_data="", spark=None):
         """set dataset schema.
 
         If dataset already have schema, and new schema is different it raise exception
@@ -106,6 +108,7 @@ class DataCatalogClient:
             The dataset ID.
         schema: str
             The schema of the dataset
+        spark: placeholder, to keep the API compatible
         """
         url = "{}/Datasets/{}/set_schema_and_sample_data/".format(self.url_base, id, )
         data = {
@@ -118,20 +121,21 @@ class DataCatalogClient:
         return r.json()
 
 
-    def delete_dataset(self, id):
+    def delete_dataset(self, id, spark=None):
         """Data a dataset by id.
 
         Parameters
         ----------
         id: str
             The dataset ID.
+        spark: placeholder, to keep the API compatible
         """
         url = "{}/Datasets/{}".format(self.url_base, id)
         r = self.session.delete(url=url)
         r.raise_for_status()
 
 
-    def get_dataset_instance(self, name, major_version, minor_version, path, revision=None):
+    def get_dataset_instance(self, name, major_version, minor_version, path, revision=None, spark=None):
         """Get a dataset instance.
 
         Parameters
@@ -147,6 +151,7 @@ class DataCatalogClient:
         revision: integer
             Optional. If specified, only dataset matching the revision will be returned.
             Otherwise, the latest revision will be returned.
+        spark: placeholder, to keep the API compatible
         """
         dataset = self.get_dataset(name, major_version, minor_version)
         if dataset is None:
@@ -184,7 +189,7 @@ class DataCatalogClient:
 
     def create_dataset_instance(self, name, major_version, minor_version, path, locations, data_time,
                                 row_count=None, loader=None, src_dsi_paths=[],
-                                application_id = None, application_args = None
+                                application_id = None, application_args = None, spark=None
 
         ):
         """Create a dataset instance.
@@ -217,6 +222,7 @@ class DataCatalogClient:
             if present, it is the application id which produces this asset
         application_args: string, optional
             if present, it is the args passed to this application.
+        spark: placeholder, to keep the API compatible
         """
         dataset = self.get_dataset(name, major_version, minor_version)
         if dataset is None:
@@ -264,19 +270,20 @@ class DataCatalogClient:
         _update_locations(ret['locations'])
         return ret
 
-    def delete_dataset_instance(self, id):
+    def delete_dataset_instance(self, id, spark=None):
         """Delete a dataset instance by id.
 
         Parameters
         ----------
         id: str
             The dataset ID.
+        spark: placeholder, to keep the API compatible
         """
         url = "{}/DatasetInstances/{id}".format(self.url_base)
         r = self.session.delete(url=url)
         r.raise_for_status()
 
-    def get_data_repo(self, name):
+    def get_data_repo(self, name, spark=None):
         """Get a data repo by name.
         Data repo's name is unique
 
@@ -284,6 +291,7 @@ class DataCatalogClient:
         ----------
         name: str
             The data repo name.
+        spark: placeholder, to keep the API compatible
         """
         url = "{}/DataRepos/".format(self.url_base)
         params = {
@@ -306,9 +314,11 @@ class DataCatalogClientProxy:
 
     def _ask(self, spark, content):
         from spark_etl.utils import server_ask_client
+        if spark is None:
+            raise Exception("spark is not set")
         return server_ask_client(spark, self.channel, content, timeout=self.timeout, check_interval=self.check_interval)
 
-    def get_dataset(self, spark, name, major_version, minor_version=None):
+    def get_dataset(self, name, major_version, minor_version=None, spark=None):
         return self._ask(spark, {
             "topic": "dc_client.get_dataset",
             "payload": {
@@ -318,7 +328,7 @@ class DataCatalogClientProxy:
             }
         })
 
-    def create_dataset(self, spark, name, major_version, minor_version, description, team):
+    def create_dataset(self, name, major_version, minor_version, description, team, spark=None):
         return self._ask(spark, {
             "topic": "dc_client.create_dataset",
             "payload": {
@@ -330,7 +340,7 @@ class DataCatalogClientProxy:
             }
         })
 
-    def set_dataset_schema_and_sample_data(self, spark, id, schema, sample_data=""):
+    def set_dataset_schema_and_sample_data(self, id, schema, sample_data="", spark=None):
         return self._ask(spark, {
             "topic": "dc_client.set_dataset_schema_and_sample_data",
             "payload": {
@@ -340,7 +350,7 @@ class DataCatalogClientProxy:
             }
         })
 
-    def delete_dataset(self, spark, id):
+    def delete_dataset(self, id, spark=None):
         return self._ask(spark, {
             "topic": "dc_client.delete_dataset",
             "payload": {
@@ -348,7 +358,7 @@ class DataCatalogClientProxy:
             }
         })
 
-    def get_dataset_instance(self, spark, name, major_version, minor_version, path, revision=None):
+    def get_dataset_instance(self, name, major_version, minor_version, path, revision=None, spark=None):
         return self._ask(spark, {
             "topic": "dc_client.get_dataset_instance",
             "payload": {
@@ -360,9 +370,9 @@ class DataCatalogClientProxy:
             }
         })
 
-    def create_dataset_instance(self, spark, name, major_version, minor_version, path, locations, data_time,
+    def create_dataset_instance(self, name, major_version, minor_version, path, locations, data_time,
                                 row_count=None, loader=None, src_dsi_paths=[],
-                                application_id = None, application_args = None):
+                                application_id = None, application_args = None, spark=None):
         return self._ask(spark, {
             "topic": "dc_client.create_dataset_instance",
             "payload": {
@@ -380,7 +390,7 @@ class DataCatalogClientProxy:
             }
         })
 
-    def delete_dataset_instance(self, spark, id):
+    def delete_dataset_instance(self, id, spark=None):
         return self._ask(spark, {
             "topic": "dc_client.delete_dataset_instance",
             "payload": {
@@ -388,7 +398,7 @@ class DataCatalogClientProxy:
             }
         })
 
-    def get_data_repo(self, spark, name):
+    def get_data_repo(self, name, spark=None):
         return self._ask(spark, {
             "topic": "dc_client.get_data_repo",
             "payload": {
