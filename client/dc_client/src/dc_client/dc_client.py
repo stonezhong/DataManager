@@ -8,7 +8,7 @@ def _update_locations(locations):
         i.pop('offset')
 
 
-class DataCatalogClient(object):
+class DataCatalogClient:
     """Data Catalog Client"""
 
     def __init__(self, url_base, auth=None):
@@ -297,3 +297,143 @@ class DataCatalogClient(object):
             return d['results'][0]
 
         return None
+
+class DataCatalogClientProxy:
+    def __init__(self, channel, timeout=600, check_interval=5):
+        self.channel = channel
+        self.timeout = timeout
+        self.check_interval = check_interval
+
+    def _ask(self, spark, content):
+        from spark_etl.utils import server_ask_client
+        return server_ask_client(spark, self.channel, content, timeout=self.timeout, check_interval=self.check_interval)
+
+    def get_dataset(self, spark, name, major_version, minor_version=None):
+        return self._ask(spark, {
+            "topic": "dc_client.get_dataset",
+            "payload": {
+                "name": name,
+                "major_version": major_version,
+                "minor_version": minor_version
+            }
+        })
+
+    def create_dataset(self, spark, name, major_version, minor_version, description, team):
+        return self._ask(spark, {
+            "topic": "dc_client.create_dataset",
+            "payload": {
+                "name": name,
+                "major_version": major_version,
+                "minor_version": minor_version,
+                "description": description,
+                "team": team
+            }
+        })
+
+    def set_dataset_schema_and_sample_data(self, spark, id, schema, sample_data=""):
+        return self._ask(spark, {
+            "topic": "dc_client.set_dataset_schema_and_sample_data",
+            "payload": {
+                "id": id,
+                "schema": schema,
+                "sample_data": sample_data
+            }
+        })
+
+    def delete_dataset(self, spark, id):
+        return self._ask(spark, {
+            "topic": "dc_client.delete_dataset",
+            "payload": {
+                "id": id,
+            }
+        })
+
+    def get_dataset_instance(self, spark, name, major_version, minor_version, path, revision=None):
+        return self._ask(spark, {
+            "topic": "dc_client.get_dataset_instance",
+            "payload": {
+                "name": name,
+                "major_version": major_version,
+                "minor_version": minor_version,
+                "path": path,
+                "revision": revision,
+            }
+        })
+
+    def create_dataset_instance(self, spark, name, major_version, minor_version, path, locations, data_time,
+                                row_count=None, loader=None, src_dsi_paths=[],
+                                application_id = None, application_args = None):
+        return self._ask(spark, {
+            "topic": "dc_client.create_dataset_instance",
+            "payload": {
+                "name": name,
+                "major_version": major_version,
+                "minor_version": minor_version,
+                "path": path,
+                "locations": locations,
+                "data_time": data_time.strftime('%Y-%m-%d %H:%M:%S'),
+                "row_count": row_count,
+                "loader": loader,
+                "src_dsi_paths": src_dsi_paths,
+                "application_id": application_id,
+                "application_args": application_args,
+            }
+        })
+
+    def delete_dataset_instance(self, spark, id):
+        return self._ask(spark, {
+            "topic": "dc_client.delete_dataset_instance",
+            "payload": {
+                "id": id,
+            }
+        })
+
+    def get_data_repo(self, spark, name):
+        return self._ask(spark, {
+            "topic": "dc_client.get_data_repo",
+            "payload": {
+                "name": name,
+            }
+        })
+
+def json_2_str(obj):
+    return json.dumps(obj, indent=4, separators=(',', ': '))
+
+
+def dc_job_handler(content, dcc):
+    topic = content['topic']
+    payload = content['payload']
+
+    print("dc_job_handler: ask >>>")
+    print(json_2_str(content))
+    print("<<<")
+
+    resp = (False, None, )
+    if topic == "dc_client.get_dataset":
+        resp = (True, dcc.get_dataset(**payload), )
+    elif topic == "dc_client.create_dataset":
+        resp = (True, dcc.create_dataset(**payload), )
+    elif topic == "dc_client.set_dataset_schema_and_sample_data":
+        resp = (True, dcc.set_dataset_schema_and_sample_data(**payload), )
+    elif topic == "dc_client.delete_dataset":
+        resp = (True, dcc.delete_dataset(**payload), )
+    elif topic == "dc_client.get_dataset_instance":
+        resp = (True, dcc.get_dataset_instance(**payload), )
+    elif topic == "dc_client.create_dataset_instance":
+        argv = dict(**payload)
+        argv['data_time'] = datetime.strptime(payload["data_time"], "%Y-%m-%d %H:%M:%S")
+        resp = (True, client.create_dataset_instance(**argv), )
+    elif topic == "dc_client.delete_dataset_instance":
+        resp = (True, dcc.delete_dataset_instance(**payload), )
+    elif topic == "dc_client.get_data_repo":
+        resp = (True, dcc.get_data_repo(**payload), )
+
+
+    print("dc_job_handler: answer >>>")
+    if resp[0]:
+        print(json_2_str(resp[1]))
+    else:
+        print("skipped")
+    print("<<<")
+
+    return resp

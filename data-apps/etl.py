@@ -8,6 +8,8 @@ import os
 import importlib
 
 from spark_etl import Application
+from dc_client import DataCatalogClient, dc_job_handler
+
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 APP_NAME = BASE_DIR.split("/")[-2]
@@ -71,6 +73,11 @@ def main():
         action="store_true",
         help="Using cli mode?"
     )
+    parser.add_argument(
+        "--dcc-proxy",
+        action="store_true",
+        help="Proxy DataCatalogClient?"
+    )
     args = parser.parse_args()
     if args.action == "build":
         do_build(args)
@@ -81,8 +88,13 @@ def main():
 
     return
 
-def get_config(args):
+def get_config():
     config_filename = os.path.join(ENV_HOME, "configs", "dmapps", "config.json")
+    with open(config_filename, "r") as f:
+        return json.load(f)
+
+def get_dm_config(name):
+    config_filename = os.path.join(ENV_HOME, "configs", "dm", name)
     with open(config_filename, "r") as f:
         return json.load(f)
 
@@ -109,7 +121,7 @@ def get_common_requirements():
 def do_build(args):
     print(f"Building application: {args.app_name}")
 
-    config = get_config(args)
+    config = get_config()
 
     app_dir     = os.path.join(BASE_DIR, "apps", args.app_name)
     build_dir   = os.path.join(BASE_DIR, ".builds", args.app_name)
@@ -127,7 +139,7 @@ def do_build(args):
 def do_deploy(args):
     print(f"Deploy application: {args.app_name}")
 
-    config = get_config(args)
+    config = get_config()
     deployer = get_deployer(config['deployer'])
 
     build_dir   = os.path.join(BASE_DIR, ".builds", args.app_name)
@@ -145,7 +157,7 @@ def do_run(args):
 
     print(f"version = {version}")
 
-    config = get_config(args)
+    config = get_config()
     job_submitter = get_job_submitter(config['job_submitter'])
 
     run_args = args.run_args
@@ -155,12 +167,23 @@ def do_run(args):
         with open(run_args, "r") as f:
             run_args_value = json.load(f)
 
+    if args.dcc_proxy:
+        dc_config = get_dm_config("dc_config.json")
+        dcc = DataCatalogClient(
+            url_base = dc_config['url_base'],
+            auth = (dc_config['username'], dc_config['password'])
+        )
+        handlers = [lambda content: dc_job_handler(content, dcc)]
+    else:
+        handlers = None
+
     deploy_dir  = f"{config['deploy_base']}/{args.app_name}"
     ret = job_submitter.run(
         f"{deploy_dir}/{version}",
         options=config.get("job_run_options", {}),
         args=run_args_value,
-        cli_mode=args.cli_mode
+        cli_mode=args.cli_mode,
+        handlers=handlers
     )
     print("Run application: done!")
     print(f"return = {ret}")

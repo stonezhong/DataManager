@@ -1,4 +1,5 @@
 spark-etl==0.0.82
+dc-client==0.0.107
 dm-job-lib==0.0.36
 Jinja2==2.11.2
 

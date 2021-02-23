@@ -1,4 +1,5 @@
 spark-etl==0.0.82
+dc-client==0.0.107
 
 # add pyspark if you need to run locally
 # pyspark==3.0.1
