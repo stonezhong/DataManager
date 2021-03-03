@@ -12,6 +12,9 @@ from oci_core import os_download, get_delegation_token, dfapp_get_os_client, \
     os_upload, os_delete_objects, os_delete_object_if_exists, os_upload_json, \
     os_rename_objects
 
+from dc_client import DataCatalogClientProxy
+from dm_job_lib import Loader
+
 # list all PULSE objects for a given day, for a given region and ad
 
 PULSE_NAMESPACE = "oci-pulse-prod"
@@ -179,7 +182,7 @@ def get_objects_for_day(dt, source, delegation_token):
 
 
 # Save all pulse rows in JSON object in staging area
-def generate_parquet(spark, dt, loader, source, destination, partition_count, application_id, application_args):
+def generate_parquet(spark, server_channel, dt, source, destination, partition_count, application_id, application_args):
     # spark             - spark session
     # dt                - date, for which day we are processing?
     # source            - specify the source
@@ -203,8 +206,14 @@ def generate_parquet(spark, dt, loader, source, destination, partition_count, ap
     df.coalesce(partition_count).write.partitionBy("_sys_region").parquet(write_location)
     data_time = datetime.combine(dt, datetime.min.time())
     df = spark.read.parquet(write_location)
+
+    # register it to data catalog
+    dcc = DataCatalogClientProxy(server_channel)
+    loader = Loader(dcc=dcc)
+
     dsi = loader.register_asset(
-        f"daily_pulse_problems_raw:1.0:1:/{dt}",
+        spark,
+        f"daily_pulse_{source_bucket}_raw:1.0:1:/{dt}",
         'hwd',
         'parquet', write_location,
         df.count(), df.schema.jsonValue(),

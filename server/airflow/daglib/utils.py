@@ -11,7 +11,7 @@ from jinja2 import Template
 import MySQLdb
 import pytz
 
-from dc_client import DataCatalogClient
+from dc_client import DataCatalogClient, dc_job_handler
 from dm_job_lib import Loader
 
 AIRFLOW_HOME = os.environ["AIRFLOW_HOME"]
@@ -241,10 +241,9 @@ class ExecuteTask:
                 url_base = dc_config['url_base'],
                 auth = (dc_config['username'], dc_config['password'])
             )
-            loader = Loader(None, dcc=dcc)
-            handlers = [ loader.get_answer_handler() ]
+            handlers = [lambda content: dc_job_handler(content, dcc)]
         else:
-            handlers = [ ]
+            handlers = None
         ret = job_submitter.run(appLocation, options=options, args=args, handlers=handlers)
         
         logger.info("Done")

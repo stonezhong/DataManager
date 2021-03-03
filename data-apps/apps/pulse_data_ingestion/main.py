@@ -4,8 +4,6 @@ import json
 from functools import wraps
 import uuid
 
-from dm_job_lib import Loader
-
 from oci_core import os_upload_json, get_delegation_token, dfapp_get_os_client, os_delete_objects
 import pulse_logic as pl
 from config import OHDDATA_NAMESPACE, OHDDATA_BUCKETS, OHDDATA_REGION
@@ -150,9 +148,7 @@ def action_generate_parquet(spark, args, sysops, application_id):
     #     bucket   : the PULSE bucket, e.g. "problems"
     #     dt       : the date for the data, e.g. "2020-06-01"
 
-    ask = sysops['ask']
-    ask.initialize(spark)
-    loader = Loader(spark, ask=ask)
+    server_channel = sysops['channel']
 
     stage     = args['stage']
     bucket    = args['bucket']
@@ -161,8 +157,8 @@ def action_generate_parquet(spark, args, sysops, application_id):
 
     pl.generate_parquet(
         spark,
+        server_channel,
         dt, 
-        loader,
         source = {
             'bucket': bucket,
         },

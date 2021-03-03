@@ -1,5 +1,6 @@
 import requests
 import json
+from datetime import datetime
 
 def _update_locations(locations):
     # sort locations array and remove field 'offset'
@@ -432,7 +433,7 @@ def dc_job_handler(content, dcc):
     elif topic == "dc_client.create_dataset_instance":
         argv = dict(**payload)
         argv['data_time'] = datetime.strptime(payload["data_time"], "%Y-%m-%d %H:%M:%S")
-        resp = (True, client.create_dataset_instance(**argv), )
+        resp = (True, dcc.create_dataset_instance(**argv), )
     elif topic == "dc_client.delete_dataset_instance":
         resp = (True, dcc.delete_dataset_instance(**payload), )
     elif topic == "dc_client.get_data_repo":
