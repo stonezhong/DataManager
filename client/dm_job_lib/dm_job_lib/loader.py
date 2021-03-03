@@ -123,7 +123,7 @@ class Loader:
         else:
             raise Exception(f"Unrecognized table type: {table_type}")
 
-    def write_asset_ex(self, spark, df, location, mode='error', coalesce=1):
+    def write_asset(self, spark, df, location, mode='error', coalesce=1):
         # possible mode
         #   append
         #   overwrite
@@ -166,11 +166,6 @@ class Loader:
             return
 
         raise Exception("Unrecognized repo type")
-
-
-    def write_asset(self, spark, df, location, mode='error'):
-        write_asset_ex(df, spark, location, mode=mode, coalesce=1)
-
 
     ##############################################################################
     # Register dataset instance
