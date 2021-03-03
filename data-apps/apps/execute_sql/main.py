@@ -6,6 +6,7 @@ from dc_client import DataCatalogClient
 from datetime import datetime
 
 from dm_job_lib import Loader
+from dc_client import DataCatalogClientProxy
 
 
 
@@ -26,7 +27,7 @@ def execute_step(spark, step, application_id, loader, team, app_args, pipeline_g
             if imp_alias in src_dict:
                 raise Exception(f"View {imp_alias} is already defined")
             dataset_instance = resolve(imp['dsi_name'], pipeline_group_context)
-            df, dsi_path = loader.load_asset_ex(dataset_instance)
+            df, dsi_path = loader.load_asset_ex(spark, dataset_instance)
             df.createOrReplaceTempView(imp_alias)
             src_list.append(dsi_path)
             print(f"loading imports: {imp_alias} ==> {dsi_path}")
@@ -59,7 +60,7 @@ def execute_step(spark, step, application_id, loader, team, app_args, pipeline_g
             'type': output['type'],
             'location': location
         }
-        loader.write_asset(df, table, mode=output['write_mode'])
+        loader.write_asset(spark, df, table, mode=output['write_mode'])
         # TODO: if we have alias for output, maybe we should reload it from storage
     else:
         print(f"Won't save query result")
@@ -82,6 +83,7 @@ def execute_step(spark, step, application_id, loader, team, app_args, pipeline_g
         print(f"register output: location = {location}")
         print(f"register output: data_time = {data_time}")
         dsi = loader.register_asset(
+            spark,
             register_dsi_full_path, team,
             output['type'],
             location,
@@ -114,11 +116,12 @@ def execute_step(spark, step, application_id, loader, team, app_args, pipeline_g
 def main(spark, input_args, sysops={}):
     print("running App: execute_sql")
 
-    ask = sysops.get('ask')
+    server_channel = sysops['channel']
+
     team = input_args['team']
     if input_args.get('dm_offline'):
-        ask.initialize(spark)
-        loader = Loader(spark, ask=ask)
+        dcc = DataCatalogClientProxy(server_channel)
+        loader = Loader(dcc=dcc)
     else:
         dc_config = input_args['dc_config']
         dcc = DataCatalogClient(
