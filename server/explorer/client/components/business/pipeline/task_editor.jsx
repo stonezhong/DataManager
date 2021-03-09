@@ -157,7 +157,7 @@ export class SequentialTaskEditor extends React.Component {
                         <AlertBox ref={this.theAlertBoxRef}/>
                         <Tabs defaultActiveKey="BasicInfo" transition={false}>
                             <Tab eventKey="BasicInfo" title="Basic Info">
-                                <Container className="pt-2">
+                                <Container fluid className="pt-2">
                                     <Row>
                                         <Col>
                                             <Form.Group controlId="task-name">
@@ -273,7 +273,7 @@ export class SequentialTaskEditor extends React.Component {
                             </Tab>
                             { this.state.task.type === "other" &&
                             <Tab eventKey="Application" title="Application">
-                                <Container className="pt-2">
+                                <Container fluid className="pt-2">
                                     <Row>
                                         <Col>
                                             <Form.Group controlId="task-app">
@@ -333,7 +333,7 @@ export class SequentialTaskEditor extends React.Component {
                             {
                                 this.state.task.type === "spark-sql" &&
                                 <Tab eventKey="SparkSQL" title="Spark-SQL">
-                                    <Container className="pt-2">
+                                    <Container fluid className="pt-2">
                                         <Row>
                                             <Col>
                                                 <h4 className="c-ib">Steps</h4>

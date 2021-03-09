@@ -194,7 +194,7 @@ export class PipelineEditor extends React.Component {
                             transition={false}
                         >
                             <Tab eventKey="BasicInfo" title="Basic Info">
-                                <Container className="pt-2">
+                                <Container fluid className="pt-2">
                                     <Row>
                                         <Form.Group as={Col} controlId="pipeline-name">
                                             <Form.Label>Name</Form.Label>
@@ -402,7 +402,7 @@ export class PipelineEditor extends React.Component {
                             </Tab>
                             {
                                 (this.state.pipeline.type==="simple-flow") &&  <Tab eventKey="Tasks" title="Tasks">
-                                    <Container className="pt-2">
+                                    <Container fluid className="pt-2">
                                         <Row>
                                             <Col>
                                                 <h4 className="c-ib">Tasks</h4>

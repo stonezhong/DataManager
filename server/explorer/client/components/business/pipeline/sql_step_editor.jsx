@@ -142,7 +142,7 @@ export class SQLStepEditor extends React.Component {
                             transition={false}
                         >
                             <Tab eventKey="BasicInfo" title="Basic Info">
-                                <Container className="pt-2">
+                                <Container fluid className="pt-2">
                                     <Row>
                                         <Col>
                                             <Form.Group as={Row} controlId="sql-step-name">
@@ -423,7 +423,7 @@ export class SQLStepEditor extends React.Component {
                                 </Container>
                             </Tab>
                             <Tab eventKey="SQLStmt" title="SQL Statement">
-                                <Container className="pt-2">
+                                <Container fluid className="pt-2">
                                     <Row>
                                         <Col>
                                             <Form.Group controlId="sql-step-sql">
