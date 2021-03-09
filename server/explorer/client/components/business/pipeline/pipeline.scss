@@ -1,11 +1,14 @@
-// div.task-editor {
-//     & > div.modal-content {
-//     }
-// }
+div.task-editor {
+    & > div.modal-content {
+        min-height: 700px;
+        min-width:  1440px;
+    }
+}
 
 div.sql-step-editor {
     & > div.modal-content {
-        width: 120%;
+        min-height: 80vh;
+        min-width:  60vw;
     }
 }
 
