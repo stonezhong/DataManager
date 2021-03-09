@@ -7,6 +7,7 @@ import os
 import shutil
 import subprocess
 import sys
+import getpass
 
 import django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'DataCatalog.settings')
@@ -184,7 +185,7 @@ def config_airflow_venv():
     admin_email = input("admin email: ")
     admin_fn = input("admin first name: ")
     admin_ln = input("admin last name: ")
-    admin_pwd = input("admin password: ")
+    admin_pwd = read_password("admin password")
 
     cmd = f"airflow create_user -r Admin -u {admin_name} -e {admin_email} -f {admin_fn} -l {admin_ln} -p {admin_pwd}"
     subprocess.call([f"source {AIRFLOW_VENV_DIR}/bin/activate; {cmd}"], shell=True)
@@ -252,6 +253,17 @@ def do_setup_dm(args):
     )
     app.save()
 
+
+def read_password(prompt):
+    password1 = None
+    password2 = None
+    prefix = ""
+    while True:
+        password1 = getpass.getpass(f"{prefix}{prompt}: ")
+        password2 = getpass.getpass(f"{prompt} (again): ")
+        if password1 == password2:
+            return password1
+        prefix = "Please retry, "
 
 def main():
     parser = argparse.ArgumentParser()
