@@ -18,4 +18,4 @@ pysassc explorer/templates/css/main.scss                explorer/static/css/main
 npm run build-prod
 # npm run build-dev
 
-mordor -a stage -p dm --stage ${DM_STAGE}
+# mordor -a stage -p dm --stage ${DM_STAGE}

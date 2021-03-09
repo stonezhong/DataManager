@@ -3,6 +3,7 @@
 
 import logging, logging.config
 from config import get_mordor_config_json_template, get_log_path
+import DataCatalog.logging_helper as logging_helper
 
 # initializing the logging MUST come before import any other modules
 config = get_mordor_config_json_template(
@@ -11,8 +12,9 @@ config = get_mordor_config_json_template(
         "log_dir": get_log_path(),
     }
 )
-# TODO: how to avoid 2nd initializing of logging in settings.py?
-logging.config.dictConfig(config['log_config'])
+if not logging_helper.logging_initialized:
+    logging_helper.logging_initialized = True
+    logging.config.dictConfig(config['log_config'])
 logger = logging.getLogger(__name__)
 
 import json
@@ -190,10 +192,34 @@ def update_pipeline_instances():
 
 ########################################################################################
 # Purpose
-#   Set a pipeline group into finished status if all pipeline instances are finished
+#   If an pending pipeline has a new pipeline instance, attach it
+#   If an pending pipeline's all pipeline instance are finished, mark it as finished
 ########################################################################################
 @transaction.atomic
-def finish_pipeline_group(pg):
+def update_pipeline_group(pg):
+    # pg is an unfinished pipeline group
+    pipeline_ids = set()
+    for pi in PipelineInstance.objects.filter(group=pg):
+        pipeline_ids.add(pi.pipeline.id)
+
+    # Let's attach those pipeline created after we created pipeline group
+    # which match the category
+    now = datetime.utcnow().replace(tzinfo=pytz.UTC)
+    for pipeline in Pipeline.objects.filter(
+        category=pg.category
+    ).filter(retired=False):
+        if pipeline.id in pipeline_ids:
+            # skip since the pg already has this pipeline
+            continue
+        pipeline_instance = PipelineInstance(
+            pipeline = pipeline,
+            group = pg,
+            context = "{}", # placeholder
+            status = PipelineInstance.CREATED_STATUS,
+            created_time = now
+        )
+        pipeline_instance.save()
+
     for pi in PipelineInstance.objects.filter(group=pg):
         if pi.status in (
             PipelineInstance.CREATED_STATUS,
@@ -204,9 +230,9 @@ def finish_pipeline_group(pg):
         pg.finished = True
         pg.save()
 
-def finish_pipeline_groups():
+def update_pipeline_groups():
     for pg in PipelineGroup.objects.filter(finished=False).filter(manual=False):
-        finish_pipeline_group(pg)
+        update_pipeline_group(pg)
 
 ########################################################################################
 # Purpose
@@ -215,14 +241,15 @@ def finish_pipeline_groups():
 #   (3) Create pipeline group when needed
 ########################################################################################
 def main():
+    logger.info(f"scheduler started")
     try:
         while True:
             create_pipeline_group_from_timers()
             update_pipeline_instances()
-            finish_pipeline_groups()
+            update_pipeline_groups()
             time.sleep(5)
     except KeyboardInterrupt:
-        print("Bye!")
+        logger.info(f"scheduler stopped gracefully")
 
 
 

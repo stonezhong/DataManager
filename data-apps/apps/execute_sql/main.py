@@ -128,7 +128,7 @@ def main(spark, input_args, sysops={}):
             url_base = dc_config['url_base'],
             auth = (dc_config['username'], dc_config['password'])
         )
-        loader = Loader(spark, dcc=dcc)
+        loader = Loader(dcc=dcc)
 
     app_args = input_args['app_args']
     application_id = input_args['application_id']

@@ -67,7 +67,7 @@ def main(spark, input_args, sysops={}):
 
         df = spark.createDataFrame(trades)
         location_to_write = os.path.join(app_args['base_location'], "tradings", dt, f"{market}.parquet")
-        loader.write_asset_ex(
+        loader.write_asset(
             spark,
             df,
             {

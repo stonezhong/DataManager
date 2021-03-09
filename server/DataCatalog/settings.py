@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 
 import os
 import json
+import DataCatalog.logging_helper as logging_helper
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -28,7 +29,9 @@ __DB_CONFIG       = get_mordor_config_json_template("db.json")
 
 # config logging
 import logging.config
-logging.config.dictConfig(__DJANGO_CONFIG['log_config'])
+if not logging_helper.logging_initialized:
+    logging_helper.logging_initialized = True
+    logging.config.dictConfig(__DJANGO_CONFIG['log_config'])
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.1/howto/deployment/checklist/
