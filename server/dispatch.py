@@ -236,7 +236,7 @@ def do_setup_dm(args):
     ], shell=True)
 
     print("**********************************************")
-    print("* Create System App: EXecute SQL             *")
+    print("* Create System App: Execute SQL             *")
     print("**********************************************")
     with open(os.path.expandvars("$ENV_HOME/configs/dmapps/config.json"), "r") as f:
         dmapp_config = json.load(f)
