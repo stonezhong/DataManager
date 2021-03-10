@@ -1,2 +1,2 @@
-dm-job-lib==0.0.41
+dm-job-lib==0.0.44
 dc-client==0.0.109
