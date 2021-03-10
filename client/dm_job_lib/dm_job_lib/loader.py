@@ -171,7 +171,8 @@ class Loader:
     # Register dataset instance
     # - it will create dataset if not exist, user need to fill in description latter
     ##############################################################################
-    def register_asset(self, spark, asset_path, team, file_type, location, row_count, schema,
+    def register_asset(self, spark, asset_path, team, file_type, location, row_count,
+                       schema, sample_data=[],
                        data_time = None, src_asset_paths = [],
                        application_id = None, application_args = None, repo_name = None):
 
@@ -202,13 +203,14 @@ class Loader:
         self.dcc.set_dataset_schema_and_sample_data(
             ds['id'],
             json.dumps(schema),
-            "",  # no sample data for now
+            json.dumps(sample_data),
             spark=spark
         )
         return dsi
 
 
-    def register_view(self, spark, asset_path, team, loader_name, loader_args, row_count, schema,
+    def register_view(self, spark, asset_path, team, loader_name, loader_args, row_count,
+                      schema, sample_data=[],
                       data_time = None, src_asset_paths = [],
                       application_id = None, application_args = None):
         if data_time is None:
@@ -239,7 +241,7 @@ class Loader:
         self.dcc.set_dataset_schema_and_sample_data(
             ds['id'],
             json.dumps(schema),
-            "",   # no sample data for now
+            json.dumps(sample_data),
             spark=spark
         )
         return dsi

@@ -5,7 +5,7 @@ from jinja2 import Template
 from dc_client import DataCatalogClient
 from datetime import datetime
 
-from dm_job_lib import Loader
+from dm_job_lib import Loader, get_dataframe_sample_data
 from dc_client import DataCatalogClientProxy
 
 
@@ -82,12 +82,14 @@ def execute_step(spark, step, application_id, loader, team, app_args, pipeline_g
         print(f"register output: type = {output['type']}")
         print(f"register output: location = {location}")
         print(f"register output: data_time = {data_time}")
+        sample_data = get_dataframe_sample_data(df)
         dsi = loader.register_asset(
             spark,
             register_dsi_full_path, team,
             output['type'],
             location,
             df.count(), df.schema.jsonValue(),
+            sample_data = sample_data,
             data_time = data_time,
             src_asset_paths = sorted(list(set(src_list))),
             application_id = application_id,

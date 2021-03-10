@@ -6,7 +6,7 @@ import os
 from pyspark.sql import SparkSession, SQLContext, Row
 from dc_client import DataCatalogClient, DataCatalogClientProxy
 
-from dm_job_lib import Loader, print_json
+from dm_job_lib import Loader, print_json, get_dataframe_sample_data
 
 
 STOCK_LIST = {
@@ -80,11 +80,13 @@ def main(spark, input_args, sysops={}):
         )
 
         data_time = datetime.strptime(dt, "%Y-%m-%d")
+        sample_data = get_dataframe_sample_data(df)
         dsi = loader.register_asset(
             spark,
             f'tradings:1.0:1:/{dt}_{market}', 'trading',
             'parquet', location_to_write,
             df.count(), df.schema.jsonValue(),
+            sample_data = sample_data,
             data_time = data_time,
             application_id = application_id,
             application_args = json.dumps(app_args),
@@ -100,12 +102,14 @@ def main(spark, input_args, sysops={}):
 
         data_time = datetime.strptime(dt, "%Y-%m-%d")
         df = loader.load_view(spark, view_loader_name, view_loader_args)
+        sample_data = get_dataframe_sample_data(df)
         loader.register_view(
             spark,
             f'tradings:1.0:1:/{dt}',
             'trading',
             view_loader_name, view_loader_args,
             df.count(), df.schema.jsonValue(),
+            sample_data = sample_data,
             data_time = data_time,
             src_asset_paths = view_loader_args['dsi_paths'],
             application_id = application_id,
