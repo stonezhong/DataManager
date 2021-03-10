@@ -16,6 +16,8 @@ import {DatasetEditor} from '/components/business/dataset/dataset_editor.jsx'
 import {DatasetViewer} from '/components/business/dataset/dataset_viewer.jsx'
 import {TopMessage} from '/components/generic/top_message/main.jsx'
 import {PageHeader} from '/components/generic/page_tools'
+import {SimpleDialogBox} from '/components/generic/dialogbox/simple.jsx'
+import {DatasetSample, has_sample_data} from '/components/business/dataset/dataset_sample.jsx'
 
 import {get_app_context, get_csrf_token, get_current_user, handle_json_response} from '/common_lib'
 import {saveDataset} from '/apis'
@@ -80,6 +82,7 @@ class DatasetPage extends React.Component {
     theHelpDialogBoxRef = React.createRef();
     theSchemaViewerRef  = React.createRef();
     theDatasetEditorRef = React.createRef();
+    theSampleViewRef    = React.createRef();
 
     state = {
         show_details: false,
@@ -160,6 +163,24 @@ class DatasetPage extends React.Component {
                             >
                                 Schema
                             </Button>}
+                            {
+                                has_sample_data(this.props.dataset) &&
+                                <Button
+                                    className="ml-2"
+                                    variant="secondary"
+                                    size="sm"
+                                    onClick={
+                                        event => {
+                                            this.theSampleViewRef.current.openDialog(
+                                                "Sample Data",
+                                                <DatasetSample dataset={this.props.dataset} />
+                                            );
+                                        }
+                                    }
+                                >
+                                    Sample Data
+                                </Button>
+                            }
                         </PageHeader>
                     </Col>
                 </Row>
@@ -186,6 +207,12 @@ class DatasetPage extends React.Component {
                 <DatasetEditor
                     ref={this.theDatasetEditorRef}
                     onSave={this.saveDatasetAndRefresh}
+                />
+                <SimpleDialogBox
+                    ref={this.theSampleViewRef}
+                    backdrop="static"
+                    size='lg'
+                    scrollable
                 />
             </Container>
         )

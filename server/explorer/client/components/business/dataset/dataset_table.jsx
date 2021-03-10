@@ -5,6 +5,8 @@ import * as Icon from 'react-bootstrap-icons'
 
 import {SchemaViewer, get_schema} from './schema_viewer.jsx'
 import {DataTable} from '/components/generic/datatable/main.jsx'
+import {SimpleDialogBox} from '/components/generic/dialogbox/simple.jsx'
+import {DatasetSample, has_sample_data} from '/components/business/dataset/dataset_sample.jsx'
 
 import './dataset.scss'
 
@@ -31,6 +33,7 @@ import './dataset.scss'
 export class DatasetTable extends React.Component {
     theSchemaViewerRef  = React.createRef();
     theDataTableRef     = React.createRef();
+    theSampleViewRef    = React.createRef();
 
     render_schema = dataset => {
         return (
@@ -42,6 +45,26 @@ export class DatasetTable extends React.Component {
                     event => {
                         this.theSchemaViewerRef.current.openDialog(
                             get_schema(dataset)
+                        )
+                    }
+                }
+            >
+                <Icon.Info />
+            </Button>
+        );
+    };
+
+    render_sample_data = dataset => {
+        return (
+            has_sample_data(dataset) &&
+            <Button
+                variant="secondary"
+                size="sm"
+                onClick={
+                    event => {
+                        this.theSampleViewRef.current.openDialog(
+                            "Sample Data",
+                            <DatasetSample dataset={dataset} />
                         )
                     }
                 }
@@ -65,6 +88,7 @@ export class DatasetTable extends React.Component {
     columns = {
         name:               {display: "Name", render_data: this.render_name},
         schema:             {display: "Schema", render_data: this.render_schema},
+        sample:             {display: "Sample Data", render_data: this.render_sample_data},
         author:             {display: "Author"},
         team:               {display: "Team"},
         publish_time:       {display: "Published"},
@@ -92,6 +116,12 @@ export class DatasetTable extends React.Component {
 
                 <SchemaViewer
                     ref={this.theSchemaViewerRef}
+                />
+                <SimpleDialogBox
+                    ref={this.theSampleViewRef}
+                    backdrop="static"
+                    size='lg'
+                    scrollable
                 />
             </div>
         )
