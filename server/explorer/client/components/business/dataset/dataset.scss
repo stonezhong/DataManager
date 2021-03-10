@@ -12,6 +12,10 @@ div.dataset-table {
                         width: 40px;
                         text-align: center;
                     }
+                    & > th[data-role='sample'] {
+                        width: 40px;
+                        text-align: center;
+                    }
                     & > th[data-role='author'] {
                         width: 120px;
                         text-align: center;
@@ -45,6 +49,9 @@ div.dataset-table {
                         vertical-align: middle;
                     }
                     & > td[data-role='schema'] {
+                        text-align: center;
+                    }
+                    & > td[data-role='sample'] {
                         text-align: center;
                     }
                     & > td[data-role='author'] {
