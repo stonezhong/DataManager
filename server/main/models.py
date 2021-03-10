@@ -221,7 +221,7 @@ class Dataset(models.Model):
         if self.schema != schema:
             raise ValidationError("Inconsistent schema")
 
-        if not sample_data:
+        if sample_data:
             self.sample_data = sample_data
         self.save()
 
