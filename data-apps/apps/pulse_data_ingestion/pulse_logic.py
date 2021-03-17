@@ -13,7 +13,7 @@ from oci_core import os_download, get_delegation_token, dfapp_get_os_client, \
     os_rename_objects
 
 from dc_client import DataCatalogClientProxy
-from dm_job_lib import Loader
+from dm_job_lib import Loader, get_dataframe_sample_data
 
 # list all PULSE objects for a given day, for a given region and ad
 
@@ -211,12 +211,14 @@ def generate_parquet(spark, server_channel, dt, source, destination, partition_c
     dcc = DataCatalogClientProxy(server_channel)
     loader = Loader(dcc=dcc)
 
+    sample_data = get_dataframe_sample_data(df)
     dsi = loader.register_asset(
         spark,
         f"daily_pulse_{source_bucket}_raw:1.0:1:/{dt}",
         'hwd',
         'parquet', write_location,
         df.count(), df.schema.jsonValue(),
+        sample_data = sample_data,
         data_time = data_time,
         application_id = application_id,
         application_args = json.dumps(application_args),
