@@ -41,6 +41,7 @@
         "react": "^16.14.0",
         "react-bootstrap": "^1.5.2",
         "react-bootstrap-icons": "^1.0.0",
-        "react-dom": "^16.14.0"
+        "react-dom": "^16.14.0",
+        "uuid": "^3.4.0"
     }
 }
