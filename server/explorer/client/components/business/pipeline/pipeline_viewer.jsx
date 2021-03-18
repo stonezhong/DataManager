@@ -85,9 +85,9 @@ export class PipelineViewer extends React.Component {
                 <Card.Header as="h3">{step.name}</Card.Header>
                 <Card.Body>
                     <div className="step_content_section">
-                    { step.imports.map(imp =>
-                        <div>import asset {imp.dsi_name} as {imp.alias}</div>
-                    ) }
+                        { step.imports.map((imp, index) =>
+                            <div key={index}>import asset {imp.dsi_name} as {imp.alias}</div>
+                        ) }
 
                         <div>Execute SQL Query:</div>
                         <pre className="ml-2">
@@ -259,12 +259,17 @@ export class PipelineViewer extends React.Component {
                             </td>
                         </tr>
                         <tr>
+                            <td>Start Offset</td>
+                            <td>
+                                {ctx.startOffset|0} minutes after scheduler is due.
+                            </td>
+                        </tr>
+                        <tr>
                             <td>Required Assets</td>
                             <td>
                                 {ctx.requiredDSIs.map(dsi_path => <div key={dsi_path}>{dsi_path}</div>)}
                             </td>
                         </tr>
-
                     </tbody>
                 </table>
 

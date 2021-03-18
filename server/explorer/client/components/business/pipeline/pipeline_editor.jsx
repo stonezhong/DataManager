@@ -22,6 +22,17 @@ import "./pipeline.scss"
 
 const _ = require("lodash");
 
+function get_integer(v) {
+    if (!v.match("^(0|([1-9][0-9]*))$")) {
+        return null;
+    }
+    return parseInt(v);
+}
+
+function isValidStartOffset(v) {
+    return (v !== null) && v >= 0;
+}
+
 /*********************************************************************************
  * Purpose: Edit a Pipeline
  *
@@ -45,12 +56,13 @@ export class PipelineEditor extends React.Component {
             type        : 'simple-flow',
             dag_id      : '',                // for external pipeline
             requiredDSIs: [],          // required dataset instances
+            startOffset : 0,           // the minutes for when this pipeline should start from the scheduled due time
             tasks       : [],
             dependencies: [],          // e.g. [{id: 1, src:'foo', dst: 'bar'},... ], means foo depend on bar
             _toAddAssertPath: '',
             _srcDepTaskName: '',
             _dstDepTaskName: '',
-
+            _startOffset: '0',         // the string format of startOffset, for display purpose
         };
     };
 
@@ -76,14 +88,8 @@ export class PipelineEditor extends React.Component {
         delete pipeline._toAddAssertPath;
         delete pipeline._srcDepTaskName;
         delete pipeline._dstDepTaskName;
+        delete pipeline._startOffset;
         this.setState({show: false}, () => {this.props.onSave(mode, pipeline)});
-    };
-
-    canSave = () => {
-        if (!this.state.pipeline.name || !this.state.pipeline.team || !this.state.category) {
-            return false;
-        }
-        return true;
     };
 
     getApplication = task => {
@@ -101,6 +107,13 @@ export class PipelineEditor extends React.Component {
             myPipeline._toAddAssertPath = '';
             myPipeline._srcDepTaskName = '';
             myPipeline._dstDepTaskName = '';
+            if ('startOffset' in myPipeline) {
+                // startOffset MUST be a integer
+                myPipeline._startOffset = myPipeline.startOffset.toString();
+            } else {
+                myPipeline._startOffset = "0";
+                myPipeline.startOffset = 0;
+            }
             if (!('dependencies' in myPipeline)) {
                 myPipeline.dependencies = [];
             }
@@ -169,7 +182,10 @@ export class PipelineEditor extends React.Component {
 
 
     canSave = () => {
-        return this.state.pipeline.name && this.state.pipeline.team && this.state.pipeline.category;
+        return this.state.pipeline.name &&
+            this.state.pipeline.team &&
+            this.state.pipeline.category &&
+            isValidStartOffset(this.state.pipeline.startOffset);
     };
 
 
@@ -265,7 +281,7 @@ export class PipelineEditor extends React.Component {
                                     </Row>
 
                                     <Row>
-                                        <Form.Group as={Col} controlId="pipeline-type">
+                                        <Form.Group as={Col} sm={4} controlId="pipeline-type">
                                             <Form.Label className="pr-2" >Type</Form.Label>
                                             <Form.Check
                                                 size="sm"
@@ -298,6 +314,30 @@ export class PipelineEditor extends React.Component {
                                                 }}
                                             />
                                         </Form.Group>
+                                        <Col sm={8}>
+                                            <Form.Group as={Row} controlId="start-Offset">
+                                                <Form.Label as={Col}>Start offset</Form.Label>
+                                                <Col>
+                                                    <Form.Control
+                                                        size="sm"
+                                                        disabled = {this.state.mode==='view'}
+                                                        value={this.state.pipeline._startOffset}
+                                                        isInvalid={!isValidStartOffset(this.state.pipeline.startOffset)}
+                                                        onChange={(event) => {
+                                                            const v = event.target.value;
+                                                            this.setState( state => {
+                                                                state.pipeline._startOffset = v;
+                                                                state.pipeline.startOffset = get_integer(v);
+                                                                return state;
+                                                            });
+                                                        }}
+                                                    />
+                                                    <Form.Control.Feedback type="invalid">
+                                                        Must be a integer greater or equals to zero
+                                                    </Form.Control.Feedback>
+                                                </Col>
+                                            </Form.Group>
+                                        </Col>
                                     </Row>
 
                                     <Row>

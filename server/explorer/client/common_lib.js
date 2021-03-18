@@ -63,6 +63,7 @@ export function pipeline_to_django_model(pipeline) {
         type        : pipeline.type,
         dag_id      : pipeline.dag_id,
         requiredDSIs: pipeline.requiredDSIs,
+        startOffset : pipeline.startOffset,
         tasks       : pipeline.tasks,
         dependencies: pipeline.dependencies,
     };
@@ -98,6 +99,7 @@ export function pipeline_from_django_model(pipeline) {
         tasks: context.tasks || [],
         dependencies: context.dependencies || [],
         requiredDSIs: context.requiredDSIs || [],
+        startOffset: context.startOffset|0,
         dag_id: context.dag_id,
         author: pipeline.author,
         paused: pipeline.paused,

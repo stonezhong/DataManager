@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 import json
 import jinja2
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 import pytz
 from jinja2 import Template
 
@@ -89,12 +89,21 @@ def handle_pipeline_instance_created(pi):
 
     group_ctx = json.loads(pi.group.context)
     pipeline_ctx = json.loads(pi.pipeline.context)
+    start_offset = pipeline_ctx.get("startOffset", 0)
 
     pi_prior = pi.get_prior_instance()
     if pi_prior and pi_prior.status != PipelineInstance.FINISHED_STATUS:
         logger.info("skip: prior instance is not finished")
         logger.info(f"handle_pipeline_instance_created: exit")
         return
+
+    now = datetime.utcnow().replace(tzinfo=pytz.UTC)
+    earliest_start_time = pi.group.due + timedelta(minutes=start_offset)
+    if earliest_start_time > now:
+        logger.info(f"skip: too early to run the pipeline, due={pi.group.due}, start_offset={start_offset} minute, earliest start: {earliest_start_time}, now: {now}")
+        logger.info(f"handle_pipeline_instance_created: exit")
+        return
+
 
     ready = True
     for rdit in pipeline_ctx.get('requiredDSIs', []):
