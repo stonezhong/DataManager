@@ -60,3 +60,30 @@ img.icon32 {
     width: 32px;
     height: 32px;
 }
+
+// large modal dialogbox
+div.lg-modal {
+    & > div.modal-content {
+        width:  1440px;
+        height: 860px;
+    }
+}
+div.md-modal {
+    & > div.modal-content {
+        width:  1080px;
+        height: 600px;
+    }
+}
+div.sm-modal {
+    & > div.modal-content {
+        width:  800px;
+        height: 600px;
+    }
+}
+
+
+// for resizable, movable and centered modal
+div.standard-modal {
+    max-width: none !important;
+    max-height: none !important;
+}
