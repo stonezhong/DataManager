@@ -11,6 +11,9 @@ import Tabs from 'react-bootstrap/Tabs'
 import Tab from 'react-bootstrap/Tab'
 
 import * as Icon from 'react-bootstrap-icons'
+import { v4 as uuidv4 } from 'uuid';
+
+import {bless_modal} from '/common_lib'
 
 const _ = require("lodash");
 
@@ -41,6 +44,8 @@ export class SQLStepEditor extends React.Component {
             _toAddAssertPath: ''
         }
     };
+
+    modal_id = uuidv4();
 
     state = {
         show: false,
@@ -94,13 +99,13 @@ export class SQLStepEditor extends React.Component {
                 show: true,
                 mode: mode,
                 step: myStep
-            })
+            }, () => bless_modal(this.modal_id))
         } else {
             this.setState({
                 show: true,
                 mode: mode,
                 step: this.initStepValue()
-            })
+            }, () => bless_modal(this.modal_id))
         }
     };
 
@@ -124,12 +129,13 @@ export class SQLStepEditor extends React.Component {
     render() {
         return (
             <Modal
-                dialogClassName="sql-step-editor"
                 show={this.state.show}
                 onHide={this.onClose}
                 backdrop="static"
-                size='xl'
                 scrollable
+                animation={false}
+                dialogClassName="standard-modal sql-step-editor"
+                data-modal-id={this.modal_id}
             >
                 <Modal.Header closeButton>
                     <Modal.Title>{this.get_title()}</Modal.Title>

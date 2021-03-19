@@ -139,12 +139,15 @@ export function handle_json_response(res) {
 }
 
 export function bless_modal(modal_id) {
-    $(`[data-modal-id=${modal_id}] > .modal-content`).resizable({});
-    $(`[data-modal-id=${modal_id}]`).draggable();
-    $(`[data-modal-id=${modal_id}] > .modal-content`).position({
-        my:"center",
-        at: "center",
-        of: "body"
+    const modal_content = $(`[data-modal-id=${modal_id}] > .modal-content`);
+    // const modal = $(`[data-modal-id=${modal_id}]`)
+
+    modal_content.resizable({});
+    modal_content.draggable({
+        handle: ".modal-header",
+    });
+    modal_content.position({
+        of: $(window)
     });
 
 }

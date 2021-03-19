@@ -11,8 +11,11 @@ import Tabs from 'react-bootstrap/Tabs'
 import Tab from 'react-bootstrap/Tab'
 
 import * as Icon from 'react-bootstrap-icons'
+import { v4 as uuidv4 } from 'uuid';
+
+
 import {SQLStepEditor} from './sql_step_editor.jsx'
-import {is_json_string} from '/common_lib.js'
+import {is_json_string, bless_modal} from '/common_lib.js'
 import {AlertBox} from '/components/generic/alert/alert.jsx'
 
 import './pipeline.scss'
@@ -43,6 +46,8 @@ export class SequentialTaskEditor extends React.Component {
             application_id: '',
         }
     };
+
+    modal_id = uuidv4();
 
     state = {
         show: false,
@@ -79,13 +84,13 @@ export class SequentialTaskEditor extends React.Component {
                 show: true,
                 mode: mode,
                 task: _.cloneDeep(task)
-            });
+            }, () => bless_modal(this.modal_id));
         } else {
             this.setState({
                 show: true,
                 mode: mode,
                 task: this.initTaskValue()
-            });
+            }, () => bless_modal(this.modal_id));
         }
     };
 
@@ -141,13 +146,13 @@ export class SequentialTaskEditor extends React.Component {
     render() {
         return (
             <Modal
-                dialogClassName="task-editor"
                 show={this.state.show}
                 onHide={this.onClose}
                 backdrop="static"
-                size='xl'
                 scrollable
-                centered
+                animation={false}
+                dialogClassName="standard-modal task-editor"
+                data-modal-id={this.modal_id}
             >
                 <Modal.Header closeButton>
                     <Modal.Title>{this.get_title()}</Modal.Title>
