@@ -64,6 +64,3 @@ div.standard-modal {
     border: 1px solid darkgrey; }
     div.standard-modal > div.modal-content > div.modal-header {
       background-color: royalblue; }
-
-button.btn-window {
-  border: 0; }

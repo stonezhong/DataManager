@@ -8,11 +8,14 @@ import Form from 'react-bootstrap/Form'
 import Modal from 'react-bootstrap/Modal'
 import Card from 'react-bootstrap/Card'
 
+import { v4 as uuidv4 } from 'uuid';
+
 import { CKEditor } from '@ckeditor/ckeditor5-react';
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 
 import {DataTable} from '/components/generic/datatable/main.jsx'
 import {AppIcon} from '/components/generic/icons/main.jsx'
+import {bless_modal} from '/common_lib'
 
 
 import "./application.scss"
@@ -38,6 +41,8 @@ export class ApplicationEditor extends React.Component {
         }
     };
 
+    modal_id = uuidv4();
+
     state = {
         show: false,
         mode: "new",      // either edit or new
@@ -61,13 +66,13 @@ export class ApplicationEditor extends React.Component {
                 show: true,
                 mode: mode,
                 application: application
-            })
+            }, () => bless_modal(this.modal_id))
         } else if (mode === "new") {
             this.setState({
                 show: true,
                 mode: mode,
                 application: this.initApplicationValue()
-            })
+            }, () => bless_modal(this.modal_id))
         } else {
             // wrong parameter
             console.assert(false, "mode must be edit, view or new");
@@ -98,8 +103,10 @@ export class ApplicationEditor extends React.Component {
                 show={this.state.show}
                 onHide={this.onClose}
                 backdrop="static"
-                size='xl'
                 scrollable
+                animation={false}
+                dialogClassName="standard-modal application-editor-modal"
+                data-modal-id={this.modal_id}
             >
                 <Modal.Header closeButton>
                     <Modal.Title>{this.get_title()}</Modal.Title>

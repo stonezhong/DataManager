@@ -9,12 +9,14 @@ import Modal from 'react-bootstrap/Modal'
 import InputGroup from 'react-bootstrap/InputGroup'
 
 import * as Icon from 'react-bootstrap-icons'
+import { v4 as uuidv4 } from 'uuid';
 
 import "./timer.scss"
 import {is_json_string, is_valid_datetime} from '/common_lib.js'
 import {AlertBox} from '/components/generic/alert/alert.jsx'
 import {DataTable} from '/components/generic/datatable/main.jsx'
 import {AppIcon} from '/components/generic/icons/main.jsx'
+import {bless_modal} from '/common_lib'
 
 const _ = require('lodash');
 
@@ -64,6 +66,8 @@ export class TimerEditor extends React.Component {
         }
     };
 
+    modal_id = uuidv4();
+
     state = {
         show: false,
         mode: "new",
@@ -103,13 +107,13 @@ export class TimerEditor extends React.Component {
                 show: true,
                 mode: mode,
                 timer: _.cloneDeep(timer_native_to_ui(timer))
-            })
+            }, () => bless_modal(this.modal_id))
         } else if (mode === "new") {
             this.setState({
                 show: true,
                 mode: mode,
                 timer: this.initTimerValue(),
-            })
+            }, () => bless_modal(this.modal_id))
         } else {
             // wrong parameter
             console.assert(false, "mode must be edit, view or new");
@@ -144,8 +148,10 @@ export class TimerEditor extends React.Component {
                 show={this.state.show}
                 onHide={this.onClose}
                 backdrop="static"
-                size='lg'
                 scrollable
+                animation={false}
+                dialogClassName="standard-modal timer-editor-modal"
+                data-modal-id={this.modal_id}
             >
                 <Modal.Header closeButton>
                     <Modal.Title>{this.get_title()}</Modal.Title>
