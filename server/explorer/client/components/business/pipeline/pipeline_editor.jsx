@@ -215,7 +215,7 @@ export class PipelineEditor extends React.Component {
                         >
                             <Tab eventKey="BasicInfo" title="Basic Info">
                                 <Container fluid className="pt-2">
-                                    <Row>
+                                    <Form.Row>
                                         <Form.Group as={Col} controlId="pipeline-name">
                                             <Form.Label>Name</Form.Label>
                                             <Form.Control
@@ -263,10 +263,8 @@ export class PipelineEditor extends React.Component {
                                                 }}
                                             />
                                         </Form.Group>
-                                    </Row>
-
-
-                                    <Row>
+                                    </Form.Row>
+                                    <Form.Row>
                                         <Form.Group as={Col} controlId="pipeline-description">
                                             <Form.Label>Description</Form.Label>
                                             <Form.Control as="textarea" rows="3"
@@ -282,10 +280,9 @@ export class PipelineEditor extends React.Component {
                                                 }}
                                             />
                                         </Form.Group>
-                                    </Row>
-
-                                    <Row>
-                                        <Form.Group as={Col} sm={4} controlId="pipeline-type">
+                                    </Form.Row>
+                                    <Form.Row>
+                                        <Form.Group as={Col} sm={3} controlId="pipeline-type">
                                             <Form.Label className="pr-2" >Type</Form.Label>
                                             <Form.Check
                                                 size="sm"
@@ -307,7 +304,7 @@ export class PipelineEditor extends React.Component {
                                                 disabled = {this.state.mode==='view'}
                                                 name="pipeline-type"
                                                 inline
-                                                label="External"
+                                                label="external"
                                                 type="radio"
                                                 checked={this.state.pipeline.type==="external"}
                                                 onChange={() => {
@@ -318,33 +315,28 @@ export class PipelineEditor extends React.Component {
                                                 }}
                                             />
                                         </Form.Group>
-                                        <Col sm={8}>
-                                            <Form.Group as={Row} controlId="start-Offset">
-                                                <Form.Label as={Col}>Start offset</Form.Label>
-                                                <Col>
-                                                    <Form.Control
-                                                        size="sm"
-                                                        disabled = {this.state.mode==='view'}
-                                                        value={this.state.pipeline._startOffset}
-                                                        isInvalid={!isValidStartOffset(this.state.pipeline.startOffset)}
-                                                        onChange={(event) => {
-                                                            const v = event.target.value;
-                                                            this.setState( state => {
-                                                                state.pipeline._startOffset = v;
-                                                                state.pipeline.startOffset = get_integer(v);
-                                                                return state;
-                                                            });
-                                                        }}
-                                                    />
-                                                    <Form.Control.Feedback type="invalid">
-                                                        Must be a integer greater or equals to zero
-                                                    </Form.Control.Feedback>
-                                                </Col>
-                                            </Form.Group>
-                                        </Col>
-                                    </Row>
-
-                                    <Row>
+                                        <Form.Group as={Col} sm={3} controlId="start-Offset">
+                                            <Form.Label>Start offset (in minutes)</Form.Label>
+                                            <Form.Control
+                                                size="sm"
+                                                disabled = {this.state.mode==='view'}
+                                                value={this.state.pipeline._startOffset}
+                                                isInvalid={!isValidStartOffset(this.state.pipeline.startOffset)}
+                                                onChange={(event) => {
+                                                    const v = event.target.value;
+                                                    this.setState( state => {
+                                                        state.pipeline._startOffset = v;
+                                                        state.pipeline.startOffset = get_integer(v);
+                                                        return state;
+                                                    });
+                                                }}
+                                            />
+                                            <Form.Control.Feedback tooltip type="invalid">
+                                                Must be a integer greater or equals to zero
+                                            </Form.Control.Feedback>
+                                        </Form.Group>
+                                    </Form.Row>
+                                    <Form.Row>
                                         <Col>
                                             <h4>Required assets</h4>
                                             <Table hover bordered  size="sm" >
@@ -417,37 +409,34 @@ export class PipelineEditor extends React.Component {
                                                 </tbody>
                                             </Table>
                                         </Col>
-                                    </Row>
-
+                                    </Form.Row>
                                     {
                                         (this.state.pipeline.type==="external") &&
-                                        <Row>
-                                            <Col>
-                                                <Form.Group as={Row} controlId="pipeline-dag-id">
-                                                    <Form.Label column sm={2}>DAG ID</Form.Label>
-                                                    <Col sm={10}>
-                                                        <Form.Control
-                                                            disabled = {this.state.mode==='view'}
-                                                            value={this.state.pipeline.dag_id}
-                                                            onChange={(event) => {
-                                                                const v = event.target.value;
-                                                                this.setState( state => {
-                                                                    state.pipeline.dag_id = v;
-                                                                    return state;
-                                                                });
-                                                            }}
-                                                        />
-                                                    </Col>
-                                                </Form.Group>
-                                            </Col>
-                                        </Row>
+                                        <Form.Row>
+                                            <Form.Group as={Col} controlId="pipeline-dag-id">
+                                                <Form.Label column sm={2}>DAG ID</Form.Label>
+                                                <Col sm={10}>
+                                                    <Form.Control
+                                                        disabled = {this.state.mode==='view'}
+                                                        value={this.state.pipeline.dag_id}
+                                                        onChange={(event) => {
+                                                            const v = event.target.value;
+                                                            this.setState( state => {
+                                                                state.pipeline.dag_id = v;
+                                                                return state;
+                                                            });
+                                                        }}
+                                                    />
+                                                </Col>
+                                            </Form.Group>
+                                        </Form.Row>
                                     }
                                 </Container>
                             </Tab>
                             {
                                 (this.state.pipeline.type==="simple-flow") &&  <Tab eventKey="Tasks" title="Tasks">
                                     <Container fluid className="pt-2">
-                                        <Row>
+                                        <Form.Row>
                                             <Col>
                                                 <h4 className="c-ib">Tasks</h4>
                                                 <Button
@@ -459,8 +448,8 @@ export class PipelineEditor extends React.Component {
                                                     Add Task
                                                 </Button>
                                             </Col>
-                                        </Row>
-                                        <Row>
+                                        </Form.Row>
+                                        <Form.Row>
                                             <Col>
                                                 <Table hover bordered size="sm" className="task-table">
                                                     <thead className="thead-dark">
@@ -514,9 +503,8 @@ export class PipelineEditor extends React.Component {
                                                     </tbody>
                                                 </Table>
                                             </Col>
-                                        </Row>
-
-                                        <Row>
+                                        </Form.Row>
+                                        <Form.Row>
                                             <Col>
                                                 <h4>Dependency</h4>
                                                 <Table hover bordered size="sm" className="dep-table">
@@ -627,7 +615,7 @@ export class PipelineEditor extends React.Component {
                                                     </tbody>
                                                 </Table>
                                             </Col>
-                                        </Row>
+                                        </Form.Row>
                                     </Container>
                                 </Tab>
                             }

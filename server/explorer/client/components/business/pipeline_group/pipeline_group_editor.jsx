@@ -1,15 +1,14 @@
-import React from 'react'
+import React from 'react';
 
-import Modal from 'react-bootstrap/Modal'
-import Button from 'react-bootstrap/Button'
-import Form from 'react-bootstrap/Form'
-import Col from 'react-bootstrap/Col'
-import Row from 'react-bootstrap/Row'
-import Container from 'react-bootstrap/Container'
+import Modal from 'react-bootstrap/Modal';
+import Button from 'react-bootstrap/Button';
+import Form from 'react-bootstrap/Form';
+import Col from 'react-bootstrap/Col';
+import Container from 'react-bootstrap/Container';
 
 import { v4 as uuidv4 } from 'uuid';
 
-import {bless_modal} from '/common_lib'
+import {bless_modal, is_valid_datetime} from '/common_lib';
 
 const _ = require("lodash");
 
@@ -28,6 +27,7 @@ export class PipelineGroupEditor extends React.Component {
         return {
             name: '',
             created_time: '2020-01-01 00:00:00',
+            due: '2020-01-01 00:00:00',
             category: '',
             context: '{}',
             finished: false,
@@ -51,6 +51,10 @@ export class PipelineGroupEditor extends React.Component {
         const mode = this.state.mode;
         this.setState({show: false}, () => {this.props.onSave(mode, savedPipelineGroup)});
 
+    };
+
+    canSave = () => {
+        return is_valid_datetime(this.state.pipeline_group.due);
     };
 
     openDialog = (mode, pipeline_group) => {
@@ -105,110 +109,130 @@ export class PipelineGroupEditor extends React.Component {
                 data-modal-id={this.modal_id}
             >
                 <Modal.Header closeButton>
-                    <Modal.Title>
-                        Execution
-                    </Modal.Title>
+                    <Modal.Title>Execution</Modal.Title>
                 </Modal.Header>
 
                 <Modal.Body>
                     <Container fluid className="pb-2 mb-2">
                         <Form>
-                            <Row>
-                                <Col>
-                                    <Form.Group controlId="pipeline-group-name">
-                                        <Form.Label>Name</Form.Label>
+                            <Form.Row>
+                                <Form.Group as={Col} controlId="pipeline-group-name">
+                                    <Form.Label>Name</Form.Label>
+                                    <Form.Control
+                                        size="sm"
+                                        value={this.state.pipeline_group.name}
+                                        disabled={this.state.mode !== "new"}
+                                        onChange={(event) => {
+                                            const v = event.target.value;
+                                            this.setState( state => {
+                                                state.pipeline_group.name = v;
+                                                return state;
+                                            });
+                                        }}
+                                    />
+                                </Form.Group>
+                            </Form.Row>
+                            <Form.Row>
+                                <Form.Group as={Col} controlId="pipeline-group-due">
+                                    <Form.Label>Due</Form.Label>
                                         <Form.Control
-                                            value={this.state.pipeline_group.name}
+                                            size="sm"
+                                            value={this.state.pipeline_group.due}
                                             disabled={this.state.mode !== "new"}
+                                            isInvalid={!is_valid_datetime(this.state.pipeline_group.due)}
+                                            placeholder="YYYY-mm-dd HH:MM:SS"
                                             onChange={(event) => {
                                                 const v = event.target.value;
                                                 this.setState( state => {
-                                                    state.pipeline_group.name = v;
+                                                    state.pipeline_group.due = v;
                                                     return state;
                                                 });
                                             }}
                                         />
-                                    </Form.Group>
-                                </Col>
-                            </Row>
-                            <Row>
-                                <Col xs={4}>
-                                    <Form.Group controlId="pipeline-group-created-time">
-                                        <Form.Label>Created Time</Form.Label>
-                                            <Form.Control
-                                                value={
-                                                    (this.state.mode==="new")?"current time":this.state.pipeline_group.created_time
+                                        <Form.Control.Feedback type="invalid">
+                                            Not a valid date time format
+                                        </Form.Control.Feedback>
+                                </Form.Group>
+                                <Form.Group as={Col} controlId="pipeline-group-finished">
+                                    <Form.Label>Finished</Form.Label>
+                                    <Form.Check type="checkbox"
+                                        disabled = {!this.canEditFinish()}
+                                        checked={this.state.pipeline_group._finished}
+                                        onChange={(event) => {
+                                            const v = event.target.checked;
+                                            this.setState(
+                                                state => {
+                                                    state.pipeline_group._finished = v;
+                                                    return state;
                                                 }
-                                                disabled={true}
-                                            />
-                                    </Form.Group>
-                                </Col>
-                                <Col xs={4}>
-                                    <Form.Group controlId="pipeline-group-finished">
-                                        <Form.Label>Finished</Form.Label>
-                                        <Form.Check type="checkbox"
-                                            disabled = {!this.canEditFinish()}
-                                            checked={this.state.pipeline_group._finished}
-                                            onChange={(event) => {
-                                                const v = event.target.checked;
-                                                this.setState(
-                                                    state => {
-                                                        state.pipeline_group._finished = v;
-                                                        return state;
-                                                    }
-                                                )
-                                            }}
-                                        />
-                                    </Form.Group>
-                                </Col>
-                                <Col xs={4}>
-                                <Form.Group controlId="pipeline-group-category">
-                                        <Form.Label>Category</Form.Label>
+                                            )
+                                        }}
+                                    />
+                                </Form.Group>
+                                <Form.Group as={Col} controlId="pipeline-group-category">
+                                    <Form.Label>Category</Form.Label>
+                                    <Form.Control
+                                        size="sm"
+                                        value={this.state.pipeline_group.category}
+                                        disabled={this.state.mode !== "new"}
+                                        onChange={(event) => {
+                                            const v = event.target.value;
+                                            this.setState( state => {
+                                                state.pipeline_group.category = v;
+                                                return state;
+                                            });
+                                        }}
+                                    />
+                                </Form.Group>
+                                <Form.Group as={Col} controlId="pipeline-group-created-time">
+                                    <Form.Label>Created Time</Form.Label>
                                         <Form.Control
-                                            value={this.state.pipeline_group.category}
-                                            disabled={this.state.mode !== "new"}
-                                            onChange={(event) => {
-                                                const v = event.target.value;
-                                                this.setState( state => {
-                                                    state.pipeline_group.category = v;
-                                                    return state;
-                                                });
-                                            }}
+                                            size="sm"
+                                            value={
+                                                (this.state.mode==="new")?"current time":this.state.pipeline_group.created_time
+                                            }
+                                            disabled={true}
                                         />
-                                    </Form.Group>
-                                </Col>
-                            </Row>
-                            <Row>
-                                <Col>
-                                    <Form.Group controlId="pipeline-group-context">
-                                        <Form.Label>Context</Form.Label>
-                                        <Form.Control as="textarea" rows="5"
-                                            className="monofont"
-                                            disabled={this.state.mode === "view"}
-                                            value={this.state.pipeline_group.context}
-                                            onChange={(event) => {
-                                                const v = event.target.value;
-                                                this.setState( state => {
-                                                    state.pipeline_group.context = v;
-                                                    return state;
-                                                });
-                                            }}
-                                        />
-                                    </Form.Group>
-                                </Col>
-                            </Row>
+                                </Form.Group>
+                            </Form.Row>
+                            <Form.Row>
+                                <Form.Group as={Col} controlId="pipeline-group-context">
+                                    <Form.Label>Context</Form.Label>
+                                    <Form.Control as="textarea" rows="5"
+                                        className="monofont"
+                                        disabled={this.state.mode === "view"}
+                                        value={this.state.pipeline_group.context}
+                                        onChange={(event) => {
+                                            const v = event.target.value;
+                                            this.setState( state => {
+                                                state.pipeline_group.context = v;
+                                                return state;
+                                            });
+                                        }}
+                                    />
+                                </Form.Group>
+                            </Form.Row>
                         </Form>
                     </Container>
                 </Modal.Body>
                 <Modal.Footer>
-                    <Button variant="secondary" onClick={this.onClose}>Close</Button>
                     <Button
-                        variant="primary"
-                        onClick={this.onSave}
-                        className={this.state.mode == "view"?"d-none":"d-block"}
+                        size="sm"
+                        variant="secondary"
+                        onClick={this.onClose}
                     >
-                        Save changes
+                        Close
                     </Button>
+                    {
+                        (this.state.mode !== "view") && <Button
+                            size="sm"
+                            variant="primary"
+                            onClick={this.onSave}
+                            disabled={!this.canSave()}
+                        >
+                            Save changes
+                        </Button>
+                    }
                 </Modal.Footer>
             </Modal>
         );

@@ -165,12 +165,17 @@ class PipelineGroupSerializer(serializers.ModelSerializer):
         format='%Y-%m-%d %H:%M:%S',
         input_formats=['%Y-%m-%d %H:%M:%S']
     )
+    due = serializers.DateTimeField(
+        allow_null=False,
+        format='%Y-%m-%d %H:%M:%S',
+        input_formats=['%Y-%m-%d %H:%M:%S']
+    )
 
     class Meta:
         model = PipelineGroup
         fields = [
             'url',
-            'id', 'name', 'created_time', 'category', 'context', 'finished', 'manual',
+            'id', 'name', 'created_time', 'category', 'context', 'finished', 'manual', 'due'
         ]
 
 class PipelineGroupDetailsSerializer(serializers.ModelSerializer):
