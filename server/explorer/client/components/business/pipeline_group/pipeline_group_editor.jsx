@@ -7,6 +7,10 @@ import Col from 'react-bootstrap/Col'
 import Row from 'react-bootstrap/Row'
 import Container from 'react-bootstrap/Container'
 
+import { v4 as uuidv4 } from 'uuid';
+
+import {bless_modal} from '/common_lib'
+
 const _ = require("lodash");
 
 /*********************************************************************************
@@ -32,6 +36,8 @@ export class PipelineGroupEditor extends React.Component {
         }
     };
 
+    modal_id = uuidv4();
+
     state = {
         mode: "new",
         show: false,
@@ -55,13 +61,13 @@ export class PipelineGroupEditor extends React.Component {
                 mode: mode,
                 show: true,
                 pipeline_group: ui_pipeline_group
-            })
+            }, () => bless_modal(this.modal_id))
         } else if (mode == "new") {
             this.setState({
                 mode: mode,
                 show: true,
                 pipeline_group: this.initPipelineGroupValue()
-            })
+            }, () => bless_modal(this.modal_id))
         }
     };
 
@@ -93,8 +99,10 @@ export class PipelineGroupEditor extends React.Component {
                 show={this.state.show}
                 onHide={this.onClose}
                 backdrop="static"
-                size='lg'
                 scrollable
+                animation={false}
+                dialogClassName="standard-modal pipeline-group-editor-modal"
+                data-modal-id={this.modal_id}
             >
                 <Modal.Header closeButton>
                     <Modal.Title>

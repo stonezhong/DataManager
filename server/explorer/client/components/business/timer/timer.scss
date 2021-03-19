@@ -73,3 +73,10 @@ div.timer-table {
         }
     }
 }
+
+div.timer-editor-modal {
+    & > div.modal-content {
+        width:  800px;
+        height: 728px;
+    }
+}

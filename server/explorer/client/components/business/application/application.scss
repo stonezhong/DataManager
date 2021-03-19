@@ -62,3 +62,10 @@ table.application-viewer-grid {
         vertical-align: top;
     }
 }
+
+div.application-editor-modal {
+    & > div.modal-content {
+        width:  900px;
+        height: 768px;
+    }
+}

@@ -52,3 +52,10 @@ table.datarepo-viewer-grid {
         vertical-align: top;
     }
 }
+
+div.data-repo-editor-modal {
+    & > div.modal-content {
+        width:  870px;
+        height: 586px;
+    }
+}

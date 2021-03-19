@@ -84,3 +84,10 @@ table.pipeline-instance-table {
         }
     }
 }
+
+div.pipeline-group-editor-modal {
+    & > div.modal-content {
+        width:  920px;
+        height: 540px;
+    }
+}
