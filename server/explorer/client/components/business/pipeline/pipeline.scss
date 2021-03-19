@@ -14,7 +14,8 @@ div.sql-step-editor {
 
 div.pipeline-editor {
     & > div.modal-content {
-        min-height: 650px;
+        min-height: 60vh;
+        min-width:  60vw;
     }
 }
 

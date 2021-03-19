@@ -4,6 +4,7 @@ import Col from 'react-bootstrap/Col'
 import Row from 'react-bootstrap/Row'
 import Table from 'react-bootstrap/Table'
 import Button from 'react-bootstrap/Button'
+import ReactJson from 'react-json-view'
 
 import * as Icon from 'react-bootstrap-icons'
 import {DataTable} from '/components/generic/datatable/main.jsx'
@@ -59,9 +60,19 @@ export class DatasetInstanceTable extends React.Component {
             onClick={event => {
                 this.theLoaderViewerRef.current.openDialog(
                     "Loader",
-                    <pre>
-                        {JSON.stringify(JSON.parse(dataset_instance.loader),null,2)}
-                    </pre>
+                    <div>
+                        <ReactJson  src={JSON.parse(dataset_instance.loader)}
+                            theme="colors"
+                            iconStyle="circle"
+                            quotesOnKeys={false}
+                            displayArrayKey={false}
+                            name={null}
+                            collapsed={false}
+                            displayDataTypes={false}
+                            displayObjectSize={false}
+                            enableClipboard={false}
+                        />
+                    </div>
                 );
             }}
         >
@@ -184,9 +195,7 @@ export class DatasetInstanceTable extends React.Component {
                     />
                     <SimpleDialogBox
                         ref={this.theLoaderViewerRef}
-                        backdrop="static"
-                        size='lg'
-                        scrollable
+                        dialogClassName="md-modal"
                     />
                 </Col>
             </Row>

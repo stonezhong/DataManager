@@ -1,7 +1,6 @@
 import React from 'react'
 
 import Button from 'react-bootstrap/Button'
-import Modal from 'react-bootstrap/Modal'
 import Table from 'react-bootstrap/Table'
 import * as Icon from 'react-bootstrap-icons'
 
@@ -10,6 +9,9 @@ import './dataset.scss'
 const _ = require("lodash");
 
 export function get_schema(dataset) {
+    if (!dataset) {
+        return null;
+    }
     if (!dataset.schema) {
         return null;
     }
@@ -17,35 +19,27 @@ export function get_schema(dataset) {
     if (!schema_str) {
         return null;
     }
-    return JSON.parse(schema_str);
+    try {
+        return JSON.parse(schema_str);
+    }
+    catch (e) {
+        // console.log(`get_schema: bad json, ${schema_str}`);
+        return null;
+    }
+
 }
 
 /*********************************************************************************
  * Purpose: View a Dataset Schema
  *
  * Props
- *     schema   : schema from spark dataframe, it is generated from
- *                df.schema.jsonValue
+ *     dataset   : a dataset object
  *
  */
 
 export class SchemaViewer extends React.Component {
     state = {
-        show: false,
-        schema: null,
         expand: {},
-    };
-
-
-    openDialog = (schema) => {
-        this.setState({
-            show: true,
-            schema: schema
-        })
-    };
-
-    onClose = () => {
-        this.setState({show: false});
     };
 
     get_field = (field) => {
@@ -129,11 +123,12 @@ export class SchemaViewer extends React.Component {
     };
 
     get_table_rows = () => {
-        if (!this.state.schema) {
+        const schema = get_schema(this.props.dataset);
+        if (!schema) {
             return null;
         }
 
-        const view_data = this.state.schema.fields.map(fld => this.get_field(fld));
+        const view_data = schema.fields.map(fld => this.get_field(fld));
         const rows = [];
         for (const i in view_data) {
             this.append_tree_node_to_row(view_data[i], 0, rows);
@@ -190,37 +185,20 @@ export class SchemaViewer extends React.Component {
 
     render() {
         return (
-            <Modal
-                show={this.state.show}
-                onHide={this.onClose}
-                backdrop="static"
-                size='lg'
-                scrollable
-            >
-                <Modal.Header closeButton>
-                    <Modal.Title>Schema</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    <Table hover size="sm" className="dataset-schema-table">
-                        <thead className="thead-dark">
-                            <tr>
-                                <th className="c-tc-icon1"></th>
-                                <th data-role='name'>Field Name</th>
-                                <th data-role='type'>Type</th>
-                                <th data-role='is_array'>Array</th>
-                                <th data-role='nullable'>Nullable</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            { this.get_table_rows() }
-                        </tbody>
-                    </Table>
-                </Modal.Body>
-
-                <Modal.Footer>
-                    <Button variant="secondary" size="sm" onClick={this.onClose}>Close</Button>
-                </Modal.Footer>
-            </Modal>
+            <Table hover size="sm" className="dataset-schema-table">
+                <thead className="thead-dark">
+                    <tr>
+                        <th className="c-tc-icon1"></th>
+                        <th data-role='name'>Field Name</th>
+                        <th data-role='type'>Type</th>
+                        <th data-role='is_array'>Array</th>
+                        <th data-role='nullable'>Nullable</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    { this.get_table_rows() }
+                </tbody>
+            </Table>
         );
     }
 }

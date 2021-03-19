@@ -1,4 +1,7 @@
 import React from 'react'
+import ReactJson from 'react-json-view'
+
+import './dataset_sample.scss'
 
 export function has_sample_data(dataset) {
     let rows = [];
@@ -23,11 +26,19 @@ export class DatasetSample extends React.Component {
         }
 
         return <div>
-            { rows.map((row, index) => <pre key={index}>
-                {
-                    JSON.stringify(row, null, 2)
-                }
-            </pre>) }
+            { rows.map((row, index) =>
+                <div key={index} className="dataset-sample-section">
+                    <ReactJson  src={row}
+                        theme="monokai"
+                        name={null}
+                        collapsed={false}
+                        displayDataTypes={false}
+                        displayObjectSize={false}
+                        enableClipboard={false}
+                        collapseStringsAfterLength={40}
+                    />
+                </div>
+            ) }
         </div>;
     }
 }

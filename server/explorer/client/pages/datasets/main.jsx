@@ -78,13 +78,17 @@ class DatasetsPage extends React.Component {
                         </PageHeader>
                     </Col>
                 </Row>
-                <DatasetTable
-                    ref={this.theDatasetTableRef}
-                    showExpired={this.state.showExpired}
-                    get_page={this.get_page}
-                    page_size={15}
-                    size="sm"
-                />
+                <Row>
+                    <Col>
+                        <DatasetTable
+                            ref={this.theDatasetTableRef}
+                            showExpired={this.state.showExpired}
+                            get_page={this.get_page}
+                            page_size={15}
+                            size="sm"
+                        />
+                    </Col>
+                </Row>
                 <DatasetEditor
                     ref={this.theDatasetEditorRef}
                     onSave={this.onSave}
