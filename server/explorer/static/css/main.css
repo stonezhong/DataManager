@@ -72,3 +72,5 @@ div.standard-modal {
         font-size: 18px; }
       div.standard-modal > div.modal-content > div.modal-header > button.close {
         cursor: default; }
+    div.standard-modal > div.modal-content > div.modal-body {
+      background-color: #fafafa; }

@@ -197,7 +197,7 @@ export class SequentialTaskEditor extends React.Component {
                                                             return state;
                                                         });
                                                     }}
-                                                    as="textarea" rows="3"
+                                                    as="textarea" rows="7"
                                                 />
                                             </Form.Group>
                                         </Col>
@@ -268,7 +268,7 @@ export class SequentialTaskEditor extends React.Component {
                                                             });
                                                         }}
                                                         as="textarea"
-                                                        rows="3"
+                                                        rows="7"
                                                     />
                                                 </Form.Group>
                                             </Col>
@@ -327,7 +327,7 @@ export class SequentialTaskEditor extends React.Component {
                                                         });
                                                     }}
                                                     as="textarea"
-                                                    rows="3"
+                                                    rows="18"
                                                 />
                                             </Form.Group>
                                         </Col>

@@ -267,7 +267,7 @@ export class PipelineEditor extends React.Component {
                                     <Form.Row>
                                         <Form.Group as={Col} controlId="pipeline-description">
                                             <Form.Label>Description</Form.Label>
-                                            <Form.Control as="textarea" rows="3"
+                                            <Form.Control as="textarea" rows="5"
                                                 size="sm"
                                                 disabled = {this.state.mode==='view'}
                                                 value={this.state.pipeline.description}
