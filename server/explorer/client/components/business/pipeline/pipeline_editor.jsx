@@ -17,6 +17,7 @@ import { v4 as uuidv4 } from 'uuid';
 import {SequentialTaskEditor} from './task_editor.jsx'
 import {SimpleDialogBox} from '/components/generic/dialogbox/simple.jsx'
 import {ApplicationLink} from '/components/business/application'
+import {bless_modal} from '/common_lib'
 
 import "./pipeline.scss"
 
@@ -65,6 +66,8 @@ export class PipelineEditor extends React.Component {
             _startOffset: '0',         // the string format of startOffset, for display purpose
         };
     };
+
+    modal_id = uuidv4();
 
     state = {
         show: false,
@@ -121,13 +124,13 @@ export class PipelineEditor extends React.Component {
                 show: true,
                 mode: mode,
                 pipeline: myPipeline
-            });
+            }, () => bless_modal(this.modal_id));
         } else {
             this.setState({
                 show: true,
                 mode: mode,
                 pipeline: this.initPipelineValue()
-            });
+            }, () => bless_modal(this.modal_id));
         }
     };
 
@@ -192,13 +195,13 @@ export class PipelineEditor extends React.Component {
     render() {
         return (
             <Modal
-                dialogClassName="pipeline-editor"
                 show={this.state.show}
                 onHide={this.onClose}
                 backdrop="static"
-                animation={false}
                 scrollable
-                centered
+                animation={false}
+                dialogClassName="standard-modal pipeline-editor"
+                data-modal-id={this.modal_id}
             >
                 <Modal.Header closeButton>
                     <Modal.Title>{this.get_title()}</Modal.Title>

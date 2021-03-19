@@ -1,21 +1,21 @@
 div.task-editor {
     & > div.modal-content {
-        min-height: 700px;
-        min-width:  1440px;
+        width: 860px;
+        height: 640px;
     }
 }
 
 div.sql-step-editor {
     & > div.modal-content {
-        min-height: 80vh;
-        min-width:  60vw;
+        width: 1140px;
+        height: 768px;
     }
 }
 
 div.pipeline-editor {
     & > div.modal-content {
-        min-height: 60vh;
-        min-width:  60vw;
+        width: 1140px;
+        height: 768px;
     }
 }
 
