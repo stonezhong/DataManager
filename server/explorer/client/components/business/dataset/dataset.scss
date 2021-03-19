@@ -238,3 +238,10 @@ span.asset-label-inactive {
     font-weight: bold;
     color: red;
 }
+
+div.dataset-editor-modal {
+    & > div.modal-content {
+        width:  768px;
+        min-height: 620px;
+    }
+}

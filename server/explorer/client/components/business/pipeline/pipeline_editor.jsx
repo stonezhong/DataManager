@@ -196,8 +196,9 @@ export class PipelineEditor extends React.Component {
                 show={this.state.show}
                 onHide={this.onClose}
                 backdrop="static"
-                size='xl'
+                animation={false}
                 scrollable
+                centered
             >
                 <Modal.Header closeButton>
                     <Modal.Title>{this.get_title()}</Modal.Title>
@@ -634,7 +635,10 @@ export class PipelineEditor extends React.Component {
                             onSave={this.onTaskSaved}
                             applications={this.props.applications}
                         />
-                        <SimpleDialogBox ref={this.theDlgboxRef} />
+                        <SimpleDialogBox
+                            ref={this.theDlgboxRef}
+                            dialogClassName="md-modal"
+                        />
 
                     </Container>
                 </Modal.Body>

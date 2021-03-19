@@ -156,7 +156,8 @@ class DatasetPage extends React.Component {
                                 onClick={
                                     event => {
                                         this.theSchemaViewerRef.current.openDialog(
-                                            get_schema(this.props.dataset)
+                                            "Schema",
+                                            <SchemaViewer dataset={this.props.dataset}/>
                                         )
                                     }
                                 }
@@ -201,8 +202,9 @@ class DatasetPage extends React.Component {
                     size="sm"
                 />
                 <DatasetDescriptionDialog ref={this.theHelpDialogBoxRef}/>
-                <SchemaViewer
+                <SimpleDialogBox
                     ref={this.theSchemaViewerRef}
+                    dialogClassName="md-modal"
                 />
                 <DatasetEditor
                     ref={this.theDatasetEditorRef}
@@ -210,9 +212,7 @@ class DatasetPage extends React.Component {
                 />
                 <SimpleDialogBox
                     ref={this.theSampleViewRef}
-                    backdrop="static"
-                    size='lg'
-                    scrollable
+                    dialogClassName="md-modal"
                 />
             </Container>
         )

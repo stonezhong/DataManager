@@ -137,3 +137,14 @@ export function handle_json_response(res) {
     }
     return res.json();
 }
+
+export function bless_modal(modal_id) {
+    $(`[data-modal-id=${modal_id}] > .modal-content`).resizable({});
+    $(`[data-modal-id=${modal_id}]`).draggable();
+    $(`[data-modal-id=${modal_id}] > .modal-content`).position({
+        my:"center",
+        at: "center",
+        of: "body"
+    });
+
+}

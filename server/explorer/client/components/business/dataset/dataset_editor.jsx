@@ -10,7 +10,9 @@ import Modal from 'react-bootstrap/Modal'
 import { CKEditor } from '@ckeditor/ckeditor5-react';
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 
-import {is_valid_datetime} from '/common_lib'
+import { v4 as uuidv4 } from 'uuid';
+
+import {is_valid_datetime, bless_modal} from '/common_lib'
 import {AlertBox} from '/components/generic/alert/alert.jsx'
 
 const _ = require("lodash");
@@ -38,6 +40,8 @@ export class DatasetEditor extends React.Component {
             expiration_time: "",
         }
     };
+
+    modal_id = uuidv4();
 
     state = {
         show: false,
@@ -90,13 +94,13 @@ export class DatasetEditor extends React.Component {
                 show: true,
                 mode: mode,
                 dataset: ui_dataset
-            })
+            }, () => bless_modal(this.modal_id))
         } else if (mode === "new") {
             this.setState({
                 show: true,
                 mode: mode,
                 dataset: this.initDatasetValue()
-            })
+            }, () => bless_modal(this.modal_id))
         } else {
             // wrong parameter
             console.assert(false, "mode must be edit, view or new");
@@ -121,8 +125,10 @@ export class DatasetEditor extends React.Component {
                 show={this.state.show}
                 onHide={this.onClose}
                 backdrop="static"
-                size='lg'
                 scrollable
+                animation={false}
+                dialogClassName="standard-modal dataset-editor-modal"
+                data-modal-id={this.modal_id}
             >
                 <Modal.Header closeButton>
                     <Modal.Title>{this.get_title()}</Modal.Title>

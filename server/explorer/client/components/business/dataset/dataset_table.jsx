@@ -44,7 +44,8 @@ export class DatasetTable extends React.Component {
                 onClick={
                     event => {
                         this.theSchemaViewerRef.current.openDialog(
-                            get_schema(dataset)
+                            "Schema",
+                            <SchemaViewer dataset={dataset}/>
                         )
                     }
                 }
@@ -114,14 +115,14 @@ export class DatasetTable extends React.Component {
                     get_page={this.get_page}
                 />
 
-                <SchemaViewer
+                <SimpleDialogBox
                     ref={this.theSchemaViewerRef}
+                    dialogClassName="md-modal"
                 />
+
                 <SimpleDialogBox
                     ref={this.theSampleViewRef}
-                    backdrop="static"
-                    size='lg'
-                    scrollable
+                    dialogClassName="md-modal"
                 />
             </div>
         )
