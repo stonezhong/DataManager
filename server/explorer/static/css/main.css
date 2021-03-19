@@ -63,4 +63,12 @@ div.standard-modal {
   div.standard-modal > div.modal-content {
     border: 1px solid darkgrey; }
     div.standard-modal > div.modal-content > div.modal-header {
-      background-color: royalblue; }
+      background-color: royalblue;
+      cursor: move;
+      padding: 6px; }
+      div.standard-modal > div.modal-content > div.modal-header > div.modal-title {
+        color: white;
+        font-weight: bold;
+        font-size: 18px; }
+      div.standard-modal > div.modal-content > div.modal-header > button.close {
+        cursor: default; }

@@ -92,6 +92,18 @@ div.standard-modal {
     & > div.modal-content {
         & > div.modal-header {
             background-color: royalblue;
+            cursor: move;
+            padding: 6px;
+
+            & > div.modal-title {
+                color: white;
+                font-weight: bold;
+                font-size: 18px;
+            }
+
+            & > button.close {
+                cursor: default;
+            }
         }
         border: 1px solid darkgrey;
     }
