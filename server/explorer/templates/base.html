@@ -14,12 +14,9 @@
     {% else %}
         <link rel="stylesheet" href="https://unpkg.com/bootstrap@4.4.1/dist/css/bootstrap.min.css">
     {% endif %}
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/redmond/jquery-ui.css">
     <link rel="stylesheet" href="/static/css/main.css">
 
-
-    {% comment %}
-        For jQuery, see https://code.jquery.com/jquery/, https://code.jquery.com/
-    {% endcomment %}
 
     {% if ENV_enable_js_debug %}
         <script src="https://unpkg.com/lodash@4.17.20/lodash.js"></script>
@@ -27,12 +24,22 @@
         <script src="https://unpkg.com/react@16.14.0/umd/react.development.js"></script>
         <script src="https://unpkg.com/react-dom@16.14.0/umd/react-dom.development.js"></script>
         <script src="https://unpkg.com/react-bootstrap@1.5.2/dist/react-bootstrap.js"></script>
+        <script
+            src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"
+            integrity="sha256-T0Vest3yCU7pafRw9r+settMBX6JkKN06dqBnpQ8d30="
+            crossorigin="anonymous">
+        </script>
     {% else %}
         <script src="https://unpkg.com/lodash@4.17.20/lodash.min.js"></script>
         <script src="https://unpkg.com/jquery@3.1.0/dist/jquery.min.js"></script>
         <script src="https://unpkg.com/react@16.14.0/umd/react.production.min.js"></script>
         <script src="https://unpkg.com/react-dom@16.14.0/umd/react-dom.production.min.js"></script>
         <script src="https://unpkg.com/react-bootstrap@1.5.2/dist/react-bootstrap.min.js"></script>
+        <script
+            src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"
+            integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU="
+            crossorigin="anonymous">
+        </script>
     {% endif %}
 
     <script src="https://cdn.ckeditor.com/ckeditor5/23.1.0/classic/ckeditor.js"></script>
