@@ -105,6 +105,11 @@ div.standard-modal {
                 cursor: default;
             }
         }
+
+        & > div.modal-body {
+            background-color: #fafafa;
+        }
+
         border: 1px solid darkgrey;
     }
 }
