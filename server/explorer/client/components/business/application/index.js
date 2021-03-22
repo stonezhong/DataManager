@@ -27,15 +27,27 @@ const _ = require("lodash");
 export class ApplicationEditor extends StandardDialogbox {
     initApplicationValue = () => {
         return {
-            name: '',
+            name: '-- enter name --',
             description: '',
-            team: '',
+            team: '-- enter team --',
             retired: false,
-            app_location: ''
+            app_location: '-- enter location --'
         }
     };
 
     dialogClassName = "application-editor-modal";
+
+    isNameValid = (application) => {
+        return application.name.trim().length > 0;
+    }
+
+    isTeamValid = (application) => {
+        return application.team.trim().length > 0;
+    }
+
+    isLocationValid = (application) => {
+        return application.app_location.trim().length > 0;
+    }
 
     onSave = () => {
         const {application, mode} = this.state.payload;
@@ -47,7 +59,9 @@ export class ApplicationEditor extends StandardDialogbox {
     canSave = () => {
         const {application} = this.state.payload;
 
-        return application.name && application.app_location;
+        return this.isNameValid(application) &&
+            this.isTeamValid(application) &&
+            this.isLocationValid(application);
     };
 
     hasSave = () => {
@@ -98,8 +112,10 @@ export class ApplicationEditor extends StandardDialogbox {
                         <Form.Label column sm={2}>Name</Form.Label>
                         <Col sm={10}>
                             <Form.Control
+                                size="sm"
                                 disabled = {mode==='edit'||mode==='view'}
                                 value={application.name}
+                                isInvalid={!this.isNameValid(application)}
                                 onChange={(event) => {
                                     const v = event.target.value;
                                     this.setState(
@@ -110,14 +126,19 @@ export class ApplicationEditor extends StandardDialogbox {
                                     )
                                 }}
                             />
+                            <Form.Control.Feedback tooltip type="invalid">
+                                Cannot be empty.
+                            </Form.Control.Feedback>
                         </Col>
                     </Form.Group>
                     <Form.Group as={Row} controlId="team">
                         <Form.Label column sm={2}>Team</Form.Label>
                         <Col sm={10}>
                             <Form.Control
+                                size="sm"
                                 disabled = {mode==='view'}
                                 value={application.team}
+                                isInvalid={!this.isTeamValid(application)}
                                 onChange={(event) => {
                                     const v = event.target.value;
                                     this.setState(
@@ -128,12 +149,14 @@ export class ApplicationEditor extends StandardDialogbox {
                                     )
                                 }}
                             />
+                            <Form.Control.Feedback tooltip type="invalid">
+                                Cannot be empty.
+                            </Form.Control.Feedback>
                         </Col>
                     </Form.Group>
                     <Form.Group as={Row} controlId="description">
                         <Form.Label column sm={2}>Description</Form.Label>
                         <Col sm={10}>
-
                             <CKEditor
                                 editor={ ClassicEditor }
                                 data={application.description}
@@ -155,8 +178,10 @@ export class ApplicationEditor extends StandardDialogbox {
                         <Form.Label column sm={2}>Location</Form.Label>
                         <Col sm={10}>
                             <Form.Control
+                                size="sm"
                                 disabled = {mode==='view'}
                                 value={application.app_location}
+                                isInvalid={!this.isLocationValid(application)}
                                 onChange={(event) => {
                                     const v = event.target.value;
                                     this.setState(
@@ -167,6 +192,9 @@ export class ApplicationEditor extends StandardDialogbox {
                                     )
                                 }}
                             />
+                            <Form.Control.Feedback tooltip type="invalid">
+                                Cannot be empty.
+                            </Form.Control.Feedback>
                         </Col>
                     </Form.Group>
                     <Form.Group as={Row} controlId="retired">
