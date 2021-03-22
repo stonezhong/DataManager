@@ -229,13 +229,12 @@ export class PipelineEditor extends StandardDialogbox {
                                 </Form.Group>
                             </Form.Row>
                             <Form.Row>
-                                <Form.Group as={Col} sm={3} controlId="pipeline-type">
+                                <Form.Group as={Col} sm={3}>
                                     <Form.Label className="pr-2" >Type</Form.Label>
                                     <Form.Check
-                                        size="sm"
                                         disabled = {mode==='view'}
-                                        name="pipeline-type"
                                         inline
+                                        name="pipeline-type"
                                         label="simple-flow"
                                         type="radio"
                                         checked={pipeline.type=="simple-flow"}
@@ -247,10 +246,9 @@ export class PipelineEditor extends StandardDialogbox {
                                         }}
                                     />
                                     <Form.Check
-                                        size="sm"
                                         disabled = {mode==='view'}
-                                        name="pipeline-type"
                                         inline
+                                        name="pipeline-type"
                                         label="external"
                                         type="radio"
                                         checked={pipeline.type==="external"}
