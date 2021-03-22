@@ -58,7 +58,7 @@ class DataReposPage extends React.Component {
                                     size="sm"
                                     className="c-vc ml-2"
                                     onClick={() => {
-                                        this.theDataRepoEditorRef.current.openDialog("new");
+                                        this.theDataRepoEditorRef.current.openDialog({mode: "new"});
                                     }}
                                 >
                                     Create
