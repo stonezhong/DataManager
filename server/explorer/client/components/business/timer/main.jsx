@@ -1,24 +1,21 @@
-import React from 'react'
+import React from 'react';
 
-import Button from 'react-bootstrap/Button'
-import Container from 'react-bootstrap/Container'
-import Row from 'react-bootstrap/Row'
-import Col from 'react-bootstrap/Col'
-import Form from 'react-bootstrap/Form'
-import Modal from 'react-bootstrap/Modal'
-import InputGroup from 'react-bootstrap/InputGroup'
+import Button from 'react-bootstrap/Button';
+import Row from 'react-bootstrap/Row';
+import Col from 'react-bootstrap/Col';
+import Form from 'react-bootstrap/Form';
+import InputGroup from 'react-bootstrap/InputGroup';
 
-import * as Icon from 'react-bootstrap-icons'
-import { v4 as uuidv4 } from 'uuid';
+import * as Icon from 'react-bootstrap-icons';
 
-import "./timer.scss"
-import {is_json_string, is_valid_datetime} from '/common_lib.js'
-import {AlertBox} from '/components/generic/alert/alert.jsx'
-import {DataTable} from '/components/generic/datatable/main.jsx'
-import {AppIcon} from '/components/generic/icons/main.jsx'
-import {bless_modal} from '/common_lib'
+import "./timer.scss";
+import {is_json_string, is_valid_datetime} from '/common_lib.js';
+import {DataTable} from '/components/generic/datatable/main.jsx';
+import {AppIcon} from '/components/generic/icons/main.jsx';
 
 const _ = require('lodash');
+
+import {StandardDialogbox} from '/components/generic/dialogbox/standard.jsx';
 
 function timer_native_to_ui(native_timer) {
     // this is a timer for pipeline
@@ -47,9 +44,7 @@ function timer_ui_to_native(ui_timer) {
  *                onSave(mode, timer) will be called, mode is either "new" or "edit"
  *
  */
-export class TimerEditor extends React.Component {
-    theAlertBoxRef  = React.createRef();
-
+export class TimerEditor extends StandardDialogbox {
     initTimerValue = () => {
         return {
             name: '',
@@ -66,66 +61,69 @@ export class TimerEditor extends React.Component {
         }
     };
 
-    modal_id = uuidv4();
-
-    state = {
-        show: false,
-        mode: "new",
-        timer: this.initTimerValue(),
-    }
-
-    onClose = () => {
-        this.setState({show: false});
-    };
+    dialogClassName = "timer-editor-modal";
 
     onSave = () => {
-        if (!is_json_string(this.state.timer.context)) {
+        const {timer, mode} = this.state.payload;
+
+        if (!is_json_string(timer.context)) {
             this.theAlertBoxRef.current.show("Context must be a JSON string");
             return
         }
-        if (!is_valid_datetime(this.state.timer.start_from, false)) {
+        if (!is_valid_datetime(timer.start_from, false)) {
             this.theAlertBoxRef.current.show("Start MUST be in format YYYY-MM-DD HH:MM:SS, for example: 2020-10-03 00:00:00");
             return
         }
-        if (!is_valid_datetime(this.state.timer.start_from, true)) {
+        if (!is_valid_datetime(timer.start_from, true)) {
             this.theAlertBoxRef.current.show("End MUST be in format YYYY-MM-DD HH:MM:SS, for example: 2020-10-03 00:00:00");
             return
         }
 
-        const native_timer = timer_ui_to_native(this.state.timer);
-        const mode = this.state.mode;
-        this.props.onSave(mode, native_timer).then(
-            this.onClose
-        ).catch(error => {
-            this.theAlertBoxRef.current.show(error.message);
-        });
+        const native_timer = timer_ui_to_native(timer);
+        return this.props.onSave(mode, native_timer);
     };
 
-    openDialog = (mode, timer) => {
+    canSave = () => {
+        const {timer} = this.state.payload;
+
+        return (
+            !!timer.name &&
+            !!timer.team &&
+            !!timer.category &&
+            !!timer.start_from
+        );
+    };
+
+    hasSave = () => {
+        const {mode} = this.state.payload;
+        return (mode === "edit" || mode === "new");
+    };
+
+    onOpen = openArgs => {
+        const {mode, timer} = openArgs;
         if (mode === "view" || mode === "edit") {
-            this.setState({
-                show: true,
+            return {
                 mode: mode,
                 timer: _.cloneDeep(timer_native_to_ui(timer))
-            }, () => bless_modal(this.modal_id))
+            };
         } else if (mode === "new") {
-            this.setState({
-                show: true,
+            return {
                 mode: mode,
                 timer: this.initTimerValue(),
-            }, () => bless_modal(this.modal_id))
+            };
         } else {
             // wrong parameter
             console.assert(false, "mode must be edit, view or new");
         }
     };
 
-    get_title = () => {
-        if (this.state.mode === "new") {
+    getTitle = () => {
+        const {mode} = this.state.payload;
+        if (mode === "new") {
             return "new Scheduler";
-        } else if (this.state.mode === "edit") {
+        } else if (mode === "edit") {
             return "edit Scheduler";
-        } else if (this.state.mode === "view") {
+        } else if (mode === "view") {
             return "Scheduler"
         } else {
             // wrong parameter
@@ -133,270 +131,224 @@ export class TimerEditor extends React.Component {
         }
     };
 
-    canSave = () => {
-        return (
-            !!this.state.timer.name &&
-            !!this.state.timer.team &&
-            !!this.state.timer.category &&
-            !!this.state.timer.start_from
-        );
-    };
+    renderBody = () => {
+        const {timer, mode} = this.state.payload;
 
-    render() {
         return (
-            <Modal
-                show={this.state.show}
-                onHide={this.onClose}
-                backdrop="static"
-                scrollable
-                animation={false}
-                dialogClassName="standard-modal timer-editor-modal"
-                data-modal-id={this.modal_id}
-            >
-                <Modal.Header closeButton>
-                    <Modal.Title>{this.get_title()}</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    <Container fluid className="pb-2 mb-2">
-                        <AlertBox ref={this.theAlertBoxRef}/>
-                        <Form>
-                            <Form.Group as={Row} controlId="name">
-                                <Form.Label column sm={2}>Name</Form.Label>
-                                <Col sm={10}>
+            <Form>
+                <Form.Group as={Row} controlId="name">
+                    <Form.Label column sm={2}>Name</Form.Label>
+                    <Col sm={10}>
+                        <Form.Control
+                            disabled = {mode==='edit'||mode==='view'}
+                            value={timer.name}
+                            onChange={(event) => {
+                                const v = event.target.value;
+                                this.setState(
+                                    state => {
+                                        state.payload.timer.name = v;
+                                        return state;
+                                    }
+                                )
+                            }}
+                        />
+                    </Col>
+                </Form.Group>
+                <Form.Group as={Row} controlId="description">
+                    <Form.Label column sm={2}>Description</Form.Label>
+                    <Col sm={10}>
+                        <Form.Control as="textarea" rows={3}
+                            disabled = {mode==='view'}
+                            value={timer.description}
+                            onChange={(event) => {
+                                const v = event.target.value;
+                                this.setState(
+                                    state => {
+                                        state.payload.timer.description = v;
+                                        return state;
+                                    }
+                                )
+                            }}
+                        />
+                    </Col>
+                </Form.Group>
+                <Form.Group as={Row} controlId="paused">
+                    <Form.Label column sm={2}>Paused</Form.Label>
+                    <Col sm={10}>
+                        <Form.Check type="checkbox"
+                            className="c-vc"
+                            disabled = {mode==='view'}
+                            checked={timer.paused}
+                            onChange={(event) => {
+                                const v = event.target.checked;
+                                this.setState(
+                                    state => {
+                                        state.payload.timer.paused = v;
+                                        return state;
+                                    }
+                                )
+                            }}
+                        />
+                    </Col>
+                </Form.Group>
+                <Form.Group as={Row} controlId="category">
+                    <Form.Label column sm={2}>Category</Form.Label>
+                    <Col sm={10}>
+                        <Form.Control
+                            disabled = {mode==='view'}
+                            value={timer.category}
+                            onChange={(event) => {
+                                const v = event.target.value;
+                                this.setState(
+                                    state => {
+                                        state.payload.timer.category = v;
+                                        return state;
+                                    }
+                                )
+                            }}
+                        />
+                    </Col>
+                </Form.Group>
+                <Form.Group as={Row} controlId="context">
+                    <Form.Label column sm={2}>Context</Form.Label>
+                    <Col sm={10}>
+                        <Form.Control as="textarea" rows={3}
+                            className="monofont"
+                            disabled = {mode==='view'}
+                            value={timer.context}
+                            onChange={(event) => {
+                                const v = event.target.value;
+                                this.setState(
+                                    state => {
+                                        state.payload.timer.context = v;
+                                        return state;
+                                    }
+                                )
+                            }}
+                        />
+                    </Col>
+                </Form.Group>
+                <Row>
+                    <Col>
+                        <Form.Group as={Row} controlId="author">
+                            <Form.Label column sm={2}>Author</Form.Label>
+                            <Col sm={10}>
+                                {
+                                    mode==="new" && <Form.Control
+                                        disabled = {true}
+                                        value={timer.author}
+                                    />
+                                }
+                            </Col>
+                        </Form.Group>
+                    </Col>
+                    <Col>
+                        <Form.Group as={Row} controlId="team">
+                            <Form.Label column sm={2}>Team</Form.Label>
+                            <Col sm={10}>
+                                <Form.Control
+                                    disabled = {mode==='view'}
+                                    value={timer.team}
+                                    onChange={(event) => {
+                                        const v = event.target.value;
+                                        this.setState(
+                                            state => {
+                                                state.payload.timer.team = v;
+                                                return state;
+                                            }
+                                        )
+                                    }}
+                                />
+                            </Col>
+                        </Form.Group>
+                    </Col>
+                </Row>
+                <Row>
+                    <Col>
+                        <Form.Group as={Row} controlId="interval">
+                            <Form.Label column sm={2}>Interval</Form.Label>
+                            <Col sm={10}>
+                                <InputGroup className="mb-3">
                                     <Form.Control
-                                        disabled = {this.state.mode==='edit'||this.state.mode==='view'}
-                                        value={this.state.timer.name}
+                                        disabled = {mode==='view'}
+                                        value={timer.interval_amount}
                                         onChange={(event) => {
                                             const v = event.target.value;
                                             this.setState(
                                                 state => {
-                                                    state.timer.name = v;
+                                                    state.payload.timer.interval_amount = parseInt(v);
                                                     return state;
                                                 }
                                             )
                                         }}
                                     />
-                                </Col>
-                            </Form.Group>
-                            <Form.Group as={Row} controlId="description">
-                                <Form.Label column sm={2}>Description</Form.Label>
-                                <Col sm={10}>
-                                    <Form.Control as="textarea" rows={3}
-                                        disabled = {this.state.mode==='view'}
-                                        value={this.state.timer.description}
-                                        onChange={(event) => {
-                                            const v = event.target.value;
-                                            this.setState(
-                                                state => {
-                                                    state.timer.description = v;
-                                                    return state;
-                                                }
-                                            )
-                                        }}
-                                    />
-                                </Col>
-                            </Form.Group>
-                            <Form.Group as={Row} controlId="paused">
-                                <Form.Label column sm={2}>Paused</Form.Label>
-                                <Col sm={10}>
-                                    <Form.Check type="checkbox"
-                                        className="c-vc"
-                                        disabled = {this.state.mode==='view'}
-                                        checked={this.state.timer.paused}
-                                        onChange={(event) => {
-                                            const v = event.target.checked;
-                                            this.setState(
-                                                state => {
-                                                    state.timer.paused = v;
-                                                    return state;
-                                                }
-                                            )
-                                        }}
-                                    />
-                                </Col>
-                            </Form.Group>
-                            <Form.Group as={Row} controlId="category">
-                                <Form.Label column sm={2}>Category</Form.Label>
-                                <Col sm={10}>
                                     <Form.Control
-                                        disabled = {this.state.mode==='view'}
-                                        value={this.state.timer.category}
-                                        onChange={(event) => {
+                                        as="select"
+                                        disabled = {mode==='view'}
+                                        value={timer.interval_unit}
+                                        onChange={event => {
                                             const v = event.target.value;
-                                            this.setState(
-                                                state => {
-                                                    state.timer.category = v;
-                                                    return state;
-                                                }
-                                            )
+                                            this.setState(state => {
+                                                state.payload.timer.interval_unit = v;
+                                                return state;
+                                            });
                                         }}
-                                    />
-                                </Col>
-                            </Form.Group>
-                            <Form.Group as={Row} controlId="context">
-                                <Form.Label column sm={2}>Context</Form.Label>
-                                <Col sm={10}>
-                                    <Form.Control as="textarea" rows={3}
-                                        className="monofont"
-                                        disabled = {this.state.mode==='view'}
-                                        value={this.state.timer.context}
-                                        onChange={(event) => {
-                                            const v = event.target.value;
-                                            this.setState(
-                                                state => {
-                                                    state.timer.context = v;
-                                                    return state;
-                                                }
-                                            )
-                                        }}
-                                    />
-                                </Col>
-                            </Form.Group>
-                            <Row>
-                                <Col>
-                                    <Form.Group as={Row} controlId="author">
-                                        <Form.Label column sm={2}>Author</Form.Label>
-                                        <Col sm={10}>
-                                            <Form.Control
-                                                className={this.state.mode==="new"?"d-none":"d-block"}
-                                                disabled = {true}
-                                                value={this.state.timer.author}
-                                                onChange={(event) => {
-                                                    const v = event.target.value;
-                                                    this.setState(
-                                                        state => {
-                                                            state.timer.author = v;
-                                                            return state;
-                                                        }
-                                                    )
-                                                }}
-                                            />
-                                        </Col>
-                                    </Form.Group>
-                                </Col>
-                                <Col>
-                                    <Form.Group as={Row} controlId="team">
-                                        <Form.Label column sm={2}>Team</Form.Label>
-                                        <Col sm={10}>
-                                            <Form.Control
-                                                disabled = {this.state.mode==='view'}
-                                                value={this.state.timer.team}
-                                                onChange={(event) => {
-                                                    const v = event.target.value;
-                                                    this.setState(
-                                                        state => {
-                                                            state.timer.team = v;
-                                                            return state;
-                                                        }
-                                                    )
-                                                }}
-                                            />
-                                        </Col>
-                                    </Form.Group>
-                                </Col>
-                            </Row>
-                            <Row>
-                                <Col>
-                                    <Form.Group as={Row} controlId="interval">
-                                        <Form.Label column sm={2}>Interval</Form.Label>
-                                        <Col sm={10}>
-                                            <InputGroup className="mb-3">
-                                                <Form.Control
-                                                    disabled = {this.state.mode==='view'}
-                                                    value={this.state.timer.interval_amount}
-                                                    onChange={(event) => {
-                                                        const v = event.target.value;
-                                                        this.setState(
-                                                            state => {
-                                                                state.timer.interval_amount = parseInt(v);
-                                                                return state;
-                                                            }
-                                                        )
-                                                    }}
-                                                />
-                                                <Form.Control
-                                                    as="select"
-                                                    disabled = {this.state.mode==='view'}
-                                                    value={this.state.timer.interval_unit}
-                                                    onChange={event => {
-                                                        const v = event.target.value;
-                                                        this.setState(state => {
-                                                            state.timer.interval_unit = v;
-                                                            return state;
-                                                        });
-                                                    }}
-                                                >
-                                                    <option key="YEAR" value="YEAR">YEAR</option>
-                                                    <option key="MONTH" value="MONTH">MONTH</option>
-                                                    <option key="DAY" value="DAY">DAY</option>
-                                                    <option key="HOUR" value="HOUR">HOUR</option>
-                                                    <option key="MINUTE" value="MINUTE">MINUTE</option>
-                                                    <option key="SECOND" value="SECOND">SECOND</option>
-                                                </Form.Control>
-                                            </InputGroup>
-                                        </Col>
-                                    </Form.Group>
-                                </Col>
-                            </Row>
-                            <Row>
-                                <Col>
-                                    <Form.Group as={Row} controlId="start_from">
-                                        <Form.Label column sm={2}>Start</Form.Label>
-                                        <Col sm={10}>
-                                            <Form.Control
-                                                disabled = {this.state.mode==='view'}
-                                                value={this.state.timer.start_from}
-                                                onChange={(event) => {
-                                                    const v = event.target.value;
-                                                    this.setState(
-                                                        state => {
-                                                            state.timer.start_from = v;
-                                                            return state;
-                                                        }
-                                                    )
-                                                }}
-                                            />
-                                        </Col>
-                                    </Form.Group>
-                                </Col>
-                                <Col>
-                                    <Form.Group as={Row} controlId="end_at">
-                                        <Form.Label column sm={2}>End</Form.Label>
-                                        <Col sm={10}>
-                                            <Form.Control
-                                                disabled = {this.state.mode==='view'}
-                                                value={this.state.timer.end_at}
-                                                onChange={(event) => {
-                                                    const v = event.target.value;
-                                                    this.setState(
-                                                        state => {
-                                                            state.timer.end_at = v;
-                                                            return state;
-                                                        }
-                                                    )
-                                                }}
-                                            />
-                                        </Col>
-                                    </Form.Group>
-                                </Col>
-                            </Row>
-                        </Form>
-                    </Container>
-                </Modal.Body>
-                <Modal.Footer>
-                    {
-                        (this.state.mode === "edit" || this.state.mode === "new") &&
-                        <Button
-                            variant="primary"
-                            onClick={this.onSave}
-                            disabled={!this.canSave()}
-                        >
-                            Save changes
-                        </Button>
-                    }
-                    <Button variant="secondary" onClick={this.onClose}>Close</Button>
-                </Modal.Footer>
-            </Modal>
+                                    >
+                                        <option key="YEAR" value="YEAR">YEAR</option>
+                                        <option key="MONTH" value="MONTH">MONTH</option>
+                                        <option key="DAY" value="DAY">DAY</option>
+                                        <option key="HOUR" value="HOUR">HOUR</option>
+                                        <option key="MINUTE" value="MINUTE">MINUTE</option>
+                                        <option key="SECOND" value="SECOND">SECOND</option>
+                                    </Form.Control>
+                                </InputGroup>
+                            </Col>
+                        </Form.Group>
+                    </Col>
+                </Row>
+                <Row>
+                    <Col>
+                        <Form.Group as={Row} controlId="start_from">
+                            <Form.Label column sm={2}>Start</Form.Label>
+                            <Col sm={10}>
+                                <Form.Control
+                                    disabled = {mode==='view'}
+                                    value={timer.start_from}
+                                    onChange={(event) => {
+                                        const v = event.target.value;
+                                        this.setState(
+                                            state => {
+                                                state.payload.timer.start_from = v;
+                                                return state;
+                                            }
+                                        )
+                                    }}
+                                />
+                            </Col>
+                        </Form.Group>
+                    </Col>
+                    <Col>
+                        <Form.Group as={Row} controlId="end_at">
+                            <Form.Label column sm={2}>End</Form.Label>
+                            <Col sm={10}>
+                                <Form.Control
+                                    disabled = {mode==='view'}
+                                    value={timer.end_at}
+                                    onChange={(event) => {
+                                        const v = event.target.value;
+                                        this.setState(
+                                            state => {
+                                                state.payload.timer.end_at = v;
+                                                return state;
+                                            }
+                                        )
+                                    }}
+                                />
+                            </Col>
+                        </Form.Group>
+                    </Col>
+                </Row>
+            </Form>
         );
     }
 
@@ -432,9 +384,10 @@ export class TimerTable extends React.Component {
             size="sm"
             onClick={
                 event => {
-                    this.theTimerEditorRef.current.openDialog(
-                        this.props.allowEdit?"edit":"view", timer
-                    )
+                    this.theTimerEditorRef.current.openDialog({
+                        mode: this.props.allowEdit?"edit":"view",
+                        timer: timer
+                    })
                 }
             }
         >
@@ -472,7 +425,7 @@ export class TimerTable extends React.Component {
                                 size="sm"
                                 className="c-vc ml-2"
                                 onClick={() => {
-                                    this.theTimerEditorRef.current.openDialog("new");
+                                    this.theTimerEditorRef.current.openDialog({mode: "new"});
                                 }}
                             >
                                 Create
