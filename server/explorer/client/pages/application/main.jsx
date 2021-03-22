@@ -46,9 +46,10 @@ class ApplicationPage extends React.Component {
                                     variant="secondary"
                                     size="sm"
                                     onClick={event => {
-                                        this.theApplicationEditorRef.current.openDialog(
-                                            "edit" , this.props.application
-                                        )
+                                        this.theApplicationEditorRef.current.openDialog({
+                                            mode: "edit" ,
+                                            application: this.props.application
+                                        })
                                     }}
                                 >
                                     Edit

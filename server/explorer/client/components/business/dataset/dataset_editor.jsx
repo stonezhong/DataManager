@@ -52,7 +52,7 @@ export class DatasetEditor extends StandardDialogbox {
         }
         datasetToSave.minor_version = parseInt(datasetToSave.minor_version);
 
-        return this.props.onSave(mode, dataset)
+        return this.props.onSave(mode, dataset);
     };
 
     canSave = () => {

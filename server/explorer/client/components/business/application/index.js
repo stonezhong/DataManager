@@ -1,24 +1,18 @@
-import React from 'react'
+import React from 'react';
 
-import Button from 'react-bootstrap/Button'
-import Container from 'react-bootstrap/Container'
-import Row from 'react-bootstrap/Row'
-import Col from 'react-bootstrap/Col'
-import Form from 'react-bootstrap/Form'
-import Modal from 'react-bootstrap/Modal'
-import Card from 'react-bootstrap/Card'
-
-import { v4 as uuidv4 } from 'uuid';
+import Row from 'react-bootstrap/Row';
+import Col from 'react-bootstrap/Col';
+import Form from 'react-bootstrap/Form';
+import Card from 'react-bootstrap/Card';
 
 import { CKEditor } from '@ckeditor/ckeditor5-react';
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 
-import {DataTable} from '/components/generic/datatable/main.jsx'
-import {AppIcon} from '/components/generic/icons/main.jsx'
-import {bless_modal} from '/common_lib'
+import {DataTable} from '/components/generic/datatable/main.jsx';
+import {AppIcon} from '/components/generic/icons/main.jsx';
 
-
-import "./application.scss"
+import {StandardDialogbox} from '/components/generic/dialogbox/standard.jsx';
+import "./application.scss";
 
 const _ = require("lodash");
 
@@ -30,7 +24,7 @@ const _ = require("lodash");
  *                mode is either "new" or "edit"
  *
  */
-export class ApplicationEditor extends React.Component {
+export class ApplicationEditor extends StandardDialogbox {
     initApplicationValue = () => {
         return {
             name: '',
@@ -41,51 +35,52 @@ export class ApplicationEditor extends React.Component {
         }
     };
 
-    modal_id = uuidv4();
-
-    state = {
-        show: false,
-        mode: "new",      // either edit or new
-        application: this.initApplicationValue(),
-    };
-
-    onClose = () => {
-        this.setState({show: false});
-    };
+    dialogClassName = "application-editor-modal";
 
     onSave = () => {
-        const application = _.cloneDeep(this.state.application);
-        const mode = this.state.mode;
-        this.setState({show: false}, () => {this.props.onSave(mode, application)});
+        const {application, mode} = this.state.payload;
+
+        const ui_application = _.cloneDeep(application);
+        return this.props.onSave(mode, ui_application);
     };
 
+    canSave = () => {
+        const {application} = this.state.payload;
 
-    openDialog = (mode, application) => {
+        return application.name && application.app_location;
+    };
+
+    hasSave = () => {
+        const {mode} = this.state.payload;
+        return (mode === "edit" || mode === "new");
+    };
+
+    onOpen = openArgs => {
+        const {mode, application} = openArgs;
+
         if (mode === "view" || mode === "edit") {
-            this.setState({
-                show: true,
+            return {
                 mode: mode,
                 application: application
-            }, () => bless_modal(this.modal_id))
+            };
         } else if (mode === "new") {
-            this.setState({
-                show: true,
+            return {
                 mode: mode,
                 application: this.initApplicationValue()
-            }, () => bless_modal(this.modal_id))
+            }
         } else {
             // wrong parameter
             console.assert(false, "mode must be edit, view or new");
         }
     };
 
-
-    get_title = () => {
-        if (this.state.mode === "new") {
+    getTitle = () => {
+        const {mode} = this.state.payload;
+        if (mode === "new") {
             return "new Application";
-        } else if (this.state.mode === "edit") {
+        } else if (mode === "edit") {
             return "edit Application";
-        } else if (this.state.mode === "view") {
+        } else if (mode === "view") {
             return "Application"
         } else {
             // wrong parameter
@@ -93,137 +88,108 @@ export class ApplicationEditor extends React.Component {
         }
     };
 
-    canSave = () => {
-        return this.state.application.name && this.state.application.app_location;
-    };
 
-    render() {
+    renderBody = () => {
+        const {application, mode} = this.state.payload;
         return (
-            <Modal
-                show={this.state.show}
-                onHide={this.onClose}
-                backdrop="static"
-                scrollable
-                animation={false}
-                dialogClassName="standard-modal application-editor-modal"
-                data-modal-id={this.modal_id}
-            >
-                <Modal.Header closeButton>
-                    <Modal.Title>{this.get_title()}</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    <Container fluid className="pb-2 mb-2">
-                        <Form>
-                            <Form.Group as={Row} controlId="name">
-                                <Form.Label column sm={2}>Name</Form.Label>
-                                <Col sm={10}>
-                                    <Form.Control
-                                        disabled = {this.state.mode==='edit'||this.state.mode==='view'}
-                                        value={this.state.application.name}
-                                        onChange={(event) => {
-                                            const v = event.target.value;
-                                            this.setState(
-                                                state => {
-                                                    state.application.name = v;
-                                                    return state;
-                                                }
-                                            )
-                                        }}
-                                    />
-                                </Col>
-                            </Form.Group>
-                            <Form.Group as={Row} controlId="team">
-                                <Form.Label column sm={2}>Team</Form.Label>
-                                <Col sm={10}>
-                                    <Form.Control
-                                        disabled = {this.state.mode==='view'}
-                                        value={this.state.application.team}
-                                        onChange={(event) => {
-                                            const v = event.target.value;
-                                            this.setState(
-                                                state => {
-                                                    state.application.team = v;
-                                                    return state;
-                                                }
-                                            )
-                                        }}
-                                    />
-                                </Col>
-                            </Form.Group>
-                            <Form.Group as={Row} controlId="description">
-                                <Form.Label column sm={2}>Description</Form.Label>
-                                <Col sm={10}>
+            <div>
+                <Form>
+                    <Form.Group as={Row} controlId="name">
+                        <Form.Label column sm={2}>Name</Form.Label>
+                        <Col sm={10}>
+                            <Form.Control
+                                disabled = {mode==='edit'||mode==='view'}
+                                value={application.name}
+                                onChange={(event) => {
+                                    const v = event.target.value;
+                                    this.setState(
+                                        state => {
+                                            state.payload.application.name = v;
+                                            return state;
+                                        }
+                                    )
+                                }}
+                            />
+                        </Col>
+                    </Form.Group>
+                    <Form.Group as={Row} controlId="team">
+                        <Form.Label column sm={2}>Team</Form.Label>
+                        <Col sm={10}>
+                            <Form.Control
+                                disabled = {mode==='view'}
+                                value={application.team}
+                                onChange={(event) => {
+                                    const v = event.target.value;
+                                    this.setState(
+                                        state => {
+                                            state.payload.application.team = v;
+                                            return state;
+                                        }
+                                    )
+                                }}
+                            />
+                        </Col>
+                    </Form.Group>
+                    <Form.Group as={Row} controlId="description">
+                        <Form.Label column sm={2}>Description</Form.Label>
+                        <Col sm={10}>
 
-                                    <CKEditor
-                                        editor={ ClassicEditor }
-                                        data={this.state.application.description}
-                                        disabled={this.state.mode==='view'}
-                                        type="classic"
-                                        onChange={(event, editor) => {
-                                            const v = editor.getData();
-                                            this.setState(
-                                                state => {
-                                                    state.application.description = v;
-                                                    return state;
-                                                }
-                                            )
-                                        }}
-                                    />
-                                </Col>
-                            </Form.Group>
-                            <Form.Group as={Row} controlId="app_location">
-                                <Form.Label column sm={2}>Location</Form.Label>
-                                <Col sm={10}>
-                                    <Form.Control
-                                        disabled = {this.state.mode==='view'}
-                                        value={this.state.application.app_location}
-                                        onChange={(event) => {
-                                            const v = event.target.value;
-                                            this.setState(
-                                                state => {
-                                                    state.application.app_location = v;
-                                                    return state;
-                                                }
-                                            )
-                                        }}
-                                    />
-                                </Col>
-                            </Form.Group>
-                            <Form.Group as={Row} controlId="retired">
-                                <Form.Label column sm={2}>Retired</Form.Label>
-                                <Col sm={10}>
-                                    <Form.Check type="checkbox"
-                                        className="c-vc"
-                                        disabled = {this.state.mode=='new'||this.state.mode==="view"}
-                                        checked={this.state.application.retired}
-                                        onChange={(event) => {
-                                            const v = event.target.checked;
-                                            this.setState(
-                                                state => {
-                                                    state.application.retired = v;
-                                                    return state;
-                                                }
-                                            )
-                                        }}
-                                    />
-                                </Col>
-                            </Form.Group>
-                        </Form>
-                    </Container>
-                </Modal.Body>
-
-                <Modal.Footer>
-                    {(this.state.mode === "edit" || this.state.mode === "new") &&
-                    <Button
-                        variant="primary"
-                        onClick={this.onSave}
-                        disabled={!this.canSave()}
-                    >
-                        Save changes
-                    </Button>}
-                    <Button variant="secondary" onClick={this.onClose}>Close</Button>
-                </Modal.Footer>
-            </Modal>
+                            <CKEditor
+                                editor={ ClassicEditor }
+                                data={application.description}
+                                disabled={mode==='view'}
+                                type="classic"
+                                onChange={(event, editor) => {
+                                    const v = editor.getData();
+                                    this.setState(
+                                        state => {
+                                            state.payload.application.description = v;
+                                            return state;
+                                        }
+                                    )
+                                }}
+                            />
+                        </Col>
+                    </Form.Group>
+                    <Form.Group as={Row} controlId="app_location">
+                        <Form.Label column sm={2}>Location</Form.Label>
+                        <Col sm={10}>
+                            <Form.Control
+                                disabled = {mode==='view'}
+                                value={application.app_location}
+                                onChange={(event) => {
+                                    const v = event.target.value;
+                                    this.setState(
+                                        state => {
+                                            state.payload.application.app_location = v;
+                                            return state;
+                                        }
+                                    )
+                                }}
+                            />
+                        </Col>
+                    </Form.Group>
+                    <Form.Group as={Row} controlId="retired">
+                        <Form.Label column sm={2}>Retired</Form.Label>
+                        <Col sm={10}>
+                            <Form.Check type="checkbox"
+                                className="c-vc"
+                                disabled = {mode=='new'||mode==="view"}
+                                checked={application.retired}
+                                onChange={(event) => {
+                                    const v = event.target.checked;
+                                    this.setState(
+                                        state => {
+                                            state.payload.application.retired = v;
+                                            return state;
+                                        }
+                                    )
+                                }}
+                            />
+                        </Col>
+                    </Form.Group>
+                </Form>
+            </div>
         );
     }
 }
