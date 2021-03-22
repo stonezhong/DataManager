@@ -1,18 +1,18 @@
-import React from 'react'
+import React from 'react';
 
-import Button from 'react-bootstrap/Button'
-import Container from 'react-bootstrap/Container'
-import Row from 'react-bootstrap/Row'
-import Col from 'react-bootstrap/Col'
-import Form from 'react-bootstrap/Form'
-import Table from 'react-bootstrap/Table'
-import Tabs from 'react-bootstrap/Tabs'
-import Tab from 'react-bootstrap/Tab'
-import * as Icon from 'react-bootstrap-icons'
+import Button from 'react-bootstrap/Button';
+import Container from 'react-bootstrap/Container';
+import Row from 'react-bootstrap/Row';
+import Col from 'react-bootstrap/Col';
+import Form from 'react-bootstrap/Form';
+import Table from 'react-bootstrap/Table';
+import Tabs from 'react-bootstrap/Tabs';
+import Tab from 'react-bootstrap/Tab';
+import * as Icon from 'react-bootstrap-icons';
 
 import {StandardDialogbox} from '/components/generic/dialogbox/standard.jsx';
-import {SQLStepEditor} from './sql_step_editor.jsx'
-import {is_json_string} from '/common_lib.js'
+import {SQLStepEditor} from './sql_step_editor.jsx';
+import {is_json_string} from '/common_lib.js';
 
 
 
@@ -34,7 +34,7 @@ export class SequentialTaskEditor extends StandardDialogbox {
 
     initTaskValue = () => {
         return {
-            name: '',
+            name: '-- enter name --',
             description: '',
             type: 'spark-sql',
             args: '{}',
@@ -46,6 +46,17 @@ export class SequentialTaskEditor extends StandardDialogbox {
 
     dialogClassName = "task-editor";
 
+    isNameValid = (task) => {
+        return task.name.trim().length > 0;
+    }
+
+    isSparkOptsValid = (task) => {
+        if (task.type !== "spark-sql" && task.type !== "other") {
+            return true;
+        }
+        return is_json_string(task.spark_opts);
+    };
+
     app_options = () => {
         return _.concat({
             id: '',
@@ -55,11 +66,6 @@ export class SequentialTaskEditor extends StandardDialogbox {
 
     onSave = () => {
         const {task, mode} = this.state.payload;
-
-        if (!is_json_string(task.args)) {
-            this.alert("Task Arguments must be a JSON string");
-            return
-        }
         const taskToSave = _.cloneDeep(task);
 
         return this.props.onSave(mode, taskToSave);
@@ -68,7 +74,7 @@ export class SequentialTaskEditor extends StandardDialogbox {
     canSave = () => {
         const {task} = this.state.payload;
 
-        return task.name;
+        return this.isNameValid(task) && this.isSparkOptsValid(task);
     };
 
     hasSave = () => {
@@ -157,6 +163,7 @@ export class SequentialTaskEditor extends StandardDialogbox {
                                             size="sm"
                                             disabled = {mode==='edit' || mode==='view'}
                                             value={task.name}
+                                            isInvalid={!this.isNameValid(task)}
                                             onChange={(event) => {
                                                 const v = event.target.value;
                                                 this.setState(state => {
@@ -165,6 +172,9 @@ export class SequentialTaskEditor extends StandardDialogbox {
                                                 });
                                             }}
                                         />
+                                        <Form.Control.Feedback tooltip type="invalid">
+                                            Cannot be empty.
+                                        </Form.Control.Feedback>
                                     </Form.Group>
                                 </Col>
                             </Row>
@@ -244,8 +254,9 @@ export class SequentialTaskEditor extends StandardDialogbox {
                                             <Form.Label>Spark Job Options</Form.Label>
                                             <Form.Control
                                                 className="monofont"
-                                                value={task.spark_opts}
                                                 disabled = {mode==='view'}
+                                                value={task.spark_opts}
+                                                isInvalid={!this.isSparkOptsValid(task)}
                                                 onChange={(event) => {
                                                     const v = event.target.value;
                                                     this.setState(state => {
@@ -256,6 +267,9 @@ export class SequentialTaskEditor extends StandardDialogbox {
                                                 as="textarea"
                                                 rows="7"
                                             />
+                                            <Form.Control.Feedback tooltip type="invalid">
+                                                Must be a valid JSON object.
+                                            </Form.Control.Feedback>
                                         </Form.Group>
                                     </Col>
                                 </Row>
