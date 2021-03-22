@@ -66,10 +66,10 @@ class PipelinePage extends React.Component {
                                     variant="secondary"
                                     size="sm"
                                     onClick={event => {
-                                        this.thePipelineEditorRef.current.openDialog(
-                                            "edit",
-                                            pipeline_from_django_model(this.props.pipeline)
-                                        );
+                                        this.thePipelineEditorRef.current.openDialog({
+                                            mode: "edit",
+                                            pipeline: pipeline_from_django_model(this.props.pipeline)
+                                        });
                                     }}
                                 >
                                     Edit

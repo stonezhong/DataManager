@@ -128,7 +128,7 @@ export class DatasetEditor extends StandardDialogbox {
     renderBody = () => {
         const {dataset, mode} = this.state.payload;
         return (
-            <div>
+            <Form>
                 <Form.Row>
                     <Form.Group as={Col} controlId="name">
                         <Form.Label>Name</Form.Label>
@@ -262,7 +262,7 @@ export class DatasetEditor extends StandardDialogbox {
                         </Form.Control.Feedback>
                     </Col>
                 </Form.Group>
-            </div>
+            </Form>
         );
     }
 }

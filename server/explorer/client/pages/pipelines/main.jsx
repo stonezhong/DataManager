@@ -55,9 +55,9 @@ class PipelinesPage extends React.Component {
                                     size="sm"
                                     className="ml-2"
                                     onClick={() => {
-                                        this.thePipelineEditorRef.current.openDialog(
-                                            "new"
-                                        );
+                                        this.thePipelineEditorRef.current.openDialog({
+                                            mode: "new"
+                                        });
                                     }}
                                 >
                                     Create
