@@ -95,7 +95,7 @@ export class SequentialTaskEditor extends React.Component {
     };
 
     addStep = () => {
-        this.theSQLEditorRef.current.openDialog("new");
+        this.theSQLEditorRef.current.openDialog({mode: "new"});
     };
 
     deleteSQLStep = step => {
@@ -107,11 +107,11 @@ export class SequentialTaskEditor extends React.Component {
     };
 
     editSQLStep = step => {
-        this.theSQLEditorRef.current.openDialog("edit", step);
+        this.theSQLEditorRef.current.openDialog({mode: "edit", step: step});
     };
 
     viewSQLStep = step => {
-        this.theSQLEditorRef.current.openDialog("view", step);
+        this.theSQLEditorRef.current.openDialog({mode: "view", step: step});
     };
 
     onSQLStepSaved = (mode, step) => {
