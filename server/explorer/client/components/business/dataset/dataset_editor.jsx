@@ -1,19 +1,16 @@
 import React from 'react'
 
-import Button from 'react-bootstrap/Button'
-import Container from 'react-bootstrap/Container'
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
 import Form from 'react-bootstrap/Form'
-import Modal from 'react-bootstrap/Modal'
 
 import { CKEditor } from '@ckeditor/ckeditor5-react';
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 
-import { v4 as uuidv4 } from 'uuid';
+import {is_valid_datetime} from '/common_lib'
 
-import {is_valid_datetime, bless_modal} from '/common_lib'
-import {AlertBox} from '/components/generic/alert/alert.jsx'
+import {StandardDialogbox} from '/components/generic/dialogbox/standard.jsx';
+import "./dataset.scss"
 
 const _ = require("lodash");
 
@@ -27,9 +24,7 @@ const _ = require("lodash");
  *
  */
 
-export class DatasetEditor extends React.Component {
-    theAlertBoxRef  = React.createRef();
-
+export class DatasetEditor extends StandardDialogbox {
     initDatasetValue = () => {
         return {
             name: '',
@@ -41,229 +36,194 @@ export class DatasetEditor extends React.Component {
         }
     };
 
-    modal_id = uuidv4();
-
-    state = {
-        show: false,
-        mode: "new",      // either edit or new
-        dataset: this.initDatasetValue(),
-    };
-
-    onClose = () => {
-        this.setState({show: false});
-    };
+    dialogClassName = "dataset-editor-modal";
 
     onSave = () => {
-        if (!is_valid_datetime(this.state.dataset.expiration_time, true)) {
-            this.theAlertBoxRef.current.show("Expire MUST be in format YYYY-MM-DD HH:MM:SS, for example: 2020-10-03 00:00:00");
+        const {dataset, mode} = this.state.payload;
+
+        if (!is_valid_datetime(dataset.expiration_time, true)) {
+            this.alert("Expire MUST be in format YYYY-MM-DD HH:MM:SS, for example: 2020-10-03 00:00:00");
             return
         }
 
-        const dataset = _.cloneDeep(this.state.dataset);
-        if (dataset.expiration_time === "") {
-            dataset.expiration_time = null;
+        const datasetToSave = _.cloneDeep(dataset);
+        if (datasetToSave.expiration_time === "") {
+            datasetToSave.expiration_time = null;
         }
-        dataset.minor_version = parseInt(dataset.minor_version);
-        const mode = this.state.mode;
+        datasetToSave.minor_version = parseInt(datasetToSave.minor_version);
 
-        this.props.onSave(mode, dataset).then(
-            this.onClose
-        ).catch(error => {
-            this.theAlertBoxRef.current.show(error.message);
-        });
+        return this.props.onSave(mode, dataset)
     };
 
     canSave = () => {
+        const {dataset} = this.state.payload;
+
         // minor version must be natural number
-        if (!/^[1-9]\d*$/.test(this.state.dataset.minor_version)) {
+        if (!/^[1-9]\d*$/.test(dataset.minor_version)) {
             return false;
         }
-        return this.state.dataset.major_version && this.state.dataset.name && this.state.dataset.team;
+        return dataset.major_version && dataset.name && dataset.team;
     };
 
-    openDialog = (mode, dataset) => {
+    hasSave = () => {
+        const {mode} = this.state.payload;
+        return (mode === "edit" || mode === "new");
+    };
+
+    onOpen = openArgs => {
+        const {mode, dataset} = openArgs;
         if (mode === "view" || mode === "edit") {
             const ui_dataset = _.cloneDeep(dataset);
             if (ui_dataset.expiration_time === null) {
                 ui_dataset.expiration_time = "";
             }
-
             ui_dataset.minor_version = ui_dataset.minor_version.toString();
-
-            this.setState({
-                show: true,
+            return {
                 mode: mode,
-                dataset: ui_dataset
-            }, () => bless_modal(this.modal_id))
+                dataset: ui_dataset,
+            };
         } else if (mode === "new") {
-            this.setState({
-                show: true,
+            return {
                 mode: mode,
                 dataset: this.initDatasetValue()
-            }, () => bless_modal(this.modal_id))
+            };
         } else {
             // wrong parameter
             console.assert(false, "mode must be edit, view or new");
         }
     };
 
-    get_title = () => {
-        if (this.state.mode === "new") {
+    getTitle = () => {
+        const payload = this.state.payload;
+        if (payload.mode === "new") {
             return "new Dataset";
-        } else if (this.state.mode === "edit") {
+        } else if (payload.mode === "edit") {
             return "edit Dataset";
-        } else if (this.state.mode === "view") {
+        } else if (payload.mode === "view") {
             return "Dataset"
         } else {
             console.assert(false, "mode must be edit, view or new");
         }
     };
 
-    render() {
+    renderBody = () => {
+        const {dataset, mode} = this.state.payload;
         return (
-            <Modal
-                show={this.state.show}
-                onHide={this.onClose}
-                backdrop="static"
-                scrollable
-                animation={false}
-                dialogClassName="standard-modal dataset-editor-modal"
-                data-modal-id={this.modal_id}
-            >
-                <Modal.Header closeButton>
-                    <Modal.Title>{this.get_title()}</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    <Container fluid className="pb-2 mb-2">
-                        <AlertBox ref={this.theAlertBoxRef}/>
-                        <Form.Row>
-                            <Form.Group as={Col} controlId="name">
-                                <Form.Label>Name</Form.Label>
-                                <Form.Control
-                                    size="sm"
-                                    disabled = {this.state.mode==='edit'||this.state.mode==='view'}
-                                    value={this.state.dataset.name}
-                                    onChange={(event) => {
-                                        const v = event.target.value;
-                                        this.setState(
-                                            state => {
-                                                state.dataset.name = v;
-                                                return state;
-                                            }
-                                        )
-                                    }}
-                                />
-                            </Form.Group>
-                            <Form.Group as={Col} controlId="team">
-                                <Form.Label>Team</Form.Label>
-                                <Form.Control
-                                    size="sm"
-                                    disabled = {this.state.mode==='view'}
-                                    value={this.state.dataset.team}
-                                    onChange={(event) => {
-                                        const v = event.target.value;
-                                        this.setState(
-                                            state => {
-                                                state.dataset.team = v;
-                                                return state;
-                                            }
-                                        )
-                                    }}
-                                />
-                            </Form.Group>
-                        </Form.Row>
-                        <Form.Row>
-                            <Form.Group as={Col} controlId="major_version">
-                                <Form.Label>Major Version</Form.Label>
-                                <Form.Control
-                                    size="sm"
-                                    disabled = {this.state.mode==='edit'||this.state.mode==='view'}
-                                    value={this.state.dataset.major_version}
-                                    onChange={(event) => {
-                                        const v = event.target.value;
-                                        this.setState(
-                                            state => {
-                                                state.dataset.major_version = v;
-                                                return state;
-                                            }
-                                        )
-                                    }}
-                                />
-                            </Form.Group>
-                            <Form.Group as={Col} controlId="minor_version">
-                                <Form.Label>Minor Version</Form.Label>
-                                <Form.Control
-                                    size="sm"
-                                    disabled = {this.state.mode==='edit'||this.state.mode==='view'}
-                                    value={this.state.dataset.minor_version}
-                                    onChange={(event) => {
-                                        const v = event.target.value;
-                                        this.setState(
-                                            state => {
-                                                state.dataset.minor_version = v;
-                                                return state;
-                                            }
-                                        )
-                                    }}
-                                />
-                            </Form.Group>
-                        </Form.Row>
+            <div>
+                <Form.Row>
+                    <Form.Group as={Col} controlId="name">
+                        <Form.Label>Name</Form.Label>
+                        <Form.Control
+                            size="sm"
+                            disabled = {mode==='edit'||mode==='view'}
+                            value={dataset.name}
+                            onChange={(event) => {
+                                const v = event.target.value;
+                                this.setState(
+                                    state => {
+                                        state.payload.dataset.name = v;
+                                        return state;
+                                    }
+                                )
+                            }}
+                        />
+                    </Form.Group>
+                    <Form.Group as={Col} controlId="team">
+                        <Form.Label>Team</Form.Label>
+                        <Form.Control
+                            size="sm"
+                            disabled = {mode==='view'}
+                            value={dataset.team}
+                            onChange={(event) => {
+                                const v = event.target.value;
+                                this.setState(
+                                    state => {
+                                        state.payload.dataset.team = v;
+                                        return state;
+                                    }
+                                )
+                            }}
+                        />
+                    </Form.Group>
+                </Form.Row>
+                <Form.Row>
+                    <Form.Group as={Col} controlId="major_version">
+                        <Form.Label>Major Version</Form.Label>
+                        <Form.Control
+                            size="sm"
+                            disabled = {mode==='edit'||mode==='view'}
+                            value={dataset.major_version}
+                            onChange={(event) => {
+                                const v = event.target.value;
+                                this.setState(
+                                    state => {
+                                        state.payload.dataset.major_version = v;
+                                        return state;
+                                    }
+                                )
+                            }}
+                        />
+                    </Form.Group>
+                    <Form.Group as={Col} controlId="minor_version">
+                        <Form.Label>Minor Version</Form.Label>
+                        <Form.Control
+                            size="sm"
+                            disabled = {mode==='edit'||mode==='view'}
+                            value={dataset.minor_version}
+                            onChange={(event) => {
+                                const v = event.target.value;
+                                this.setState(
+                                    state => {
+                                        state.payload.dataset.minor_version = v;
+                                        return state;
+                                    }
+                                )
+                            }}
+                        />
+                    </Form.Group>
+                </Form.Row>
 
-                        <Form.Row>
-                            <Form.Group as={Col} controlId="description">
-                                <Form.Label>Description</Form.Label>
-                                <CKEditor
-                                    editor={ ClassicEditor }
-                                    data={this.state.dataset.description}
-                                    disabled={this.state.mode==='view'}
-                                    type="classic"
-                                    onChange={(event, editor) => {
-                                        const v = editor.getData();
-                                        this.setState(
-                                            state => {
-                                                state.dataset.description = v;
-                                                return state;
-                                            }
-                                        )
-                                    }}
-                                />
-                            </Form.Group>
-                        </Form.Row>
-                        <Form.Group as={Row} controlId="expiration_time">
-                            <Form.Label column sm={2}>Expire</Form.Label>
-                            <Col sm={10}>
-                                <Form.Control
-                                    size="sm"
-                                    disabled = {this.state.mode==='new' || this.state.mode==='view'}
-                                    value={this.state.dataset.expiration_time}
-                                    onChange={(event) => {
-                                        const v = event.target.value;
-                                        this.setState(
-                                            state => {
-                                                state.dataset.expiration_time = v;
-                                                return state;
-                                            }
-                                        )
-                                    }}
-                                    placeholder="YYYY-mm-dd HH:MM:SS"
-                                />
-                            </Col>
-                        </Form.Group>
-                    </Container>
-                </Modal.Body>
-
-                <Modal.Footer>
-                    {(this.state.mode === "edit" || this.state.mode === "new") && <Button
-                        variant="primary"
-                        size="sm"
-                        onClick={this.onSave}
-                        disabled={!this.canSave()}
-                    >
-                        Save changes
-                    </Button>}
-                    <Button variant="secondary" size="sm" onClick={this.onClose}>Close</Button>
-                </Modal.Footer>
-            </Modal>
+                <Form.Row>
+                    <Form.Group as={Col} controlId="description">
+                        <Form.Label>Description</Form.Label>
+                        <CKEditor
+                            editor={ ClassicEditor }
+                            data={dataset.description}
+                            disabled={mode==='view'}
+                            type="classic"
+                            onChange={(event, editor) => {
+                                const v = editor.getData();
+                                this.setState(
+                                    state => {
+                                        state.payload.dataset.description = v;
+                                        return state;
+                                    }
+                                )
+                            }}
+                        />
+                    </Form.Group>
+                </Form.Row>
+                <Form.Group as={Row} controlId="expiration_time">
+                    <Form.Label column sm={2}>Expire</Form.Label>
+                    <Col sm={10}>
+                        <Form.Control
+                            size="sm"
+                            disabled = {mode==='new' || mode==='view'}
+                            value={dataset.expiration_time}
+                            onChange={(event) => {
+                                const v = event.target.value;
+                                this.setState(
+                                    state => {
+                                        state.payload.dataset.expiration_time = v;
+                                        return state;
+                                    }
+                                )
+                            }}
+                            placeholder="YYYY-mm-dd HH:MM:SS"
+                        />
+                    </Col>
+                </Form.Group>
+            </div>
         );
     }
 }

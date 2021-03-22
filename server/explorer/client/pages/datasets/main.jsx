@@ -58,7 +58,9 @@ class DatasetsPage extends React.Component {
                                     size="sm"
                                     className="ml-2"
                                     onClick={() => {
-                                        this.theDatasetEditorRef.current.openDialog("new");
+                                        this.theDatasetEditorRef.current.openDialog({
+                                            mode: "new",
+                                        });
                                     }}
                                 >
                                     Create
