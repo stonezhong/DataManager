@@ -1,16 +1,16 @@
-import React from 'react'
+import React from 'react';
 
-import Row from 'react-bootstrap/Row'
-import Col from 'react-bootstrap/Col'
-import Form from 'react-bootstrap/Form'
+import Row from 'react-bootstrap/Row';
+import Col from 'react-bootstrap/Col';
+import Form from 'react-bootstrap/Form';
 
 import { CKEditor } from '@ckeditor/ckeditor5-react';
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 
-import {is_valid_datetime} from '/common_lib'
+import {is_valid_datetime, get_unsigned_integer} from '/common_lib'
 
 import {StandardDialogbox} from '/components/generic/dialogbox/standard.jsx';
-import "./dataset.scss"
+import "./dataset.scss";
 
 const _ = require("lodash");
 
@@ -27,29 +27,48 @@ const _ = require("lodash");
 export class DatasetEditor extends StandardDialogbox {
     initDatasetValue = () => {
         return {
-            name: '',
+            name: 'dataset',
             major_version: "1.0",
             minor_version: "1",
             description: "",
-            team: "",
+            team: 'team',
             expiration_time: "",
         }
     };
 
     dialogClassName = "dataset-editor-modal";
 
+    isNameValid = (dataset) => {
+        return dataset.name.trim().length > 0;
+    }
+
+    isTeamValid = (dataset) => {
+        return dataset.team.trim().length > 0;
+    }
+
+    isMajorVersionValid = (dataset) => {
+        return dataset.major_version.trim().length > 0;
+    };
+
+    isMinorVersionValid = (dataset) => {
+        const minor_version = get_unsigned_integer(dataset.minor_version);
+        return (minor_version !== null && minor_version >= 1);
+    };
+
+    isExpiratiomTimeValid = (dataset) => {
+        return is_valid_datetime(dataset.expiration_time, true)
+    };
+
     onSave = () => {
         const {dataset, mode} = this.state.payload;
-
-        if (!is_valid_datetime(dataset.expiration_time, true)) {
-            this.alert("Expire MUST be in format YYYY-MM-DD HH:MM:SS, for example: 2020-10-03 00:00:00");
-            return
-        }
 
         const datasetToSave = _.cloneDeep(dataset);
         if (datasetToSave.expiration_time === "") {
             datasetToSave.expiration_time = null;
         }
+        datasetToSave.name = datasetToSave.name.trim();
+        datasetToSave.team = datasetToSave.team.trim();
+        datasetToSave.major_version = datasetToSave.major_version.trim();
         datasetToSave.minor_version = parseInt(datasetToSave.minor_version);
 
         return this.props.onSave(mode, dataset);
@@ -58,11 +77,11 @@ export class DatasetEditor extends StandardDialogbox {
     canSave = () => {
         const {dataset} = this.state.payload;
 
-        // minor version must be natural number
-        if (!/^[1-9]\d*$/.test(dataset.minor_version)) {
-            return false;
-        }
-        return dataset.major_version && dataset.name && dataset.team;
+        return this.isNameValid(dataset) &&
+            this.isTeamValid(dataset) &&
+            this.isMajorVersionValid(dataset) &&
+            this.isMinorVersionValid(dataset) &&
+            this.isExpiratiomTimeValid(dataset);
     };
 
     hasSave = () => {
@@ -117,6 +136,7 @@ export class DatasetEditor extends StandardDialogbox {
                             size="sm"
                             disabled = {mode==='edit'||mode==='view'}
                             value={dataset.name}
+                            isInvalid={!this.isNameValid(dataset)}
                             onChange={(event) => {
                                 const v = event.target.value;
                                 this.setState(
@@ -127,6 +147,9 @@ export class DatasetEditor extends StandardDialogbox {
                                 )
                             }}
                         />
+                        <Form.Control.Feedback tooltip type="invalid">
+                            Cannot be empty.
+                        </Form.Control.Feedback>
                     </Form.Group>
                     <Form.Group as={Col} controlId="team">
                         <Form.Label>Team</Form.Label>
@@ -134,6 +157,7 @@ export class DatasetEditor extends StandardDialogbox {
                             size="sm"
                             disabled = {mode==='view'}
                             value={dataset.team}
+                            isInvalid={!this.isTeamValid(dataset)}
                             onChange={(event) => {
                                 const v = event.target.value;
                                 this.setState(
@@ -144,6 +168,9 @@ export class DatasetEditor extends StandardDialogbox {
                                 )
                             }}
                         />
+                        <Form.Control.Feedback tooltip type="invalid">
+                            Cannot be empty.
+                        </Form.Control.Feedback>
                     </Form.Group>
                 </Form.Row>
                 <Form.Row>
@@ -153,6 +180,7 @@ export class DatasetEditor extends StandardDialogbox {
                             size="sm"
                             disabled = {mode==='edit'||mode==='view'}
                             value={dataset.major_version}
+                            isInvalid={!this.isMajorVersionValid(dataset)}
                             onChange={(event) => {
                                 const v = event.target.value;
                                 this.setState(
@@ -163,6 +191,9 @@ export class DatasetEditor extends StandardDialogbox {
                                 )
                             }}
                         />
+                        <Form.Control.Feedback tooltip type="invalid">
+                            Cannot be empty.
+                        </Form.Control.Feedback>
                     </Form.Group>
                     <Form.Group as={Col} controlId="minor_version">
                         <Form.Label>Minor Version</Form.Label>
@@ -170,6 +201,7 @@ export class DatasetEditor extends StandardDialogbox {
                             size="sm"
                             disabled = {mode==='edit'||mode==='view'}
                             value={dataset.minor_version}
+                            isInvalid={!this.isMinorVersionValid(dataset)}
                             onChange={(event) => {
                                 const v = event.target.value;
                                 this.setState(
@@ -180,6 +212,9 @@ export class DatasetEditor extends StandardDialogbox {
                                 )
                             }}
                         />
+                        <Form.Control.Feedback tooltip type="invalid">
+                            Must be a integer greater or equals to 1
+                        </Form.Control.Feedback>
                     </Form.Group>
                 </Form.Row>
 
@@ -210,6 +245,7 @@ export class DatasetEditor extends StandardDialogbox {
                             size="sm"
                             disabled = {mode==='new' || mode==='view'}
                             value={dataset.expiration_time}
+                            isInvalid={!this.isExpiratiomTimeValid(dataset)}
                             onChange={(event) => {
                                 const v = event.target.value;
                                 this.setState(
@@ -221,6 +257,9 @@ export class DatasetEditor extends StandardDialogbox {
                             }}
                             placeholder="YYYY-mm-dd HH:MM:SS"
                         />
+                        <Form.Control.Feedback tooltip type="invalid">
+                            Must be in format YYYY-MM-DD HH:MM:SS, for example: 2020-10-03 00:00:00.
+                        </Form.Control.Feedback>
                     </Col>
                 </Form.Group>
             </div>

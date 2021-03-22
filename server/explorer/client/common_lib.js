@@ -151,3 +151,12 @@ export function bless_modal(modal_id) {
     });
 
 }
+
+// get a integer from a string
+// if the string is not a valid integer, it returns null
+export function get_unsigned_integer(v) {
+    if (!v.match("^(0|([1-9][0-9]*))$")) {
+        return null;
+    }
+    return parseInt(v);
+}
