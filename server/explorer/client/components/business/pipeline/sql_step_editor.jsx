@@ -1,14 +1,14 @@
-import React from 'react'
+import React from 'react';
 
-import Button from 'react-bootstrap/Button'
-import Container from 'react-bootstrap/Container'
-import Row from 'react-bootstrap/Row'
-import Col from 'react-bootstrap/Col'
-import Form from 'react-bootstrap/Form'
-import Table from 'react-bootstrap/Table'
-import Tabs from 'react-bootstrap/Tabs'
-import Tab from 'react-bootstrap/Tab'
-import * as Icon from 'react-bootstrap-icons'
+import Button from 'react-bootstrap/Button';
+import Container from 'react-bootstrap/Container';
+import Row from 'react-bootstrap/Row';
+import Col from 'react-bootstrap/Col';
+import Form from 'react-bootstrap/Form';
+import Table from 'react-bootstrap/Table';
+import Tabs from 'react-bootstrap/Tabs';
+import Tab from 'react-bootstrap/Tab';
+import * as Icon from 'react-bootstrap-icons';
 
 import {StandardDialogbox} from '/components/generic/dialogbox/standard.jsx';
 
@@ -25,7 +25,7 @@ const _ = require("lodash");
 export class SQLStepEditor extends StandardDialogbox {
     initStepValue = () => {
         return {
-            name: '',
+            name: '-- enter name --',
             imports: [],        // bunch of imports, e.g. [{dataset_instance: "foo.bar:1.0:1/2020-09-16", alias: "a"}]
             sql: '',
             alias: '',          // output the dataframe as an alias
@@ -44,6 +44,28 @@ export class SQLStepEditor extends StandardDialogbox {
 
     dialogClassName = "sql-step-editor";
 
+    isNameValid = (step) => {
+        return step.name.trim().length > 0;
+    }
+
+    isSQLValid = (step) => {
+        return step.sql.trim().length > 0;
+    }
+
+    isOutputLocationValid = (step) => {
+        if (!step._output) {
+            return true;
+        }
+        return step.output.location.trim().length > 0;
+    };
+
+    isOutputDataTimeValid = (step) => {
+        if (!step._output) {
+            return true;
+        }
+        return step.output.data_time.trim().length > 0;
+    };
+
     deleteImport = alias => {
         const {step} = this.state.payload;
 
@@ -58,12 +80,18 @@ export class SQLStepEditor extends StandardDialogbox {
         const {step, mode} = this.state.payload;
         const stepToSave = _.cloneDeep(step);
 
+        stepToSave.name = stepToSave.name.trim();
+        stepToSave.sql = stepToSave.sql.trim();
         delete stepToSave._toAddAlias;
         delete stepToSave._toAddAssertPath;
         if (!stepToSave._output) {
             delete stepToSave.output;
         }
         delete stepToSave._output;
+        if ('output' in step) {
+            step.output.location = step.output.location.trim();
+            step.output.data_time = step.output.data_time.trim();
+        }
 
         // TODO: populate error message on failure
         return this.props.onSave(mode, stepToSave);
@@ -71,7 +99,11 @@ export class SQLStepEditor extends StandardDialogbox {
 
     canSave = () => {
         const {step} = this.state.payload;
-        return step.name;
+
+        return this.isNameValid(step) &&
+            this.isSQLValid(step) &&
+            this.isOutputLocationValid(step) &&
+            this.isOutputDataTimeValid(step);
     };
 
     hasSave = () => {
@@ -145,6 +177,7 @@ export class SQLStepEditor extends StandardDialogbox {
                                             size="sm"
                                             disabled = {mode==='edit'||mode==='view'}
                                             value={step.name}
+                                            isInvalid={!this.isNameValid(step)}
                                             onChange={(event) => {
                                                 const v = event.target.value;
                                                 this.setState(state => {
@@ -153,6 +186,9 @@ export class SQLStepEditor extends StandardDialogbox {
                                                 })
                                             }}
                                         />
+                                        <Form.Control.Feedback tooltip type="invalid">
+                                            Cannot be empty.
+                                        </Form.Control.Feedback>
                                     </Col>
                                 </Form.Group>
                             </Form.Row>
@@ -307,6 +343,7 @@ export class SQLStepEditor extends StandardDialogbox {
                                                                 size="sm"
                                                                 disabled = {mode==='view'}
                                                                 value={step.output.location}
+                                                                isInvalid={!this.isOutputLocationValid(step)}
                                                                 onChange={(event) => {
                                                                     const v = event.target.value;
                                                                     this.setState(state => {
@@ -315,6 +352,9 @@ export class SQLStepEditor extends StandardDialogbox {
                                                                     });
                                                                 }}
                                                             />
+                                                            <Form.Control.Feedback tooltip type="invalid">
+                                                                Cannot be empty.
+                                                            </Form.Control.Feedback>
                                                         </Col>
                                                     </Form.Group>
                                                 </Col>
@@ -396,6 +436,7 @@ export class SQLStepEditor extends StandardDialogbox {
                                                                 size="sm"
                                                                 disabled = {mode==='view'}
                                                                 value={step.output.data_time}
+                                                                isInvalid={!this.isOutputDataTimeValid(step)}
                                                                 onChange={(event) => {
                                                                     const v = event.target.value;
                                                                     this.setState(state => {
@@ -404,6 +445,9 @@ export class SQLStepEditor extends StandardDialogbox {
                                                                     });
                                                                 }}
                                                             />
+                                                            <Form.Control.Feedback tooltip type="invalid">
+                                                                Cannot be empty.
+                                                            </Form.Control.Feedback>
                                                         </Col>
                                                     </Form.Group>
                                                 </Col>
@@ -424,6 +468,7 @@ export class SQLStepEditor extends StandardDialogbox {
                                         className="monofont"
                                         disabled = {mode==='view'}
                                         value={step.sql}
+                                        isInvalid={!this.isSQLValid(step)}
                                         onChange={(event) => {
                                             const v = event.target.value;
                                             this.setState(state => {
@@ -432,6 +477,9 @@ export class SQLStepEditor extends StandardDialogbox {
                                             })
                                         }}
                                     />
+                                    <Form.Control.Feedback tooltip type="invalid">
+                                        Cannot be empty.
+                                    </Form.Control.Feedback>
                                 </Form.Group>
                             </Form.Row>
                         </Container>
