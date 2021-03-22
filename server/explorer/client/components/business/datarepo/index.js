@@ -1,22 +1,22 @@
-import React from 'react'
+import React from 'react';
 
-import Container from 'react-bootstrap/Container'
-import Card from 'react-bootstrap/Card'
-import Row from 'react-bootstrap/Row'
-import Col from 'react-bootstrap/Col'
-import Form from 'react-bootstrap/Form'
-import Tabs from 'react-bootstrap/Tabs'
-import Tab from 'react-bootstrap/Tab'
+import Container from 'react-bootstrap/Container';
+import Card from 'react-bootstrap/Card';
+import Row from 'react-bootstrap/Row';
+import Col from 'react-bootstrap/Col';
+import Form from 'react-bootstrap/Form';
+import Tabs from 'react-bootstrap/Tabs';
+import Tab from 'react-bootstrap/Tab';
 
 import { CKEditor } from '@ckeditor/ckeditor5-react';
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 
-import {DataTable} from '/components/generic/datatable/main.jsx'
+import {DataTable} from '/components/generic/datatable/main.jsx';
 
-import {is_json_string} from '/common_lib.js'
+import {is_json_string} from '/common_lib.js';
 
 import {StandardDialogbox} from '/components/generic/dialogbox/standard.jsx';
-import "./datarepo.scss"
+import "./datarepo.scss";
 
 const _ = require("lodash");
 
@@ -24,7 +24,7 @@ const REPO_TYPE_BY_ID = {
     1: "Local File System",
     2: "Hadoop File System",
     3: "JDBC Data Source"
-}
+};
 
 function mask_password_for_repo_context(context) {
     const obj_context = JSON.parse(context);
@@ -103,7 +103,7 @@ export class DataRepoTable extends React.Component {
 export class DataRepoEditor extends StandardDialogbox {
     initDataRepoValue = () => {
         return {
-            name: '',
+            name: '-- enter name --',
             description: '',
             type: 2,
             context: '{}'
@@ -111,6 +111,14 @@ export class DataRepoEditor extends StandardDialogbox {
     };
 
     dialogClassName = "data-repo-editor-modal";
+
+    isNameValid = (datarepo) => {
+        return datarepo.name.trim().length > 0;
+    }
+
+    isContextValid = (datarepo) => {
+        return is_json_string(datarepo.context);
+    }
 
     onSave = () => {
         const {datarepo, mode} = this.state.payload;
@@ -121,7 +129,8 @@ export class DataRepoEditor extends StandardDialogbox {
 
     canSave = () => {
         const {datarepo} = this.state.payload;
-        return datarepo.name && is_json_string(datarepo.context);
+
+        return this.isNameValid(datarepo) && this.isContextValid(datarepo);
     };
 
     hasSave = () => {
@@ -167,7 +176,7 @@ export class DataRepoEditor extends StandardDialogbox {
     renderBody = () => {
         const {datarepo, mode} = this.state.payload;
         return (
-            <div>
+            <Form>
                 <Tabs defaultActiveKey="BasicInfo" transition={false}>
                     <Tab eventKey="BasicInfo" title="Basic Info">
                         <Container className="pt-2">
@@ -178,6 +187,7 @@ export class DataRepoEditor extends StandardDialogbox {
                                         size="sm"
                                         disabled = {mode==='edit'||mode==='view'}
                                         value={datarepo.name}
+                                        isInvalid={!this.isNameValid(datarepo)}
                                         onChange={(event) => {
                                             const v = event.target.value;
                                             this.setState(
@@ -188,6 +198,9 @@ export class DataRepoEditor extends StandardDialogbox {
                                             )
                                         }}
                                     />
+                                    <Form.Control.Feedback tooltip type="invalid">
+                                        Cannot be empty.
+                                    </Form.Control.Feedback>
                                 </Col>
                             </Form.Group>
                             <Form.Group as={Row} controlId="datarepo-type">
@@ -226,6 +239,7 @@ export class DataRepoEditor extends StandardDialogbox {
                                         className="monofont"
                                         disabled = {mode==='view'}
                                         value={datarepo.context}
+                                        isInvalid={!this.isContextValid(datarepo)}
                                         onChange={(event) => {
                                             const v = event.target.value;
                                             this.setState(
@@ -236,6 +250,9 @@ export class DataRepoEditor extends StandardDialogbox {
                                             )
                                         }}
                                     />
+                                    <Form.Control.Feedback tooltip type="invalid">
+                                        Must be a valid JSON object.
+                                    </Form.Control.Feedback>
                                 </Col>
                             </Form.Group>
                         </Container>
@@ -264,7 +281,7 @@ export class DataRepoEditor extends StandardDialogbox {
                         </Container>
                     </Tab>
                 </Tabs>
-            </div>
+            </Form>
         );
     }
 }
