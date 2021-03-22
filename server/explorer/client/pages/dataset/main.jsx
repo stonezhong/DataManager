@@ -6,7 +6,6 @@ import Col from 'react-bootstrap/Col'
 import Row from 'react-bootstrap/Row'
 import Container from 'react-bootstrap/Container'
 import Button from 'react-bootstrap/Button'
-import Modal from 'react-bootstrap/Modal'
 
 const buildUrl = require('build-url');
 
@@ -22,60 +21,6 @@ import {DatasetSample, has_sample_data} from '/components/business/dataset/datas
 import {get_app_context, get_csrf_token, get_current_user, handle_json_response} from '/common_lib'
 import {saveDataset} from '/apis'
 
-class DatasetDescriptionDialog extends React.Component {
-    state = {
-        show: false,
-        title: "",
-        content: "",
-        publish_line: "",
-    };
-
-    onClose = () => {
-        this.setState({show: false});
-    };
-
-    openDialog = (title, publish_line, content) => {
-        this.setState({
-            show: true,
-            title: title,
-            content: content,
-            publish_line: publish_line,
-        })
-    };
-
-    render() {
-        return (
-            <Modal
-                show={this.state.show}
-                onHide={this.onClose}
-                backdrop="static"
-                size='lg'
-                scrollable
-            >
-                <Modal.Header closeButton>
-                    <Modal.Title>{this.state.title}</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    <Container fluid className="pb-2 mb-2">
-                        <Row>
-                            <Col>
-                                <i>{this.state.publish_line}</i>
-                            </Col>
-                        </Row>
-                        <Row>
-                            <Col>
-                                <div dangerouslySetInnerHTML={ {__html: this.state.content } }/>
-                            </Col>
-                        </Row>
-                    </Container>
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" size="sm" onClick={this.onClose}>Close</Button>
-                </Modal.Footer>
-            </Modal>
-        );
-    }
-}
 
 class DatasetPage extends React.Component {
     theTopMessageRef    = React.createRef();
@@ -143,7 +88,10 @@ class DatasetPage extends React.Component {
                                     variant="secondary"
                                     size="sm"
                                     onClick={event => {
-                                        this.theDatasetEditorRef.current.openDialog("edit", this.props.dataset);
+                                        this.theDatasetEditorRef.current.openDialog({
+                                            mode: "edit",
+                                            dataset: this.props.dataset
+                                        });
                                     }}
                                 >
                                     Edit
@@ -201,7 +149,6 @@ class DatasetPage extends React.Component {
                     page_size={15}
                     size="sm"
                 />
-                <DatasetDescriptionDialog ref={this.theHelpDialogBoxRef}/>
                 <SimpleDialogBox
                     ref={this.theSchemaViewerRef}
                     dialogClassName="md-modal"
