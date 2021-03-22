@@ -15,18 +15,11 @@ import {SequentialTaskEditor} from './task_editor.jsx';
 import {ApplicationLink} from '/components/business/application';
 import {StandardDialogbox} from '/components/generic/dialogbox/standard.jsx';
 
-import {get_unsigned_integer} from '/common_lib'
+import {get_unsigned_integer} from '/common_lib';
 
-import "./pipeline.scss"
+import "./pipeline.scss";
 
 const _ = require("lodash");
-
-function get_integer(v) {
-    if (!v.match("^(0|([1-9][0-9]*))$")) {
-        return null;
-    }
-    return parseInt(v);
-}
 
 /*********************************************************************************
  * Purpose: Edit a Pipeline
