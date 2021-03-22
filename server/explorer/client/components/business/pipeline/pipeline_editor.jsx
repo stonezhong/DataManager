@@ -135,7 +135,7 @@ export class PipelineEditor extends React.Component {
     };
 
     addTask = () => {
-        this.theTaskEditorRef.current.openDialog("new");
+        this.theTaskEditorRef.current.openDialog({mode: "new"});
     };
 
     deleteTask = (task) => {
@@ -163,11 +163,11 @@ export class PipelineEditor extends React.Component {
     };
 
     editTask = task => {
-        this.theTaskEditorRef.current.openDialog("edit", task);
+        this.theTaskEditorRef.current.openDialog({mode: "edit", task: task});
     };
 
     viewTask = task => {
-        this.theTaskEditorRef.current.openDialog("view", task);
+        this.theTaskEditorRef.current.openDialog({mode: "view", task: task});
     };
 
     get_title = () => {
