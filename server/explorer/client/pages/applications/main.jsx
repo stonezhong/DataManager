@@ -62,7 +62,7 @@ class ApplicationsPage extends React.Component {
                                     size="sm"
                                     className="c-vc ml-2"
                                     onClick={() => {
-                                        this.theApplicationEditorRef.current.openDialog("new");
+                                        this.theApplicationEditorRef.current.openDialog({mode: "new"});
                                     }}
                                 >
                                     Create
