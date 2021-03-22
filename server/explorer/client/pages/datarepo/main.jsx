@@ -43,9 +43,10 @@ class DataRepoPage extends React.Component {
                                     variant="secondary"
                                     size="sm"
                                     onClick={event => {
-                                        this.theDataRepoEditorRef.current.openDialog(
-                                            "edit" , this.props.datarepo
-                                        )
+                                        this.theDataRepoEditorRef.current.openDialog({
+                                            mode: "edit" ,
+                                            datarepo: this.props.datarepo
+                                        })
                                     }}
                                 >
                                     Edit

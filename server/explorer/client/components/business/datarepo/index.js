@@ -1,23 +1,21 @@
 import React from 'react'
 
-import Button from 'react-bootstrap/Button'
 import Container from 'react-bootstrap/Container'
 import Card from 'react-bootstrap/Card'
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
 import Form from 'react-bootstrap/Form'
-import Modal from 'react-bootstrap/Modal'
 import Tabs from 'react-bootstrap/Tabs'
 import Tab from 'react-bootstrap/Tab'
 
 import { CKEditor } from '@ckeditor/ckeditor5-react';
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
-import { v4 as uuidv4 } from 'uuid';
 
 import {DataTable} from '/components/generic/datatable/main.jsx'
 
-import {is_json_string, bless_modal} from '/common_lib.js'
+import {is_json_string} from '/common_lib.js'
 
+import {StandardDialogbox} from '/components/generic/dialogbox/standard.jsx';
 import "./datarepo.scss"
 
 const _ = require("lodash");
@@ -102,7 +100,7 @@ export class DataRepoTable extends React.Component {
  *                mode is either "new" or "edit"
  *
  */
-export class DataRepoEditor extends React.Component {
+export class DataRepoEditor extends StandardDialogbox {
     initDataRepoValue = () => {
         return {
             name: '',
@@ -112,41 +110,39 @@ export class DataRepoEditor extends React.Component {
         }
     };
 
-    modal_id = uuidv4();
-
-    state = {
-        show: false,
-        mode: "new",      // either edit or new
-        datarepo: this.initDataRepoValue(),
-    };
-
-    onClose = () => {
-        this.setState({show: false});
-    };
+    dialogClassName = "data-repo-editor-modal";
 
     onSave = () => {
-        const datarepo = _.cloneDeep(this.state.datarepo);
-        const mode = this.state.mode;
-        this.setState({show: false}, () => {this.props.onSave(mode, datarepo)});
+        const {datarepo, mode} = this.state.payload;
+
+        const datarepoToSave = _.cloneDeep(datarepo);
+        return this.props.onSave(mode, datarepoToSave);
     };
 
+    canSave = () => {
+        const {datarepo} = this.state.payload;
+        return datarepo.name && is_json_string(datarepo.context);
+    };
 
-    openDialog = (mode, datarepo) => {
+    hasSave = () => {
+        const {mode} = this.state.payload;
+        return (mode === "edit" || mode === "new");
+    };
+
+    onOpen = openArgs => {
+        const {mode, datarepo} = openArgs;
         if (mode === "view" || mode === "edit") {
-            const datarepo2 = _.cloneDeep(datarepo);
-            datarepo2.context = mask_password_for_repo_context(datarepo2.context);
-
-            this.setState({
-                show: true,
+            const ui_datarepo = _.cloneDeep(datarepo);
+            ui_datarepo.context = mask_password_for_repo_context(ui_datarepo.context);
+            return {
                 mode: mode,
-                datarepo: datarepo2
-            }, () => bless_modal(this.modal_id))
+                datarepo: ui_datarepo
+            };
         } else if (mode === "new") {
-            this.setState({
-                show: true,
+            return {
                 mode: mode,
                 datarepo: this.initDataRepoValue()
-            }, () => bless_modal(this.modal_id))
+            };
         } else {
             // wrong parameter
             console.assert(false, "mode must be edit, view or new");
@@ -154,12 +150,13 @@ export class DataRepoEditor extends React.Component {
     };
 
 
-    get_title = () => {
-        if (this.state.mode === "new") {
+    getTitle = () => {
+        const {mode} = this.state.payload;
+        if (mode === "new") {
             return "new Data Repository";
-        } else if (this.state.mode === "edit") {
+        } else if (mode === "edit") {
             return "edit Data Repository";
-        } else if (this.state.mode === "view") {
+        } else if (mode === "view") {
             return "Data Repository"
         } else {
             // wrong parameter
@@ -167,138 +164,107 @@ export class DataRepoEditor extends React.Component {
         }
     };
 
-    canSave = () => {
-        return this.state.datarepo.name && is_json_string(this.state.datarepo.context);
-    };
-
-    render() {
+    renderBody = () => {
+        const {datarepo, mode} = this.state.payload;
         return (
-            <Modal
-                show={this.state.show}
-                onHide={this.onClose}
-                backdrop="static"
-                scrollable
-                animation={false}
-                dialogClassName="standard-modal data-repo-editor-modal"
-                data-modal-id={this.modal_id}
-            >
-                <Modal.Header closeButton>
-                    <Modal.Title>{this.get_title()}</Modal.Title>
-                </Modal.Header>
-
-                <Modal.Body>
-                    <Container fluid  className="pb-2 mb-2">
-                        <Tabs defaultActiveKey="BasicInfo" transition={false}>
-                            <Tab eventKey="BasicInfo" title="Basic Info">
-                                <Container className="pt-2">
-                                    <Form.Group as={Row} controlId="datarepo-name">
-                                        <Form.Label column sm={2}>Name</Form.Label>
-                                        <Col sm={10}>
-                                            <Form.Control
-                                                size="sm"
-                                                disabled = {this.state.mode==='edit'||this.state.mode==='view'}
-                                                value={this.state.datarepo.name}
-                                                onChange={(event) => {
-                                                    const v = event.target.value;
-                                                    this.setState(
-                                                        state => {
-                                                            state.datarepo.name = v;
-                                                            return state;
-                                                        }
-                                                    )
-                                                }}
-                                            />
-                                        </Col>
-                                    </Form.Group>
-                                    <Form.Group as={Row} controlId="datarepo-type">
-                                        <Form.Label column sm={2}>Type</Form.Label>
-                                        <Col sm={10}>
-                                            <Form.Control
-                                                as="select"
-                                                size="sm"
-                                                disabled = {this.state.mode==='view'}
-                                                value={this.state.datarepo.type}
-                                                onChange={(event) => {
-                                                    const v = event.target.value;
-                                                    this.setState(
-                                                        state => {
-                                                            state.datarepo.type = parseInt(v);
-                                                            return state;
-                                                        }
-                                                    )
-                                                }}
-                                            >
-                                                {
-                                                    Object.keys(REPO_TYPE_BY_ID).map(
-                                                        i => <option key={REPO_TYPE_BY_ID[i]} value={i}>{REPO_TYPE_BY_ID[i]}</option>
-                                                    )
+            <div>
+                <Tabs defaultActiveKey="BasicInfo" transition={false}>
+                    <Tab eventKey="BasicInfo" title="Basic Info">
+                        <Container className="pt-2">
+                            <Form.Group as={Row} controlId="datarepo-name">
+                                <Form.Label column sm={2}>Name</Form.Label>
+                                <Col sm={10}>
+                                    <Form.Control
+                                        size="sm"
+                                        disabled = {mode==='edit'||mode==='view'}
+                                        value={datarepo.name}
+                                        onChange={(event) => {
+                                            const v = event.target.value;
+                                            this.setState(
+                                                state => {
+                                                    state.payload.datarepo.name = v;
+                                                    return state;
                                                 }
-                                            </Form.Control>
-                                        </Col>
-                                    </Form.Group>
-                                    <Form.Group as={Row} controlId="datarepo-context">
-                                        <Form.Label column sm={2}>Details</Form.Label>
-                                        <Col sm={10}>
-                                            <Form.Control
-                                                as="textarea"
-                                                rows="5"
-                                                size="sm"
-                                                className="monofont"
-                                                disabled = {this.state.mode==='view'}
-                                                value={this.state.datarepo.context}
-                                                onChange={(event) => {
-                                                    const v = event.target.value;
-                                                    this.setState(
-                                                        state => {
-                                                            state.datarepo.context = v;
-                                                            return state;
-                                                        }
-                                                    )
-                                                }}
-                                            />
-                                        </Col>
-                                    </Form.Group>
-                                </Container>
-                            </Tab>
-                            <Tab eventKey="Description" title="Description">
-                                <Container className="pt-2">
-                                    <Row>
-                                        <Col>
-                                            <CKEditor
-                                                editor={ ClassicEditor }
-                                                data={this.state.datarepo.description}
-                                                disabled={this.state.mode==='view'}
-                                                type="classic"
-                                                onChange={(event, editor) => {
-                                                    const v = editor.getData();
-                                                    this.setState(
-                                                        state => {
-                                                            state.datarepo.description = v;
-                                                            return state;
-                                                        }
-                                                    )
-                                                }}
-                                            />
-                                        </Col>
-                                    </Row>
-                                </Container>
-                            </Tab>
-                        </Tabs>
-                    </Container>
-                </Modal.Body>
-
-                <Modal.Footer>
-                    {(this.state.mode === "edit" || this.state.mode === "new") &&
-                    <Button
-                        variant="primary"
-                        onClick={this.onSave}
-                        disabled={!this.canSave()}
-                    >
-                        Save changes
-                    </Button>}
-                    <Button variant="secondary" onClick={this.onClose}>Close</Button>
-                </Modal.Footer>
-            </Modal>
+                                            )
+                                        }}
+                                    />
+                                </Col>
+                            </Form.Group>
+                            <Form.Group as={Row} controlId="datarepo-type">
+                                <Form.Label column sm={2}>Type</Form.Label>
+                                <Col sm={10}>
+                                    <Form.Control
+                                        as="select"
+                                        size="sm"
+                                        disabled = {mode==='view'}
+                                        value={datarepo.type}
+                                        onChange={(event) => {
+                                            const v = event.target.value;
+                                            this.setState(
+                                                state => {
+                                                    state.payload.datarepo.type = parseInt(v);
+                                                    return state;
+                                                }
+                                            )
+                                        }}
+                                    >
+                                        {
+                                            Object.keys(REPO_TYPE_BY_ID).map(
+                                                i => <option key={REPO_TYPE_BY_ID[i]} value={i}>{REPO_TYPE_BY_ID[i]}</option>
+                                            )
+                                        }
+                                    </Form.Control>
+                                </Col>
+                            </Form.Group>
+                            <Form.Group as={Row} controlId="datarepo-context">
+                                <Form.Label column sm={2}>Details</Form.Label>
+                                <Col sm={10}>
+                                    <Form.Control
+                                        as="textarea"
+                                        rows="5"
+                                        size="sm"
+                                        className="monofont"
+                                        disabled = {mode==='view'}
+                                        value={datarepo.context}
+                                        onChange={(event) => {
+                                            const v = event.target.value;
+                                            this.setState(
+                                                state => {
+                                                    state.payload.datarepo.context = v;
+                                                    return state;
+                                                }
+                                            )
+                                        }}
+                                    />
+                                </Col>
+                            </Form.Group>
+                        </Container>
+                    </Tab>
+                    <Tab eventKey="Description" title="Description">
+                        <Container className="pt-2">
+                            <Row>
+                                <Col>
+                                    <CKEditor
+                                        editor={ ClassicEditor }
+                                        data={datarepo.description}
+                                        disabled={mode==='view'}
+                                        type="classic"
+                                        onChange={(event, editor) => {
+                                            const v = editor.getData();
+                                            this.setState(
+                                                state => {
+                                                    state.payload.datarepo.description = v;
+                                                    return state;
+                                                }
+                                            )
+                                        }}
+                                    />
+                                </Col>
+                            </Row>
+                        </Container>
+                    </Tab>
+                </Tabs>
+            </div>
         );
     }
 }
