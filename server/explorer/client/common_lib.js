@@ -63,7 +63,7 @@ export function pipeline_to_django_model(pipeline) {
         type        : pipeline.type,
         dag_id      : pipeline.dag_id,
         requiredDSIs: pipeline.requiredDSIs,
-        startOffset : pipeline.startOffset,
+        startOffset : parseInt(pipeline.startOffset),
         tasks       : pipeline.tasks,
         dependencies: pipeline.dependencies,
     };
@@ -99,7 +99,6 @@ export function pipeline_from_django_model(pipeline) {
         tasks: context.tasks || [],
         dependencies: context.dependencies || [],
         requiredDSIs: context.requiredDSIs || [],
-        startOffset: context.startOffset|0,
         dag_id: context.dag_id,
         author: pipeline.author,
         paused: pipeline.paused,
@@ -107,6 +106,12 @@ export function pipeline_from_django_model(pipeline) {
         version: pipeline.version,
         dag_version: pipeline.dag_version,
     }
+    if ('startOffset' in context) {
+        p.startOffset = context.startOffset.toString();
+    } else {
+        p.startOffset = "0";
+    }
+
     return p;
 }
 
