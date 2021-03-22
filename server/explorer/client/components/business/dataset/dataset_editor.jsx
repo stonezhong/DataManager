@@ -27,11 +27,11 @@ const _ = require("lodash");
 export class DatasetEditor extends StandardDialogbox {
     initDatasetValue = () => {
         return {
-            name: 'dataset',
+            name: '-- enter name --',
             major_version: "1.0",
             minor_version: "1",
             description: "",
-            team: 'team',
+            team: '-- enter team --',
             expiration_time: "",
         }
     };
