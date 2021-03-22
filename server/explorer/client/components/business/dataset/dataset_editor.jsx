@@ -94,12 +94,12 @@ export class DatasetEditor extends StandardDialogbox {
     };
 
     getTitle = () => {
-        const payload = this.state.payload;
-        if (payload.mode === "new") {
+        const {mode} = this.state.payload;
+        if (mode === "new") {
             return "new Dataset";
-        } else if (payload.mode === "edit") {
+        } else if (mode === "edit") {
             return "edit Dataset";
-        } else if (payload.mode === "view") {
+        } else if (mode === "view") {
             return "Dataset"
         } else {
             console.assert(false, "mode must be edit, view or new");

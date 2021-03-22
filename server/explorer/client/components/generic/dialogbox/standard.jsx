@@ -46,8 +46,8 @@ export class StandardDialogbox extends React.Component {
     };
 
     onSaveWrapper   = () => {
-        // onSave MUST return a promise, if the operation failed, it should failed with error message.
-        this.onSave().then(
+        // onSave can return a promise or not
+        Promise.resolve(this.onSave()).then(
             this.onClose
         ).catch(
             error => {
