@@ -58,6 +58,14 @@ export function get_app_context() {
         return {}
 }
 
+export function get_tenant_id() {
+    const elements = $("meta[name='tenant_id']");
+    if (elements)
+        return parseInt(elements[0].content);
+    else
+        return null
+}
+
 export function pipeline_to_django_model(pipeline) {
     const context = {
         type        : pipeline.type,

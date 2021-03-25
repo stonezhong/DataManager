@@ -54,6 +54,10 @@
     <meta name="app_context" content="{{ app_context }}">
     {% endif %}
 
+    {% if tenant_id %}
+    <meta name="tenant_id" content="{{ tenant_id }}">
+    {% endif %}
+
     {% if user.is_authenticated %}
     <meta name="user" content="{{user|user_to_json}}">
     {% endif %}

@@ -11,7 +11,7 @@ import {PageHeader} from '/components/generic/page_tools'
 import $ from 'jquery'
 const buildUrl = require('build-url');
 
-import {get_csrf_token, get_current_user, handle_json_response} from '/common_lib'
+import {get_csrf_token, get_current_user, get_tenant_id, handle_json_response} from '/common_lib'
 import {saveDataset} from '/apis'
 import {DatasetTable} from '/components/business/dataset/dataset_table.jsx'
 import {DatasetEditor} from '/components/business/dataset/dataset_editor.jsx'
@@ -27,7 +27,7 @@ class DatasetsPage extends React.Component {
 
     onSave = (mode, dataset) => {
         return saveDataset(
-            get_csrf_token(), mode, dataset
+            get_csrf_token(), this.props.tenant_id, mode, dataset
         ).then(this.theDatasetTableRef.current.refresh);
     };
 
@@ -35,6 +35,7 @@ class DatasetsPage extends React.Component {
         const buildArgs = {
             path: "/api/Datasets/",
             queryParams: {
+                tenant_id: this.props.tenant_id,
                 offset: offset,
                 limit : limit,
                 ordering: "-publish_time",
@@ -83,6 +84,7 @@ class DatasetsPage extends React.Component {
                 <Row>
                     <Col>
                         <DatasetTable
+                            tenant_id={this.props.tenant_id}
                             ref={this.theDatasetTableRef}
                             showExpired={this.state.showExpired}
                             get_page={this.get_page}
@@ -101,9 +103,14 @@ class DatasetsPage extends React.Component {
 }
 
 $(function() {
-    const current_user = get_current_user()
+    const current_user = get_current_user();
+    const tenant_id = get_tenant_id();
+
     ReactDOM.render(
-        <DatasetsPage current_user={current_user} />,
+        <DatasetsPage
+            current_user={current_user}
+            tenant_id={tenant_id}
+        />,
         document.getElementById('app')
     );
 });

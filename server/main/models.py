@@ -196,11 +196,6 @@ class Dataset(models.Model):
             ['name', 'major_version', 'minor_version']
         ]
 
-    @classmethod
-    def get_active_datasets(cls, requester):
-        # get all active datasets
-        return cls.objects.filter(expiration_time__isnull=True).all()
-
     # is this dataset active at given time?
     def is_active_at(self, dt):
         return self.expiration_time is None or self.expiration_time > dt
@@ -221,13 +216,14 @@ class Dataset(models.Model):
 
     # create a dataset
     @classmethod
-    def create(cls, requester, name, major_version, minor_version, publish_time,
+    def create(cls, requester, tenant_id, name, major_version, minor_version, publish_time,
                description, team):
 
         if not requester.is_authenticated:
             raise PermissionDeniedException()
 
-        ds = Dataset(name = name,
+        ds = Dataset(tenant_id = tenant_id,
+                     name = name,
                      major_version = major_version,
                      minor_version = minor_version,
                      publish_time = publish_time,

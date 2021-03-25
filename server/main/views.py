@@ -59,6 +59,7 @@ class DatasetViewSet(viewsets.ModelViewSet):
     serializer_class = DatasetSerializer
     filter_backends = [DjangoFilterBackend, OrderingFilter]
     filterset_fields = {
+        'tenant_id'         : ['exact'],
         'name'              : ['exact'],
         'major_version'     : ['exact'],
         'minor_version'     : ['exact'],
@@ -123,6 +124,7 @@ class DatasetViewSet(viewsets.ModelViewSet):
 
         ds = Dataset.create(
             request.user,
+            create_dataset_input.tenant_id,
             create_dataset_input.name,
             create_dataset_input.major_version, create_dataset_input.minor_version,
             create_dataset_input.publish_time,

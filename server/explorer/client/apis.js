@@ -1,6 +1,6 @@
 import {handle_json_response, dt_2_utc_string, pipeline_to_django_model} from '/common_lib'
 
-export function saveDataset(csrf_token, mode, dataset) {
+export function saveDataset(csrf_token, tenant_id, mode, dataset) {
     // csrf_token: as name indicates
     // if mode is "new", we want to create a new dataset
     // if mode is "edit", we want patch an existing dataset
@@ -8,6 +8,7 @@ export function saveDataset(csrf_token, mode, dataset) {
         // TODO: shuold not trust client side time
         const now = dt_2_utc_string(new Date());
         const to_post = {
+            tenant_id       : tenant_id,
             name            : dataset.name,
             major_version   : dataset.major_version,
             minor_version   : parseInt(dataset.minor_version),

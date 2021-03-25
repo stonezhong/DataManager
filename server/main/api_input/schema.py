@@ -36,6 +36,9 @@ models = {
     "create_dataset_input": {
         "type": "object",
         "properties": {
+            "tenant_id": {
+                "type": "integer"
+            },
             "name": {
                 "type": "string"
             },
