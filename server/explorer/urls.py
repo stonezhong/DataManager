@@ -3,7 +3,7 @@ from . import views
 
 urlpatterns = [
     path('', views.index, name='index'),
-    path('datalake', views.datalake, name='datalake'),
+    path('datalakes', views.datalakes, name='datalakes'),
     path('<int:tenant_id>/datasets', views.datasets, name='datasets'),
     path('<int:tenant_id>/dataset', views.dataset, name='dataset'),
     path('<int:tenant_id>/pipelines', views.pipelines, name='pipelines'),

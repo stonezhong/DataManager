@@ -26,7 +26,7 @@ module.exports = env => ({
         ],
     },
     entry: {
-        "datalake"          : '/pages/datalake/main.jsx',
+        "datalakes"         : '/pages/datalakes/main.jsx',
         "datasets"          : '/pages/datasets/main.jsx',
         "dataset"           : '/pages/dataset/main.jsx',
         "pipelines"         : '/pages/pipelines/main.jsx',

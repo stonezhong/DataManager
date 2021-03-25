@@ -20,14 +20,15 @@ import json
 
 from .models import Dataset, DatasetInstance, DataLocation, Pipeline, \
     PipelineGroup, PipelineInstance, Application, Timer, ScheduledEvent, \
-    DataRepo, Tenant
+    DataRepo, Tenant, UserTenantSubscription
 from .serializers import DatasetSerializer, DatasetInstanceSerializer, \
     DataLocationSerializer, PipelineSerializer, PipelineGroupSerializer, \
     PipelineInstanceSerializer, ApplicationSerializer, PipelineGroupDetailsSerializer, \
-    TimerSerializer, ScheduledEventSerializer, DataRepoSerializer, TenantSerializer
+    TimerSerializer, ScheduledEventSerializer, DataRepoSerializer, TenantSerializer, \
+    UserTenantSubscriptionSerializer
 from .api_input import CreateDatasetInput, CreateDatasetInstanceInput, \
     CreatePipelineInput, CreateApplicationInput, CreateTimerInput, \
-    SetSchemaAndSampleDataInput
+    SetSchemaAndSampleDataInput, CreateTenantInput
 
 import explorer.airflow_lib as airflow_lib
 
@@ -420,3 +421,45 @@ class TenantViewSet(viewsets.ModelViewSet):
     filterset_fields = {
         'name'              : ['exact'],
     }
+
+    @transaction.atomic
+    def create(self, request):
+        """
+        Create a Tenant
+        """
+
+        data = request.data
+        create_tenant_input = CreateTenantInput.from_json(data)
+
+        tenant = Tenant.create(
+            request.user,
+            create_tenant_input.name,
+            create_tenant_input.description,
+            create_tenant_input.config,
+            create_tenant_input.is_public
+        )
+        response = TenantSerializer(instance=tenant, context={'request': request}).data
+        return Response(response)
+
+
+
+class UserTenantSubscriptionViewSet(viewsets.ModelViewSet):
+    queryset = UserTenantSubscription.objects.all()
+    serializer_class = UserTenantSubscriptionSerializer
+
+    @transaction.atomic
+    def list(self, request):
+        # non-superuser only can query
+        # (1) all users for tenant owned by the requester
+        # (2) all tenants requester subscribed
+        queryset = self.filter_queryset(self.get_queryset())
+        if not request.user.is_superuser:
+            queryset = queryset.filter(user=request.user)
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)

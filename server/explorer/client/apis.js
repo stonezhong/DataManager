@@ -204,3 +204,43 @@ export function saveDataRepo(csrf_token, mode, datarepo) {
         }).then(handle_json_response)
     }
 }
+
+export function saveDatalake(csrf_token, mode, datalake) {
+    // csrf_token: as name indicates
+    // if mode is "new", we want to create a new application
+    // if mode is "edit", we want patch an existing application
+    if (mode === "new") {
+        // for new application, you do not need to pass "retired" -- it is false
+        const to_post = {
+            name            : datalake.name,
+            description     : datalake.description,
+            config          : datalake.config,
+            is_public       : datalake.is_public,
+        }
+
+        return fetch('/api/Tenants/', {
+            method: 'post',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrf_token,
+            },
+            body: JSON.stringify(to_post)
+        }).then(handle_json_response)
+    } else if (mode === "edit") {
+        const to_patch = {
+            name            : datalake.name,
+            description     : datalake.description,
+            config          : datalake.config,
+            is_public       : datalake.is_public,
+        }
+        return fetch(`/api/Tenants/${datalake.id}/`, {
+            method: 'post',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrf_token,
+                'X-Data-Manager-Use-Method': 'PATCH',
+            },
+            body: JSON.stringify(to_patch)
+        }).then(handle_json_response)
+    }
+}

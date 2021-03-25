@@ -20,9 +20,11 @@
 
     <div class="collapse navbar-collapse">
         <ul class="navbar-nav">
-            <li class="nav-item" role="datalake">
-                <a class="nav-link" href="/explorer/datalake">Datalake</a>
+            {% if user.is_authenticated %}
+            <li class="nav-item" role="datalakes">
+                <a class="nav-link" href="/explorer/datalakes">Datalakes</a>
             </li>
+                {% if tenant_id %}
             <li class="nav-item" role="datasets">
                 <a class="nav-link" href="/explorer/datasets">Datasets</a>
             </li>
@@ -41,6 +43,8 @@
             <li class="nav-item" role="datarepos">
                 <a class="nav-link" href="/explorer/datarepos">Data Repositories</a>
             </li>
+                {% endif %}
+            {% endif %}
             <li class="nav-item" role="document">
                 <a class="nav-link" href="https://github.com/stonezhong/DataManager/wiki/Document-one-page" target="_blank">Document</a>
             </li>

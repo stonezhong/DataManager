@@ -16,10 +16,10 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 
 from main.models import Dataset, Pipeline, PipelineGroup, PipelineInstance, \
-    Application, DatasetInstance, DataRepo, Tenant
+    Application, DatasetInstance, DataRepo, Tenant, UserTenantSubscription
 from main.serializers import PipelineSerializer, DatasetSerializer, \
     ApplicationSerializer, PipelineGroupDetailsSerializer, \
-    DatasetInstanceSerializer, DataRepoSerializer
+    DatasetInstanceSerializer, DataRepoSerializer, UserTenantSubscriptionSerializer
 
 from rest_framework.renderers import JSONRenderer
 
@@ -70,7 +70,8 @@ def datasets(request, tenant_id):
                 '/static/js-bundle/datasets.js'
             ],
             'nav_item_role': 'datasets',
-            'app_config': get_app_config()
+            'app_config': get_app_config(),
+            'tenant_id': tenant_id,
         }
     )
 
@@ -96,12 +97,13 @@ def dataset(request, tenant_id):
             'nav_item_role': 'datasets',
             'app_config': get_app_config(),
             'app_context': JSONRenderer().render(app_context).decode("utf-8"),
+            'tenant_id': tenant_id,
         }
     )
 
 def logout(request):
     do_logout(request)
-    return HttpResponseRedirect(f'/explorer')
+    return HttpResponseRedirect(f'/explorer/login')
 
 
 def login(request):
@@ -119,7 +121,7 @@ def login(request):
         user = do_authenticate(username=username, password=password)
         if user is not None:
             do_login(request, user)
-            return HttpResponseRedirect('/explorer')
+            return HttpResponseRedirect('/explorer/datalakes')
         # must be wrong
         return render(
             request,
@@ -177,6 +179,7 @@ def pipelines(request, tenant_id):
             'nav_item_role': 'pipelines',
             'app_config': get_app_config(),
             'app_context': JSONRenderer().render(app_context).decode("utf-8"),
+            'tenant_id': tenant_id,
         }
     )
 
@@ -235,6 +238,7 @@ def pipeline(request, tenant_id):
             'nav_item_role': 'pipelines',
             'app_config': get_app_config(),
             'app_context': JSONRenderer().render(app_context).decode("utf-8"),
+            'tenant_id': tenant_id,
         }
     )
 
@@ -249,7 +253,8 @@ def pipeline_groups(request, tenant_id):
                 '/static/js-bundle/pipeline_groups.js'
             ],
             'nav_item_role': 'executions',
-            'app_config': get_app_config()
+            'app_config': get_app_config(),
+            'tenant_id': tenant_id,
         }
     )
 
@@ -272,7 +277,8 @@ def pipeline_group(request, tenant_id):
             ],
             'nav_item_role': 'executions',
             'app_config': get_app_config(),
-            'app_context': JSONRenderer().render(app_context).decode("utf-8")
+            'app_context': JSONRenderer().render(app_context).decode("utf-8"),
+            'tenant_id': tenant_id,
         }
     )
 
@@ -288,7 +294,8 @@ def applications(request, tenant_id):
                 '/static/js-bundle/applications.js'
             ],
             'nav_item_role': 'applications',
-            'app_config': get_app_config()
+            'app_config': get_app_config(),
+            'tenant_id': tenant_id,
         }
     )
 
@@ -326,6 +333,7 @@ def dataset_instance(request, tenant_id):
             'nav_item_role': 'Asset',
             'app_config': get_app_config(),
             'app_context': JSONRenderer().render(app_context).decode('utf-8'),
+            'tenant_id': tenant_id,
         }
     )
 
@@ -340,7 +348,8 @@ def schedulers(request, tenant_id):
                 '/static/js-bundle/schedulers.js'
             ],
             'nav_item_role': 'schedulers',
-            'app_config': get_app_config()
+            'app_config': get_app_config(),
+            'tenant_id': tenant_id,
         }
     )
 
@@ -366,6 +375,7 @@ def application(request, tenant_id):
             'nav_item_role': 'applications',
             'app_config': get_app_config(),
             'app_context': JSONRenderer().render(app_context).decode("utf-8"),
+            'tenant_id': tenant_id,
         }
     )
 
@@ -380,7 +390,8 @@ def datarepos(request, tenant_id):
                 '/static/js-bundle/datarepos.js'
             ],
             'nav_item_role': 'datarepos',
-            'app_config': get_app_config()
+            'app_config': get_app_config(),
+            'tenant_id': tenant_id,
         }
     )
 
@@ -406,23 +417,24 @@ def datarepo(request, tenant_id):
                 'nav_item_role': 'datarepos',
                 'app_config': get_app_config(),
                 'app_context': JSONRenderer().render(app_context).decode("utf-8"),
+                'tenant_id': tenant_id,
             }
         )
     except (ObjectDoesNotExist, ValidationError, ):
         return HttpResponseNotFound("Page not found")
 
-def datalake(request):
+def datalakes(request, tenant_id=None):
     return render(
         request,
         'common_page.html',
         context={
             'user': request.user,
-            'sub_title': "Datalake",
+            'sub_title': "Datalakes",
             'scripts':[
-                '/static/js-bundle/datalake.js'
+                '/static/js-bundle/datalakes.js'
             ],
-            'nav_item_role': 'datalake',
-            'app_config': get_app_config()
+            'nav_item_role': 'datalakes',
+            'app_config': get_app_config(),
         }
     )
 

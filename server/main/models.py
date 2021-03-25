@@ -70,6 +70,29 @@ class Tenant(models.Model):
     is_public           = models.BooleanField(null=False)
     config              = models.TextField(null=False)
 
+    # create a tenant
+    @classmethod
+    def create(cls, requester, name, description, config, is_public):
+        if not requester.is_authenticated:
+            raise PermissionDeniedException()
+
+        tenant = Tenant(
+            name = name,
+            description = description,
+            config = config,
+            is_public = is_public,
+        )
+        tenant.save()
+
+        user_tenant_subscription = UserTenantSubscription(
+            user = requester,
+            tenant = tenant,
+            is_admin = True,
+        )
+        user_tenant_subscription.save()
+
+        return tenant
+
 class UserTenantSubscription(models.Model):
     id                  = models.AutoField(primary_key=True)
     user                = models.ForeignKey(User,
@@ -84,6 +107,18 @@ class UserTenantSubscription(models.Model):
         unique_together = [
             ['tenant', 'user']
         ]
+
+    # list all my subscriptions
+    @classmethod
+    def list_subscribed(cls, requester):
+        if not requester.is_authenticated:
+            # TODO: return public tenants
+            raise PermissionDeniedException()
+
+        subscriptions = UserTenantSubscription.objects.filter(
+            user=requester
+        ).select_related('tenant').order_by('id')
+        return subscriptions
 
 class Application(models.Model):
 

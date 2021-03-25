@@ -224,6 +224,27 @@ models = {
         "required": [
             "schema"
         ]
+    },
+    "create_tenant_input": {
+        "type": "object",
+        "properties": {
+            "name": {
+                "type": "string"
+            },
+            "description": {
+                "type": "string"
+            },
+            "config": {
+                "type": "string"
+            },
+            "is_public": {
+                "type": "boolean",
+            },
+        },
+        "additionalProperties": False,
+        "required": [
+            "name", "description", "config", "is_public"
+        ]
     }
 }
 
