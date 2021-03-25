@@ -20,11 +20,11 @@ import json
 
 from .models import Dataset, DatasetInstance, DataLocation, Pipeline, \
     PipelineGroup, PipelineInstance, Application, Timer, ScheduledEvent, \
-    DataRepo
+    DataRepo, Tenant
 from .serializers import DatasetSerializer, DatasetInstanceSerializer, \
     DataLocationSerializer, PipelineSerializer, PipelineGroupSerializer, \
     PipelineInstanceSerializer, ApplicationSerializer, PipelineGroupDetailsSerializer, \
-    TimerSerializer, ScheduledEventSerializer, DataRepoSerializer
+    TimerSerializer, ScheduledEventSerializer, DataRepoSerializer, TenantSerializer
 from .api_input import CreateDatasetInput, CreateDatasetInstanceInput, \
     CreatePipelineInput, CreateApplicationInput, CreateTimerInput, \
     SetSchemaAndSampleDataInput
@@ -406,6 +406,15 @@ class ScheduledEventViewSet(viewsets.ModelViewSet):
 class DataRepoViewSet(viewsets.ModelViewSet):
     queryset = DataRepo.objects.all()
     serializer_class = DataRepoSerializer
+
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = {
+        'name'              : ['exact'],
+    }
+
+class TenantViewSet(viewsets.ModelViewSet):
+    queryset = Tenant.objects.all()
+    serializer_class = TenantSerializer
 
     filter_backends = [DjangoFilterBackend]
     filterset_fields = {

@@ -10,7 +10,7 @@ export function saveDataset(csrf_token, mode, dataset) {
         const to_post = {
             name            : dataset.name,
             major_version   : dataset.major_version,
-            minor_version   : dataset.minor_version,
+            minor_version   : parseInt(dataset.minor_version),
             description     : dataset.description,
             team            : dataset.team,
             publish_time    : now,

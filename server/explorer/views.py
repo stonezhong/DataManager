@@ -11,11 +11,12 @@ from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction
 from django.urls import reverse
 from django.http import HttpResponse
+from django.contrib.auth.models import User
 
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 
 from main.models import Dataset, Pipeline, PipelineGroup, PipelineInstance, \
-    Application, DatasetInstance, DataRepo
+    Application, DatasetInstance, DataRepo, Tenant
 from main.serializers import PipelineSerializer, DatasetSerializer, \
     ApplicationSerializer, PipelineGroupDetailsSerializer, \
     DatasetInstanceSerializer, DataRepoSerializer
@@ -58,7 +59,7 @@ def test(request):
 def index(request):
     return redirect(reverse('datasets'))
 
-def datasets(request):
+def datasets(request, tenant_id):
     return render(
         request,
         'common_page.html',
@@ -73,7 +74,7 @@ def datasets(request):
         }
     )
 
-def dataset(request):
+def dataset(request, tenant_id):
     dataset_id = request.GET['id']
 
     dataset = Dataset.objects.get(pk=dataset_id)
@@ -128,7 +129,35 @@ def login(request):
             }
         )
 
-def pipelines(request):
+def signup(request):
+    if request.method == 'GET':
+        return render(
+            request,
+            'signup.html',
+            context={
+                'user': request.user,
+            }
+        )
+
+    if request.method == 'POST':
+        # TODO: maybe add some security check, like email validation and activation
+        username    = request.POST['username']
+        password    = request.POST['password']
+        first_name  = request.POST['first_name']
+        last_name   = request.POST['last_name']
+        email       = request.POST['email']
+
+        user = User.objects.create_user(
+            username,
+            email=email,
+            password=password,
+            first_name=first_name,
+            last_name=last_name
+        )
+        user.save()
+        return HttpResponseRedirect('/explorer/login')
+
+def pipelines(request, tenant_id):
     applications = Application.objects.filter(retired=False, sys_app_id__isnull=True)
 
     s = ApplicationSerializer(applications, many=True, context={"request": request})
@@ -168,7 +197,7 @@ def get_task_dep_svg(pipeline):
     return r
 
 
-def pipeline(request):
+def pipeline(request, tenant_id):
     pipeline_id = request.GET['id']
 
     pipeline = Pipeline.objects.get(pk=pipeline_id)
@@ -209,7 +238,7 @@ def pipeline(request):
         }
     )
 
-def pipeline_groups(request):
+def pipeline_groups(request, tenant_id):
     return render(
         request,
         'common_page.html',
@@ -224,7 +253,7 @@ def pipeline_groups(request):
         }
     )
 
-def pipeline_group(request):
+def pipeline_group(request, tenant_id):
     pipeline_group_id = request.GET['id']
 
     app_context = {
@@ -248,7 +277,7 @@ def pipeline_group(request):
     )
 
 
-def applications(request):
+def applications(request, tenant_id):
     return render(
         request,
         'common_page.html',
@@ -264,7 +293,7 @@ def applications(request):
     )
 
 
-def dataset_instance(request):
+def dataset_instance(request, tenant_id):
     dsi_path = request.GET['dsi_path']
 
     if dsi_path is None:
@@ -300,7 +329,7 @@ def dataset_instance(request):
         }
     )
 
-def schedulers(request):
+def schedulers(request, tenant_id):
     return render(
         request,
         'common_page.html',
@@ -315,7 +344,7 @@ def schedulers(request):
         }
     )
 
-def application(request):
+def application(request, tenant_id):
     application_id = request.GET['id']
 
     application = Application.objects.get(pk=application_id)
@@ -340,7 +369,7 @@ def application(request):
         }
     )
 
-def datarepos(request):
+def datarepos(request, tenant_id):
     return render(
         request,
         'common_page.html',
@@ -355,7 +384,7 @@ def datarepos(request):
         }
     )
 
-def datarepo(request):
+def datarepo(request, tenant_id):
     try:
         datarepo_id = request.GET['id']
         datarepo = DataRepo.objects.get(pk=datarepo_id)
@@ -381,6 +410,21 @@ def datarepo(request):
         )
     except (ObjectDoesNotExist, ValidationError, ):
         return HttpResponseNotFound("Page not found")
+
+def datalake(request):
+    return render(
+        request,
+        'common_page.html',
+        context={
+            'user': request.user,
+            'sub_title': "Datalake",
+            'scripts':[
+                '/static/js-bundle/datalake.js'
+            ],
+            'nav_item_role': 'datalake',
+            'app_config': get_app_config()
+        }
+    )
 
 # this is required by Let's Encrypt to get free SSL cert.
 # def letsencrypt(request):

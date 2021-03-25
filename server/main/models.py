@@ -62,6 +62,29 @@ class PermissionDeniedException(AppException):
 class DataCorruptionException(AppException):
     pass
 
+class Tenant(models.Model):
+    # public tenant: allow every to read
+    id                  = models.AutoField(primary_key=True)
+    name                = models.CharField(max_length=255, blank=False, unique=True)     # required
+    description         = models.TextField(blank=True)
+    is_public           = models.BooleanField(null=False)
+    config              = models.TextField(null=False)
+
+class UserTenantSubscription(models.Model):
+    id                  = models.AutoField(primary_key=True)
+    user                = models.ForeignKey(User,
+                            on_delete = models.PROTECT,
+                            null=False)
+    tenant              = models.ForeignKey(Tenant,
+                            on_delete = models.PROTECT,
+                            null=False)
+    is_admin            = models.BooleanField(null=False)
+
+    class Meta:
+        unique_together = [
+            ['tenant', 'user']
+        ]
+
 class Application(models.Model):
 
     class SysAppID(Enum):
@@ -69,6 +92,7 @@ class Application(models.Model):
 
     # For now, assuming it is a spark app.
     id                  = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant              = models.ForeignKey(Tenant, on_delete = models.PROTECT, null=False)
     name                = models.CharField(max_length=255, blank=False, unique=True)     # required
     description         = models.TextField(blank=False)                     # description is required
     author              = models.ForeignKey(
@@ -114,6 +138,7 @@ class Application(models.Model):
 
 class Dataset(models.Model):
     id              = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant          = models.ForeignKey(Tenant, on_delete=models.PROTECT, null=False)
     name            = models.CharField(max_length=255, blank=False)     # required
     major_version   = models.CharField(max_length=10, blank=False)      # required
     minor_version   = models.IntegerField(null=False)                   # required
@@ -229,6 +254,7 @@ class Dataset(models.Model):
 # We call it asset in UI
 class DatasetInstance(models.Model):
     id                  = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant              = models.ForeignKey(Tenant, on_delete=models.PROTECT, null=False)
     dataset             = models.ForeignKey(Dataset, on_delete = models.PROTECT, null=False)       # non NULL field
     parent_instance     = models.ForeignKey('self', on_delete = models.PROTECT, null=True)         # NULLable, if NULL, then it is a top-level instance
     name                = models.CharField(max_length=255, blank=False)                            # required
@@ -482,6 +508,7 @@ class DatasetInstance(models.Model):
 class DatasetInstanceDep(models.Model):
     # each row represent src dsi generates dst dsi. (aka dst depened on src)
     id                  = models.AutoField(primary_key=True)
+    tenant              = models.ForeignKey(Tenant, on_delete=models.PROTECT, null=False)
     src_dsi             = models.ForeignKey(DatasetInstance,
                                             on_delete = models.PROTECT,
                                             related_name = 'src_dsideps',
@@ -505,6 +532,7 @@ class DataRepo(models.Model):
         JDBC    = 3     # via JDBC connector
 
     id          = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant      = models.ForeignKey(Tenant, on_delete=models.PROTECT, null=False)
     name        = models.CharField(max_length=255, blank=True, unique=True)
     description = models.TextField(blank=True)
     type        = models.IntegerField(null=False)
@@ -520,6 +548,7 @@ class DataRepo(models.Model):
 
 class DataLocation(models.Model):
     id                  = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant              = models.ForeignKey(Tenant, on_delete=models.PROTECT, null=False)
     dataset_instance    = models.ForeignKey(
         DatasetInstance,
         on_delete = models.PROTECT,
@@ -546,6 +575,7 @@ class PipelineGroup(models.Model):
     # context is usually a JSON object containing the context of the pipeline context
     # A pipeline context is finished if all pipeline in the context is finished
     id                  = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant              = models.ForeignKey(Tenant, on_delete=models.PROTECT, null=False)
     name                = models.CharField(max_length=255, blank=False, unique=True)     # required
     created_time        = models.DateTimeField(null=False)                                         # required
     category            = models.CharField(max_length=255, blank=False)                            # required
@@ -572,6 +602,7 @@ class PipelineGroup(models.Model):
 
 class Pipeline(models.Model):
     id                  = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant              = models.ForeignKey(Tenant, on_delete=models.PROTECT, null=False)
     name                = models.CharField(max_length=255, blank=False)     # required
     description         = models.TextField(blank=True)                     # description is required
     author              = models.ForeignKey(
@@ -638,6 +669,7 @@ class PipelineInstance(models.Model):
     # A pipeline instance lives inside a pipeline context
     # It is generated from a pipeline's on_context_created_method
     id                  = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant              = models.ForeignKey(Tenant, on_delete=models.PROTECT, null=False)
     pipeline            = models.ForeignKey(Pipeline, on_delete = models.PROTECT, null=False)           # non NULL field
 
     # the pipeline group this instance belongs to
@@ -675,6 +707,7 @@ class PipelineInstance(models.Model):
 
 class Timer(models.Model):
     id                  = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant              = models.ForeignKey(Tenant, on_delete=models.PROTECT, null=False)
     name                = models.CharField(max_length=255, blank=False, unique=True)     # required
     description         = models.TextField(blank=True)
     author              = models.ForeignKey(
@@ -782,6 +815,7 @@ class Timer(models.Model):
 
 class ScheduledEvent(models.Model):
     id                  = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant              = models.ForeignKey(Tenant, on_delete=models.PROTECT, null=False)
     timer               = models.ForeignKey(
         Timer,
         on_delete=models.PROTECT,

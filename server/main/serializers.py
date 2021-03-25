@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 
 from .models import Dataset, DatasetInstance, DataLocation, Pipeline, \
     PipelineGroup, PipelineInstance, Application, Timer, ScheduledEvent, \
-    DatasetInstanceDep, DataRepo
+    DatasetInstanceDep, DataRepo, Tenant
 
 class ApplicationSerializer(serializers.ModelSerializer):
     author = serializers.ReadOnlyField(source='author.username')
@@ -235,4 +235,12 @@ class ScheduledEventSerializer(serializers.ModelSerializer):
         fields = [
             'url',
             'id', 'timer', 'due', 'acked', 'topic', 'context', 'category'
+        ]
+
+class TenantSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tenant
+        fields = [
+            'url',
+            'id', 'name', 'description', 'is_public', 'config'
         ]
