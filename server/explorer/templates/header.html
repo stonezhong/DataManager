@@ -25,24 +25,24 @@
                 <a class="nav-link" href="/explorer/datalakes">Datalakes</a>
             </li>
                 {% if tenant_id %}
-            <li class="nav-item" role="datasets">
-                <a class="nav-link" href="/explorer/datasets">Datasets</a>
-            </li>
-            <li class="nav-item" role="pipelines">
-                <a class="nav-link" href="/explorer/pipelines">Pipelines</a>
-            </li>
-            <li class="nav-item" role="executions">
-                <a class="nav-link" href="/explorer/executions">Executions</a>
-            </li>
-            <li class="nav-item" role="applications">
-                <a class="nav-link" href="/explorer/applications">Applications</a>
-            </li>
-            <li class="nav-item" role="schedulers">
-                <a class="nav-link" href="/explorer/schedulers">Schedulers</a>
-            </li>
-            <li class="nav-item" role="datarepos">
-                <a class="nav-link" href="/explorer/datarepos">Data Repositories</a>
-            </li>
+                <li class="nav-item" role="datasets">
+                    <a class="nav-link" href="/explorer/{{tenant_id}}/datasets">Datasets</a>
+                </li>
+                <li class="nav-item" role="pipelines">
+                    <a class="nav-link" href="/explorer/{{tenant_id}}/pipelines">Pipelines</a>
+                </li>
+                <li class="nav-item" role="executions">
+                    <a class="nav-link" href="/explorer/{{tenant_id}}/executions">Executions</a>
+                </li>
+                <li class="nav-item" role="applications">
+                    <a class="nav-link" href="/explorer/{{tenant_id}}/applications">Applications</a>
+                </li>
+                <li class="nav-item" role="schedulers">
+                    <a class="nav-link" href="/explorer/{{tenant_id}}/schedulers">Schedulers</a>
+                </li>
+                <li class="nav-item" role="datarepos">
+                    <a class="nav-link" href="/explorer/{{tenant_id}}/datarepos">Data Repositories</a>
+                </li>
                 {% endif %}
             {% endif %}
             <li class="nav-item" role="document">
