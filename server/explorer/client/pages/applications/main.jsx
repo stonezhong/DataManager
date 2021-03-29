@@ -14,7 +14,7 @@ import {PageHeader} from '/components/generic/page_tools'
 import $ from 'jquery'
 const buildUrl = require('build-url');
 
-import {get_csrf_token, get_current_user, handle_json_response} from '/common_lib'
+import {get_csrf_token, get_current_user, get_tenant_id, handle_json_response} from '/common_lib'
 import {saveApplication} from '/apis'
 
 class ApplicationsPage extends React.Component {
@@ -24,14 +24,18 @@ class ApplicationsPage extends React.Component {
 
     onSave = (mode, application) => {
         return saveApplication(
-            get_csrf_token(), mode, application
-        ).then(this.theApplicationTableRef.current.refresh)
+            get_csrf_token(),
+            this.props.tenant_id,
+            mode,
+            application
+        ).then(this.theApplicationTableRef.current.refresh);
     };
 
     get_page = (offset, limit, filter={}) => {
         const buildArgs = {
             path: "/api/Applications/",
             queryParams: {
+                tenant_id: this.props.tenant_id,
                 offset: offset,
                 limit : limit,
             }
@@ -75,6 +79,7 @@ class ApplicationsPage extends React.Component {
                 <Row>
                     <Col>
                         <ApplicationTable
+                            tenant_id={this.props.tenant_id}
                             ref={this.theApplicationTableRef}
                             get_page={this.get_page}
                             page_size={15}
@@ -94,9 +99,14 @@ class ApplicationsPage extends React.Component {
 }
 
 $(function() {
-    const current_user = get_current_user()
+    const current_user = get_current_user();
+    const tenant_id = get_tenant_id();
+
     ReactDOM.render(
-        <ApplicationsPage current_user={current_user} />,
+        <ApplicationsPage
+            current_user={current_user}
+            tenant_id={tenant_id}
+        />,
         document.getElementById('app')
     );
 });

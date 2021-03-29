@@ -1,16 +1,13 @@
 from .schema import validate_model
-from datetime import datetime
-import pytz
 
-class CreatePipelineInput:
+class CreateDataRepoInput:
     @classmethod
     def from_json(cls, data):
-        validate_model("create_pipeline_input", data)
+        validate_model("create_datarepo_input", data)
         self = cls()
         self.tenant_id = data["tenant_id"]
         self.name = data["name"]
         self.description = data["description"]
-        self.team = data["team"]
-        self.category = data["category"]
         self.context = data["context"]
+        self.type = data["type"]
         return self

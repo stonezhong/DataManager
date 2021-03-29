@@ -12,7 +12,7 @@ import {PageHeader} from '/components/generic/page_tools'
 
 import $ from 'jquery'
 const buildUrl = require('build-url');
-import {saveDatalake} from '/apis'
+import {saveTenant} from '/apis'
 
 import {get_csrf_token, get_current_user, handle_json_response} from '/common_lib'
 
@@ -21,9 +21,9 @@ class DatalakePage extends React.Component {
     theDatalakeEditorRef    = React.createRef();
     theSubscriptionTableRef = React.createRef();
 
-    onSave = (mode, datalake) => {
-        return saveDatalake(
-            get_csrf_token(), mode, datalake
+    onSave = (mode, tenant) => {
+        return saveTenant(
+            get_csrf_token(), mode, tenant
         ).then(this.theSubscriptionTableRef.current.refresh)
     };
 

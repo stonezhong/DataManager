@@ -27,7 +27,10 @@ class DatasetsPage extends React.Component {
 
     onSave = (mode, dataset) => {
         return saveDataset(
-            get_csrf_token(), this.props.tenant_id, mode, dataset
+            get_csrf_token(),
+            this.props.tenant_id,
+            mode,
+            dataset
         ).then(this.theDatasetTableRef.current.refresh);
     };
 

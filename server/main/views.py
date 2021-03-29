@@ -28,7 +28,7 @@ from .serializers import DatasetSerializer, DatasetInstanceSerializer, \
     UserTenantSubscriptionSerializer
 from .api_input import CreateDatasetInput, CreateDatasetInstanceInput, \
     CreatePipelineInput, CreateApplicationInput, CreateTimerInput, \
-    SetSchemaAndSampleDataInput, CreateTenantInput
+    SetSchemaAndSampleDataInput, CreateTenantInput, CreateDataRepoInput
 
 import explorer.airflow_lib as airflow_lib
 
@@ -250,6 +250,7 @@ class PipelineViewSet(viewsets.ModelViewSet):
 
         pipeline = Pipeline.create(
             request.user,
+            create_pipeline_input.tenant_id,
             create_pipeline_input.name,
             create_pipeline_input.description,
             create_pipeline_input.team,
@@ -340,6 +341,7 @@ class ApplicationViewSet(viewsets.ModelViewSet):
     serializer_class = ApplicationSerializer
     filter_backends = [DjangoFilterBackend, OrderingFilter]
     filterset_fields = {
+        'tenant_id'         : ['exact'],
         'name'              : ['exact'],
         'sys_app_id'        : ['isnull', 'exact']
     }
@@ -356,6 +358,7 @@ class ApplicationViewSet(viewsets.ModelViewSet):
 
         app = Application.create(
             request.user,
+            create_application_input.tenant_id,
             create_application_input.name,
             create_application_input.description,
             create_application_input.team,
@@ -383,6 +386,7 @@ class TimerViewSet(viewsets.ModelViewSet):
 
         timer = Timer.create(
             request.user,
+            create_timer_input.tenant_id,
             create_timer_input.name,
             create_timer_input.description,
             create_timer_input.team,
@@ -412,8 +416,30 @@ class DataRepoViewSet(viewsets.ModelViewSet):
 
     filter_backends = [DjangoFilterBackend]
     filterset_fields = {
+        'tenant_id'         : ['exact'],
         'name'              : ['exact'],
     }
+
+    @transaction.atomic
+    def create(self, request):
+        """
+        Create a DataRepo
+        """
+
+        data = request.data
+        create_datarepo_input = CreateDataRepoInput.from_json(data)
+
+        data_repo = DataRepo.create(
+            request.user,
+            create_datarepo_input.tenant_id,
+            create_datarepo_input.name,
+            create_datarepo_input.description,
+            create_datarepo_input.type,
+            create_datarepo_input.context
+        )
+        response = DataRepoSerializer(instance=data_repo, context={'request': request}).data
+        return Response(response)
+
 
 class TenantViewSet(viewsets.ModelViewSet):
     queryset = Tenant.objects.all()

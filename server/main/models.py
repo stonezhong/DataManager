@@ -112,7 +112,6 @@ class UserTenantSubscription(models.Model):
     @classmethod
     def list_subscribed(cls, requester):
         if not requester.is_authenticated:
-            # TODO: return public tenants
             raise PermissionDeniedException()
 
         subscriptions = UserTenantSubscription.objects.filter(
@@ -147,11 +146,12 @@ class Application(models.Model):
 
     # create an application
     @classmethod
-    def create(cls, requester, name, description, team, app_location):
+    def create(cls, requester, tenant_id, name, description, team, app_location):
         if not requester.is_authenticated:
             raise PermissionDeniedException()
 
         application = Application(
+            tenant_id = tenant_id,
             name = name,
             description = description,
             author = requester,
@@ -436,6 +436,7 @@ class DatasetInstance(models.Model):
 
         # save data instance
         di = DatasetInstance(
+            tenant_id = dataset.tenant_id,
             dataset = dataset,
             parent_instance = parent_instance,
             name = name,
@@ -576,6 +577,22 @@ class DataRepo(models.Model):
             return None
         return repos[0]
 
+    # create a data repo
+    @classmethod
+    def create(cls, requester, tenant_id, name, description, type, context):
+        if not requester.is_authenticated:
+            raise PermissionDeniedException()
+
+        data_repo = DataRepo(
+            tenant_id = tenant_id,
+            name = name,
+            description = description,
+            type = type,
+            context = context
+        )
+        data_repo.save()
+        return data_repo
+
 
 class DataLocation(models.Model):
     id                  = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -665,11 +682,12 @@ class Pipeline(models.Model):
 
     # create a pipeline
     @classmethod
-    def create(cls, requester, name, description, team, category, context):
+    def create(cls, requester, tenant_id, name, description, team, category, context):
         if not requester.is_authenticated:
             raise PermissionDeniedException()
 
         pipeline = Pipeline(
+            tenant_id = tenant_id,
             name = name,
             description = description,
             author = requester,
@@ -770,7 +788,7 @@ class Timer(models.Model):
 
     # create a timer
     @classmethod
-    def create(cls, requester, name, description, team, paused,
+    def create(cls, requester, tenant_id, name, description, team, paused,
                interval_unit, interval_amount,
                start_from, topic, context, category="", end_at=None):
 
@@ -778,7 +796,8 @@ class Timer(models.Model):
             raise PermissionDeniedException()
 
         # TODO: validate arguments
-        timer = Timer(name = name,
+        timer = Timer(tenant_id = tenant_id,
+                      name = name,
                       description = description,
                       author = requester,
                       team = team,

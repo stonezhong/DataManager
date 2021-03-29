@@ -18,7 +18,7 @@ import {PageHeader} from '/components/generic/page_tools'
 import {SimpleDialogBox} from '/components/generic/dialogbox/simple.jsx'
 import {DatasetSample, has_sample_data} from '/components/business/dataset/dataset_sample.jsx'
 
-import {get_app_context, get_csrf_token, get_current_user, handle_json_response} from '/common_lib'
+import {get_app_context, get_csrf_token, get_current_user, get_tenant_id, handle_json_response} from '/common_lib'
 import {saveDataset} from '/apis'
 
 
@@ -47,7 +47,12 @@ class DatasetPage extends React.Component {
     };
 
     saveDatasetAndRefresh = (mode, dataset) => {
-        return saveDataset(get_csrf_token(), mode, dataset).then(() => {
+        return saveDataset(
+            get_csrf_token(),
+            this.props.tenant_id,
+            mode,
+            dataset
+        ).then(() => {
             location.reload();
         });
     };
@@ -169,9 +174,14 @@ class DatasetPage extends React.Component {
 $(function() {
     const current_user = get_current_user()
     const app_context = get_app_context();
+    const tenant_id = get_tenant_id();
 
     ReactDOM.render(
-        <DatasetPage current_user={current_user} dataset={app_context.dataset} />,
+        <DatasetPage
+            current_user={current_user}
+            dataset={app_context.dataset}
+            tenant_id={tenant_id}
+        />,
         document.getElementById('app')
     );
 });

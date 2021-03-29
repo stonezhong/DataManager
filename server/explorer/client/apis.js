@@ -45,13 +45,14 @@ export function saveDataset(csrf_token, tenant_id, mode, dataset) {
     }
 }
 
-export function saveApplication(csrf_token, mode, application) {
+export function saveApplication(csrf_token, tenant_id, mode, application) {
     // csrf_token: as name indicates
     // if mode is "new", we want to create a new application
     // if mode is "edit", we want patch an existing application
     if (mode === "new") {
         // for new application, you do not need to pass "retired" -- it is false
         const to_post = {
+            tenant_id       : tenant_id,
             name            : application.name,
             description     : application.description,
             team            : application.team,
@@ -85,8 +86,8 @@ export function saveApplication(csrf_token, mode, application) {
     }
 }
 
-export function savePipeline(csrf_token, mode, pipeline) {
-    const to_post = pipeline_to_django_model(pipeline);
+export function savePipeline(csrf_token, tenant_id, mode, pipeline) {
+    const to_post = pipeline_to_django_model(tenant_id, pipeline);
     if (mode == "new") {
         return fetch('/api/Pipelines/', {
             method: 'post',
@@ -166,13 +167,14 @@ export function retirePipeline(csrf_token, pipeline_id) {
     }).then(handle_json_response)
 }
 
-export function saveDataRepo(csrf_token, mode, datarepo) {
+export function saveDataRepo(csrf_token, tenant_id, mode, datarepo) {
     // csrf_token: as name indicates
     // if mode is "new", we want to create a new data repo
     // if mode is "edit", we want patch an existing data repo
     if (mode === "new") {
         // for new application, you do not need to pass "retired" -- it is false
         const to_post = {
+            tenant_id       : tenant_id,
             name            : datarepo.name,
             description     : datarepo.description,
             type            : datarepo.type,
@@ -206,17 +208,17 @@ export function saveDataRepo(csrf_token, mode, datarepo) {
     }
 }
 
-export function saveDatalake(csrf_token, mode, datalake) {
+export function saveTenant(csrf_token, mode, tenant) {
     // csrf_token: as name indicates
     // if mode is "new", we want to create a new application
     // if mode is "edit", we want patch an existing application
     if (mode === "new") {
         // for new application, you do not need to pass "retired" -- it is false
         const to_post = {
-            name            : datalake.name,
-            description     : datalake.description,
-            config          : datalake.config,
-            is_public       : datalake.is_public,
+            name            : tenant.name,
+            description     : tenant.description,
+            config          : tenant.config,
+            is_public       : tenant.is_public,
         }
 
         return fetch('/api/Tenants/', {
@@ -229,12 +231,12 @@ export function saveDatalake(csrf_token, mode, datalake) {
         }).then(handle_json_response)
     } else if (mode === "edit") {
         const to_patch = {
-            name            : datalake.name,
-            description     : datalake.description,
-            config          : datalake.config,
-            is_public       : datalake.is_public,
+            name            : tenant.name,
+            description     : tenant.description,
+            config          : tenant.config,
+            is_public       : tenant.is_public,
         }
-        return fetch(`/api/Tenants/${datalake.id}/`, {
+        return fetch(`/api/Tenants/${tenant.id}/`, {
             method: 'post',
             headers: {
                 'Content-Type': 'application/json',
