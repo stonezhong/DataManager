@@ -13,7 +13,7 @@ import {PipelineEditor} from '/components/business/pipeline/pipeline_editor.jsx'
 import {PageHeader} from '/components/generic/page_tools'
 
 import {
-    get_csrf_token, get_app_context, get_current_user, get_app_config, handle_json_response
+    get_csrf_token, get_app_context, get_current_user, get_app_config, get_tenant_id, handle_json_response
 } from '/common_lib'
 
 import {savePipeline} from '/apis'
@@ -27,7 +27,10 @@ class PipelinesPage extends React.Component {
 
     onSave = (mode, pipeline) => {
         return savePipeline(
-            get_csrf_token(), mode, pipeline
+            get_csrf_token(),
+            this.props.tenant_id,
+            mode,
+            pipeline
         ).then(this.thePipelineTableRef.current.refresh);
     };
 
@@ -35,6 +38,7 @@ class PipelinesPage extends React.Component {
         const buildArgs = {
             path: "/api/Pipelines/",
             queryParams: {
+                tenant_id: this.props.tenant_id,
                 offset: offset,
                 limit : limit,
                 retired: "False"
@@ -70,6 +74,7 @@ class PipelinesPage extends React.Component {
                     <Col>
                         <PipelineTable
                             ref={this.thePipelineTableRef}
+                            tenant_id={this.props.tenant_id}
                             applications={this.props.applications}
                             airflow_base_url={this.props.airflow_base_url}
                             get_page={this.get_page}
@@ -89,13 +94,15 @@ class PipelinesPage extends React.Component {
 }
 
 $(function() {
-    const current_user = get_current_user()
+    const current_user = get_current_user();
     const app_context = get_app_context();
     const app_config = get_app_config();
+    const tenant_id = get_tenant_id();
 
     ReactDOM.render(
         <PipelinesPage
             current_user={current_user}
+            tenant_id={tenant_id}
             applications={app_context.applications}
             airflow_base_url = {app_config.AIRFLOW_BASE_URL}
         />,

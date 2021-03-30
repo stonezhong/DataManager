@@ -237,6 +237,7 @@ class PipelineViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend]
     filterset_fields = {
         'retired'           : ['exact'],
+        'tenant_id'         : ['exact'],
     }
 
     @transaction.atomic
