@@ -8,7 +8,7 @@ import {TimerTable} from '/components/business/timer/main.jsx'
 import $ from 'jquery'
 const buildUrl = require('build-url');
 
-import {get_csrf_token, get_current_user, handle_json_response} from '/common_lib'
+import {get_csrf_token, get_current_user, get_tenant_id, handle_json_response} from '/common_lib'
 
 class SchedulersPage extends React.Component {
     state = {
@@ -18,6 +18,7 @@ class SchedulersPage extends React.Component {
     onSave = (mode, timer) => {
         if (mode === "new") {
             const to_post = {
+                tenant_id       : this.props.tenant_id,
                 name            : timer.name,
                 description     : timer.description,
                 team            : timer.team,
@@ -69,6 +70,7 @@ class SchedulersPage extends React.Component {
         const buildArgs = {
             path: "/api/Timers/",
             queryParams: {
+                tenant_id: this.props.tenant_id,
                 offset: offset,
                 limit : limit,
                 topic: 'pipeline',
@@ -96,9 +98,14 @@ class SchedulersPage extends React.Component {
 }
 
 $(function() {
-    const current_user = get_current_user()
+    const current_user = get_current_user();
+    const tenant_id = get_tenant_id();
+
     ReactDOM.render(
-        <SchedulersPage current_user={current_user} />,
+        <SchedulersPage
+            current_user={current_user}
+            tenant_id={tenant_id}
+        />,
         document.getElementById('app')
     );
 });

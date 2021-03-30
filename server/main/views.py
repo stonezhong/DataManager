@@ -372,7 +372,10 @@ class TimerViewSet(viewsets.ModelViewSet):
     serializer_class = TimerSerializer
 
     filter_backends = [DjangoFilterBackend, OrderingFilter]
-    filterset_fields = ['topic']
+    filterset_fields = {
+        'tenant_id'         : ['exact'],
+        'topic'             : ['exact'],
+    }
     ordering_fields = ['name']
 
     @transaction.atomic
