@@ -10,7 +10,7 @@ from django.contrib.auth import logout as do_logout, \
 from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction
 from django.urls import reverse
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseForbidden
 from django.contrib.auth.models import User
 
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
@@ -57,9 +57,12 @@ def test(request):
     )
 
 def index(request):
-    return redirect(reverse('datasets'))
+    return redirect(reverse('datalakes'))
 
 def datasets(request, tenant_id):
+    if not request.user.is_authenticated:
+        return redirect(reverse('login'))
+
     return render(
         request,
         'common_page.html',
@@ -76,6 +79,9 @@ def datasets(request, tenant_id):
     )
 
 def dataset(request, tenant_id):
+    if not request.user.is_authenticated:
+        return redirect(reverse('login'))
+
     dataset_id = request.GET['id']
 
     dataset = Dataset.objects.get(pk=dataset_id)
@@ -121,6 +127,9 @@ def login(request):
             }
         )
     if request.method == 'POST':
+        if request.user.is_authenticated:
+            return HttpResponseForbidden()
+
         username = request.POST['username']
         password = request.POST['password']
         user = do_authenticate(username=username, password=password)
@@ -164,6 +173,9 @@ def signup(request):
         )
 
     if request.method == 'POST':
+        if request.user.is_authenticated:
+            return HttpResponseForbidden()
+
         # TODO: maybe add some security check, like email validation and activation
         username    = request.POST['username']
         password    = request.POST['password']
@@ -202,6 +214,9 @@ def signup(request):
         return HttpResponseRedirect('/explorer/login')
 
 def pipelines(request, tenant_id):
+    if not request.user.is_authenticated:
+        return redirect(reverse('login'))
+
     applications = Application.objects.filter(retired=False, sys_app_id__isnull=True)
 
     s = ApplicationSerializer(applications, many=True, context={"request": request})
@@ -243,6 +258,9 @@ def get_task_dep_svg(pipeline):
 
 
 def pipeline(request, tenant_id):
+    if not request.user.is_authenticated:
+        return redirect(reverse('login'))
+
     pipeline_id = request.GET['id']
 
     pipeline = Pipeline.objects.get(pk=pipeline_id)
@@ -285,6 +303,9 @@ def pipeline(request, tenant_id):
     )
 
 def pipeline_groups(request, tenant_id):
+    if not request.user.is_authenticated:
+        return redirect(reverse('login'))
+
     return render(
         request,
         'common_page.html',
@@ -301,6 +322,9 @@ def pipeline_groups(request, tenant_id):
     )
 
 def pipeline_group(request, tenant_id):
+    if not request.user.is_authenticated:
+        return redirect(reverse('login'))
+
     pipeline_group_id = request.GET['id']
 
     app_context = {
@@ -326,6 +350,9 @@ def pipeline_group(request, tenant_id):
 
 
 def applications(request, tenant_id):
+    if not request.user.is_authenticated:
+        return redirect(reverse('login'))
+
     return render(
         request,
         'common_page.html',
@@ -343,6 +370,9 @@ def applications(request, tenant_id):
 
 
 def dataset_instance(request, tenant_id):
+    if not request.user.is_authenticated:
+        return redirect(reverse('login'))
+
     dsi_path = request.GET['dsi_path']
 
     if dsi_path is None:
@@ -380,6 +410,9 @@ def dataset_instance(request, tenant_id):
     )
 
 def schedulers(request, tenant_id):
+    if not request.user.is_authenticated:
+        return redirect(reverse('login'))
+
     return render(
         request,
         'common_page.html',
@@ -396,6 +429,9 @@ def schedulers(request, tenant_id):
     )
 
 def application(request, tenant_id):
+    if not request.user.is_authenticated:
+        return redirect(reverse('login'))
+
     application_id = request.GET['id']
 
     application = Application.objects.get(pk=application_id)
@@ -422,6 +458,9 @@ def application(request, tenant_id):
     )
 
 def datarepos(request, tenant_id):
+    if not request.user.is_authenticated:
+        return redirect(reverse('login'))
+
     return render(
         request,
         'common_page.html',
@@ -438,6 +477,9 @@ def datarepos(request, tenant_id):
     )
 
 def datarepo(request, tenant_id):
+    if not request.user.is_authenticated:
+        return redirect(reverse('login'))
+
     try:
         datarepo_id = request.GET['id']
         datarepo = DataRepo.objects.get(pk=datarepo_id)
@@ -466,6 +508,9 @@ def datarepo(request, tenant_id):
         return HttpResponseNotFound("Page not found")
 
 def datalakes(request, tenant_id=None):
+    if not request.user.is_authenticated:
+        return redirect(reverse('login'))
+
     return render(
         request,
         'common_page.html',
