@@ -110,9 +110,14 @@ def login(request):
     if request.method == 'GET':
         return render(
             request,
-            'login.html',
+            'common_page.html',
             context={
                 'user': request.user,
+                'sub_title': "Login",
+                'scripts':[
+                    '/static/js-bundle/login.js'
+                ],
+                'nav_item_role': 'login',
             }
         )
     if request.method == 'POST':
@@ -123,21 +128,38 @@ def login(request):
             do_login(request, user)
             return HttpResponseRedirect('/explorer/datalakes')
         # must be wrong
+        app_context = {
+            'msg': "Wrong username or password!"
+        }
+
         return render(
             request,
-            'login.html',
+            'common_page.html',
             context={
-                'msg': "Wrong username or password!"
-            }
+                'user': request.user,
+                'sub_title': "Login",
+                'scripts':[
+                    '/static/js-bundle/login.js'
+                ],
+                'nav_item_role': 'login',
+                'app_context': JSONRenderer().render(app_context).decode("utf-8"),
+            },
+
         )
+
 
 def signup(request):
     if request.method == 'GET':
         return render(
             request,
-            'signup.html',
+            'common_page.html',
             context={
                 'user': request.user,
+                'sub_title': "Signup",
+                'scripts':[
+                    '/static/js-bundle/signup.js'
+                ],
+                'nav_item_role': 'signup',
             }
         )
 
@@ -145,9 +167,29 @@ def signup(request):
         # TODO: maybe add some security check, like email validation and activation
         username    = request.POST['username']
         password    = request.POST['password']
+        password1   = request.POST['password1']
         first_name  = request.POST['first_name']
         last_name   = request.POST['last_name']
         email       = request.POST['email']
+
+        if password != password1:
+            app_context = {
+                'msg': "Password does not match, please retry!"
+            }
+            return render(
+                request,
+                'common_page.html',
+                context={
+                    'user': request.user,
+                    'sub_title': "Signup",
+                    'scripts':[
+                        '/static/js-bundle/signup.js'
+                    ],
+                    'nav_item_role': 'signup',
+                    'app_context': JSONRenderer().render(app_context).decode("utf-8"),
+                }
+            )
+
 
         user = User.objects.create_user(
             username,
