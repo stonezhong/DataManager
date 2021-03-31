@@ -46,7 +46,7 @@ export class PipelineGroupTable extends React.Component {
             { this.canEdit(pipeline_group)?<Icon.Pencil />:<Icon.Info /> }
         </Button>;
 
-    render_name = pipeline_group => <a href={`execution?id=${pipeline_group.id}`}>{pipeline_group.name}</a>;
+    render_name = pipeline_group => <a href={`/explorer/${this.props.tenant_id}/execution?id=${pipeline_group.id}`}>{pipeline_group.name}</a>;
 
     get_page = (offset, limit) => {
         return this.props.get_page(

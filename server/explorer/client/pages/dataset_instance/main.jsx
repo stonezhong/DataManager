@@ -7,7 +7,7 @@ import Row from 'react-bootstrap/Row'
 
 import $ from 'jquery'
 
-import {get_current_user, get_app_context} from '/common_lib'
+import {get_current_user, get_app_context, get_tenant_id} from '/common_lib'
 import {DatasetInstanceView} from '/components/business/dataset/dataset_instance_revision.jsx'
 import {DatasetLink} from '/components/business/dataset/utils.jsx'
 
@@ -35,7 +35,12 @@ class DatasetInstancePage extends React.Component {
                             <tbody>
                                 <tr>
                                     <td>Dataset</td>
-                                    <td><DatasetLink ds={this.props.dataset} /></td>
+                                    <td>
+                                        <DatasetLink
+                                            tenant_id={this.props.tenant_id}
+                                            ds={this.props.dataset}
+                                        />
+                                    </td>
                                 </tr>
                                 <tr>
                                     <td>Full Path</td>
@@ -52,6 +57,7 @@ class DatasetInstancePage extends React.Component {
                     {
                         this.props.dsi_list.map(dsi => <div id={`revision-${dsi.revision}`}  className="mb-4">
                             <DatasetInstanceView
+                                tenant_id={this.props.tenant_id}
                                 key={dsi.id}
                                 dsi={dsi}
                                 dataset={this.props.dataset}
@@ -69,9 +75,11 @@ class DatasetInstancePage extends React.Component {
 $(function() {
     const current_user = get_current_user();
     const app_context = get_app_context();
+    const tenant_id = get_tenant_id();
 
     ReactDOM.render(
         <DatasetInstancePage
+            tenant_id={tenant_id}
             current_user={current_user}
             dataset={app_context.ds}
             dsi_list={app_context.dsi_list}

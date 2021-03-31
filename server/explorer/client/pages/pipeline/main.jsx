@@ -13,7 +13,7 @@ import {PipelineViewer} from '/components/business/pipeline/pipeline_viewer.jsx'
 import {PipelineEditor} from '/components/business/pipeline/pipeline_editor.jsx'
 import {PageHeader} from '/components/generic/page_tools'
 
-import {get_csrf_token, get_app_context, get_app_config, get_current_user, pipeline_from_django_model} from '/common_lib'
+import {get_csrf_token, get_app_context, get_app_config, get_current_user, get_tenant_id, pipeline_from_django_model} from '/common_lib'
 import {savePipeline, pausePipeline, unpausePipeline, retirePipeline} from '/apis'
 
 const _ = require("lodash");
@@ -31,7 +31,12 @@ class PipelinePage extends React.Component {
     thePipelineEditorRef = React.createRef();
 
     savePipelineAndRefresh = (mode, pipeline) => {
-        return savePipeline(get_csrf_token(), mode, pipeline).then(() => {
+        return savePipeline(
+            get_csrf_token(),
+            this.props.tenant_id,
+            mode,
+            pipeline
+        ).then(() => {
             location.reload();
         });
     };
@@ -135,10 +140,12 @@ $(function() {
     const applications_by_id = _.keyBy(app_context.applications, "id");
     const dag_svg = app_context.dag_svg;
     const app_config = get_app_config();
+    const tenant_id = get_tenant_id();
 
     ReactDOM.render(
         <PipelinePage
             current_user={current_user}
+            tenant_id={tenant_id}
             pipeline={app_context.pipeline}
             applications_by_id={applications_by_id}
             active_applications={app_context.active_applications}

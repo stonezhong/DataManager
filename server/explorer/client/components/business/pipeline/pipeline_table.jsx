@@ -67,7 +67,10 @@ export class PipelineTable extends React.Component {
         );
     };
 
-    render_name = pipeline => <PipelineLink pipeline={pipeline} />
+    render_name = pipeline => <PipelineLink
+        tenant_id={this.props.tenant_id}
+        pipeline={pipeline}
+    />;
 
     get_page = (offset, limit) => {
         return this.props.get_page(

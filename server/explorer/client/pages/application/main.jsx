@@ -15,7 +15,7 @@ import {saveApplication} from '/apis'
 
 import $ from 'jquery'
 
-import {get_csrf_token, get_current_user, get_app_context} from '/common_lib'
+import {get_csrf_token, get_current_user, get_app_context, get_tenant_id} from '/common_lib'
 
 /*********************************************************************************
  * Purpose: Page to view an application
@@ -29,9 +29,14 @@ class ApplicationPage extends React.Component {
     theApplicationEditorRef = React.createRef();
 
     saveApplicationAndRefresh = (mode, application) => {
-        return saveApplication(get_csrf_token(), mode, application).then(() => {
-            location.reload();
-        });
+        return saveApplication(
+            get_csrf_token(),
+            this.props.tenant_id,
+            mode,
+            application).then(() => {
+                location.reload();
+            }
+        );
     };
 
     render() {
@@ -75,11 +80,13 @@ class ApplicationPage extends React.Component {
 $(function() {
     const current_user = get_current_user()
     const app_context = get_app_context();
+    const tenant_id = get_tenant_id();
 
     ReactDOM.render(
         <ApplicationPage
             current_user={current_user}
             application={app_context.application}
+            tenant_id={tenant_id}
         />,
         document.getElementById('app')
     );

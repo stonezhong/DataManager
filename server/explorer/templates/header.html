@@ -20,24 +20,31 @@
 
     <div class="collapse navbar-collapse">
         <ul class="navbar-nav">
-            <li class="nav-item" role="datasets">
-                <a class="nav-link" href="/explorer/datasets">Datasets</a>
+            {% if user.is_authenticated %}
+            <li class="nav-item" role="datalakes">
+                <a class="nav-link" href="/explorer/datalakes">Datalakes</a>
             </li>
-            <li class="nav-item" role="pipelines">
-                <a class="nav-link" href="/explorer/pipelines">Pipelines</a>
-            </li>
-            <li class="nav-item" role="executions">
-                <a class="nav-link" href="/explorer/executions">Executions</a>
-            </li>
-            <li class="nav-item" role="applications">
-                <a class="nav-link" href="/explorer/applications">Applications</a>
-            </li>
-            <li class="nav-item" role="schedulers">
-                <a class="nav-link" href="/explorer/schedulers">Schedulers</a>
-            </li>
-            <li class="nav-item" role="datarepos">
-                <a class="nav-link" href="/explorer/datarepos">Data Repositories</a>
-            </li>
+                {% if tenant_id %}
+                <li class="nav-item" role="datasets">
+                    <a class="nav-link" href="/explorer/{{tenant_id}}/datasets">Datasets</a>
+                </li>
+                <li class="nav-item" role="pipelines">
+                    <a class="nav-link" href="/explorer/{{tenant_id}}/pipelines">Pipelines</a>
+                </li>
+                <li class="nav-item" role="executions">
+                    <a class="nav-link" href="/explorer/{{tenant_id}}/executions">Executions</a>
+                </li>
+                <li class="nav-item" role="applications">
+                    <a class="nav-link" href="/explorer/{{tenant_id}}/applications">Applications</a>
+                </li>
+                <li class="nav-item" role="schedulers">
+                    <a class="nav-link" href="/explorer/{{tenant_id}}/schedulers">Schedulers</a>
+                </li>
+                <li class="nav-item" role="datarepos">
+                    <a class="nav-link" href="/explorer/{{tenant_id}}/datarepos">Data Repositories</a>
+                </li>
+                {% endif %}
+            {% endif %}
             <li class="nav-item" role="document">
                 <a class="nav-link" href="https://github.com/stonezhong/DataManager/wiki/Document-one-page" target="_blank">Document</a>
             </li>
@@ -48,6 +55,9 @@
             {% else %}
             <li class="nav-item">
                 <a class="nav-link" href="/explorer/login">Login</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/explorer/signup">Signup</a>
             </li>
             {% endif %}
         </ul>

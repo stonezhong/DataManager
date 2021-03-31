@@ -124,10 +124,12 @@ def handle_pipeline_instance_created(pi):
     logger.info(f"triggering DAG {pi.pipeline.name}")
     pipeline_instance_id = str(pi.id).replace("-", "")
     pipeline_id = str(pi.pipeline.id).replace("-", "")
+    tenant_id = pi.tenant.id
     r = airflow_lib.trigger_dag(
         f"{pi.pipeline.name}.{pipeline_id}",
         {
-            "pipeline_instance_id": pipeline_instance_id
+            "pipeline_instance_id": pipeline_instance_id,
+            "tenant_id": tenant_id
         }
     )
 
@@ -156,6 +158,7 @@ def event_handler(scheduled_event):
     now = datetime.utcnow().replace(tzinfo=pytz.UTC)
     # create pipeline group
     pg = PipelineGroup(
+        tenant=scheduled_event.tenant,
         name=f'{scheduled_event.timer.name}/{scheduled_event.due.strftime("%Y-%m-%d %H:%M:%S")}',
         created_time = now,
         category=scheduled_event.category,
@@ -174,7 +177,8 @@ def event_handler(scheduled_event):
         # yes, we will attach paused pipeline, but they won't trigger
         # until the pipeline is unpaused
         pipeline_instance = PipelineInstance(
-            pipeline = pipeline,
+            tenant=scheduled_event.tenant,
+            pipeline=pipeline,
             group = pg,
             context = "{}", # placeholder
             status = PipelineInstance.CREATED_STATUS,
@@ -227,6 +231,7 @@ def update_pending_pipeline_group(pg):
             # skip since the pg already has this pipeline
             continue
         pipeline_instance = PipelineInstance(
+            tenant_id = pg.tenant_id,
             pipeline = pipeline,
             group = pg,
             context = "{}", # placeholder

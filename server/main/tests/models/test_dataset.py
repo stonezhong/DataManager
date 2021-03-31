@@ -78,25 +78,3 @@ class DatasetTestCase(TestCase):
         self.assertTrue(ds.is_active_at(self.now))
         self.assertFalse(ds.is_active_at(self.now + timedelta(days=2)))
 
-    def test_get_active_datasets(self):
-        ds1 = Dataset.create(
-            self.user,
-            "test-name", "1.0", 1,
-            self.now,
-            "test-description",
-            "test-team"
-        )
-        ds1.expiration_time = self.now + timedelta(days=1)
-        ds1.save()
-
-        ds2 = Dataset.create(
-            self.user,
-            "test-name", "1.1", 1,
-            self.now,
-            "test-description",
-            "test-team"
-        )
-
-        active_ds_list = Dataset.get_active_datasets(self.user)
-        self.assertEqual(len(active_ds_list), 1)
-        self.assertEqual(active_ds_list[0].id, ds2.id)

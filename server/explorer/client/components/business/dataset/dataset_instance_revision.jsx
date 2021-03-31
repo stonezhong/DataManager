@@ -60,7 +60,7 @@ export class DatasetInstanceView extends React.Component {
                     <tr>
                         <td>Application</td>
                         <td>
-                            <ApplicationLink application={this.props.dsi.application} />
+                            <ApplicationLink tenant_id={this.props.tenant_id} application={this.props.dsi.application} />
                         </td>
                     </tr>
                     <tr>
@@ -172,7 +172,7 @@ export class DatasetInstanceView extends React.Component {
                                                         this.props.dsi.locations.map(location => <div key={location.position}>
                                                             {
                                                                 location.repo && <span className="card-asset-type">
-                                                                    <DataRepoLink datarepo={location.repo} />
+                                                                    <DataRepoLink tenant_id={this.props.tenant_id} datarepo={location.repo} />
                                                                 </span>
                                                             }
                                                             <span className="card-asset-type">{location.type}</span>
@@ -198,7 +198,7 @@ export class DatasetInstanceView extends React.Component {
                                                     <td>Upstream</td>
                                                     <td>
                                                         {this.props.dsi.src_dataset_instances.map(src_dsi => <div key={src_dsi}>
-                                                            <AssetLinkFromDSIPath dsi_path={src_dsi} />
+                                                            <AssetLinkFromDSIPath tenant_id={this.props.tenant_id} dsi_path={src_dsi} />
                                                         </div>)}
                                                     </td>
                                                 </tr>
@@ -206,7 +206,7 @@ export class DatasetInstanceView extends React.Component {
                                                     <td>Downstream</td>
                                                     <td>
                                                         {this.props.dsi.dst_dataset_instances.map(dst_dsi => <div key={dst_dsi}>
-                                                            <AssetLinkFromDSIPath dsi_path={dst_dsi} />
+                                                            <AssetLinkFromDSIPath tenant_id={this.props.tenant_id} dsi_path={dst_dsi} />
                                                         </div>)}
                                                     </td>
                                                 </tr>

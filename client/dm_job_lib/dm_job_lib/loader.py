@@ -14,13 +14,13 @@ class Loader:
     #####################################################################
     # Load bunch of tables with same structure
     #####################################################################
-    def union_loader(self, spark, args):
+    def union_loader(self, spark, tenant_id, args):
         df = None
         for dsi_path in args['dsi_paths']:
             if df is None:
-                df = self.load_asset(spark, dsi_path)
+                df = self.load_asset(spark, tenant_id, dsi_path)
             else:
-                df = df.union(self.load_asset(spark, dsi_path))
+                df = df.union(self.load_asset(spark, tenant_id, dsi_path))
         return df
 
     def get_loader(self, name):
@@ -31,19 +31,20 @@ class Loader:
     #####################################################################
     # Load a view
     #####################################################################
-    def load_view(self, spark, loader_name, loader_args):
+    def load_view(self, spark, tenant_id, loader_name, loader_args):
         loader = self.get_loader(loader_name)
-        return loader(spark, loader_args)
+        return loader(spark, tenant_id, loader_args)
 
-    def load_asset(self, spark, dsi_path):
-        df, _ = self.load_asset_ex(spark, dsi_path)
+    def load_asset(self, spark, tenant_id, dsi_path):
+        df, _ = self.load_asset_ex(spark, tenant_id, dsi_path)
         return df
 
-    def load_asset_ex(self, spark, dsi_path):
+    def load_asset_ex(self, spark, tenant_id, dsi_path):
         # same as load_asset, but it return the asset path with revision as well
         # dcc: data catalog client
         dataset_name, major_version, minor_version, path, revision = (dsi_path.split(":") + [None])[:5]
         di = self.dcc.get_dataset_instance(
+            tenant_id,
             dataset_name, major_version, int(minor_version), path, revision=revision, spark=spark
         )
         if di is None:
@@ -110,7 +111,7 @@ class Loader:
         # we can use a loader
         loader_name = loader['name']
         loader_args = loader['args']
-        return self.load_view(spark, loader_name, loader_args), f"{dataset_name}:{major_version}:{minor_version}:{path}:{di['revision']}"
+        return self.load_view(spark, tenant_id, loader_name, loader_args), f"{dataset_name}:{major_version}:{minor_version}:{path}:{di['revision']}"
 
     def _write_to_fs(self, df, table_type, table_path, mode, coalesce):
         if coalesce is not None:
@@ -123,7 +124,7 @@ class Loader:
         else:
             raise Exception(f"Unrecognized table type: {table_type}")
 
-    def write_asset(self, spark, df, location, mode='error', coalesce=1):
+    def write_asset(self, spark, tenant_id, df, location, mode='error', coalesce=1):
         # possible mode
         #   append
         #   overwrite
@@ -138,7 +139,7 @@ class Loader:
             self._write_to_fs(df, table_type, table_path, mode, coalesce)
             return
 
-        repo = self.dcc.get_data_repo(repo_name, spark=spark)
+        repo = self.dcc.get_data_repo(tenant_id, repo_name, spark=spark)
         if repo['type'] == 1 or repo['type'] == 2:
             repo_context = json.loads(repo['context'])
             base_url = repo_context['base_url']
@@ -171,7 +172,7 @@ class Loader:
     # Register dataset instance
     # - it will create dataset if not exist, user need to fill in description latter
     ##############################################################################
-    def register_asset(self, spark, asset_path, team, file_type, location, row_count,
+    def register_asset(self, spark, tenant_id, asset_path, team, file_type, location, row_count,
                        schema, sample_data=[],
                        data_time = None, src_asset_paths = [],
                        application_id = None, application_args = None, repo_name = None):
@@ -182,10 +183,11 @@ class Loader:
             effective_data_time = data_time
 
         dataset_name, major_version, minor_version, path = asset_path.split(":")
-        ds = self.dcc.get_dataset(dataset_name, major_version, int(minor_version), spark=spark)
+        ds = self.dcc.get_dataset(tenant_id, dataset_name, major_version, int(minor_version), spark=spark)
         if ds is None:
-            ds = self.dcc.create_dataset(dataset_name, major_version, int(minor_version), "-- Placeholder --", team, spark=spark)
+            ds = self.dcc.create_dataset(tenant_id, dataset_name, major_version, int(minor_version), "-- Placeholder --", team, spark=spark)
         dsi = self.dcc.create_dataset_instance(
+            tenant_id,
             dataset_name, major_version, int(minor_version),
             path,
             [{
@@ -209,7 +211,7 @@ class Loader:
         return dsi
 
 
-    def register_view(self, spark, asset_path, team, loader_name, loader_args, row_count,
+    def register_view(self, spark, tenant_id, asset_path, team, loader_name, loader_args, row_count,
                       schema, sample_data=[],
                       data_time = None, src_asset_paths = [],
                       application_id = None, application_args = None):
@@ -220,11 +222,12 @@ class Loader:
 
         dataset_name, major_version, minor_version, path = asset_path.split(":")
 
-        ds = self.dcc.get_dataset(dataset_name, major_version, int(minor_version), spark=spark)
+        ds = self.dcc.get_dataset(tenant_id, dataset_name, major_version, int(minor_version), spark=spark)
         if ds is None:
-            ds = self.dcc.create_dataset(dataset_name, major_version, int(minor_version), "-- Placeholder --", team, spark=spark)
+            ds = self.dcc.create_dataset(tenant_id, dataset_name, major_version, int(minor_version), "-- Placeholder --", team, spark=spark)
 
         dsi = self.dcc.create_dataset_instance(
+            tenant_id,
             dataset_name, major_version, int(minor_version),
             path, [],
             effective_data_time,

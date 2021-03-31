@@ -6,44 +6,35 @@ import Col from 'react-bootstrap/Col'
 import Row from 'react-bootstrap/Row'
 import Button from 'react-bootstrap/Button'
 
-import {ApplicationTable, ApplicationEditor} from '/components/business/application'
-
+import {DatalakeEditor, SubscriptionTable} from '/components/business/datalake'
 import {TopMessage} from '/components/generic/top_message/main.jsx'
 import {PageHeader} from '/components/generic/page_tools'
 
 import $ from 'jquery'
 const buildUrl = require('build-url');
+import {saveTenant} from '/apis'
 
-import {get_csrf_token, get_current_user, get_tenant_id, handle_json_response} from '/common_lib'
-import {saveApplication} from '/apis'
+import {get_csrf_token, get_current_user, handle_json_response} from '/common_lib'
 
-class ApplicationsPage extends React.Component {
+class DatalakePage extends React.Component {
     theTopMessageRef        = React.createRef();
-    theApplicationEditorRef = React.createRef();
-    theApplicationTableRef  = React.createRef();
+    theDatalakeEditorRef    = React.createRef();
+    theSubscriptionTableRef = React.createRef();
 
-    onSave = (mode, application) => {
-        return saveApplication(
-            get_csrf_token(),
-            this.props.tenant_id,
-            mode,
-            application
-        ).then(this.theApplicationTableRef.current.refresh);
+    onSave = (mode, tenant) => {
+        return saveTenant(
+            get_csrf_token(), mode, tenant
+        ).then(this.theSubscriptionTableRef.current.refresh)
     };
 
     get_page = (offset, limit, filter={}) => {
         const buildArgs = {
-            path: "/api/Applications/",
+            path: "/api/UserTenantSubscriptions/",
             queryParams: {
-                tenant_id: this.props.tenant_id,
                 offset: offset,
                 limit : limit,
             }
         };
-        if (!this.props.current_user || !this.props.current_user.is_superuser) {
-            // non-admin should not see system apps
-            buildArgs.queryParams.sys_app_id__isnull = "True";
-        }
         const url = buildUrl('', buildArgs);
         return fetch(url).then(handle_json_response);
     };
@@ -60,13 +51,14 @@ class ApplicationsPage extends React.Component {
 
                 <Row>
                     <Col>
-                        <PageHeader title="Applications">
+                        <PageHeader title="Datalake">
                             {
-                                !!this.props.current_user && <Button
+                                !!this.props.current_user && this.props.current_user.is_superuser &&
+                                <Button
                                     size="sm"
                                     className="c-vc ml-2"
                                     onClick={() => {
-                                        this.theApplicationEditorRef.current.openDialog({mode: "new"});
+                                        this.theDatalakeEditorRef.current.openDialog({mode: "new"});
                                     }}
                                 >
                                     Create
@@ -78,9 +70,8 @@ class ApplicationsPage extends React.Component {
 
                 <Row>
                     <Col>
-                        <ApplicationTable
-                            tenant_id={this.props.tenant_id}
-                            ref={this.theApplicationTableRef}
+                        <SubscriptionTable
+                            ref={this.theSubscriptionTableRef}
                             get_page={this.get_page}
                             page_size={15}
                             size="sm"
@@ -88,24 +79,21 @@ class ApplicationsPage extends React.Component {
                     </Col>
                 </Row>
 
-                <ApplicationEditor
-                    ref={this.theApplicationEditorRef}
+                <DatalakeEditor
+                    ref={this.theDatalakeEditorRef}
                     onSave={this.onSave}
                 />
-
             </Container>
         )
     }
 }
 
 $(function() {
-    const current_user = get_current_user();
-    const tenant_id = get_tenant_id();
+    const current_user = get_current_user()
 
     ReactDOM.render(
-        <ApplicationsPage
+        <DatalakePage
             current_user={current_user}
-            tenant_id={tenant_id}
         />,
         document.getElementById('app')
     );

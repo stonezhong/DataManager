@@ -53,7 +53,7 @@ export class DataRepoTable extends React.Component {
     };
 
     render_name = datarepo => {
-        return <DataRepoLink datarepo={datarepo} />;
+        return <DataRepoLink tenant_id={this.props.tenant_id} datarepo={datarepo} />;
     };
 
     render_type = datarepo => {
@@ -352,7 +352,7 @@ export class DataRepoViewer extends React.Component {
 export class DataRepoLink extends React.Component {
     render() {
         return (
-            <a href={`/explorer/datarepo?id=${this.props.datarepo.id}`}>
+            <a href={`/explorer/${this.props.tenant_id}/datarepo?id=${this.props.datarepo.id}`}>
                 { this.props.datarepo.name }
             </a>
         );

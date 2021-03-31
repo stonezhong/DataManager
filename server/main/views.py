@@ -20,14 +20,15 @@ import json
 
 from .models import Dataset, DatasetInstance, DataLocation, Pipeline, \
     PipelineGroup, PipelineInstance, Application, Timer, ScheduledEvent, \
-    DataRepo
+    DataRepo, Tenant, UserTenantSubscription
 from .serializers import DatasetSerializer, DatasetInstanceSerializer, \
     DataLocationSerializer, PipelineSerializer, PipelineGroupSerializer, \
     PipelineInstanceSerializer, ApplicationSerializer, PipelineGroupDetailsSerializer, \
-    TimerSerializer, ScheduledEventSerializer, DataRepoSerializer
+    TimerSerializer, ScheduledEventSerializer, DataRepoSerializer, TenantSerializer, \
+    UserTenantSubscriptionSerializer
 from .api_input import CreateDatasetInput, CreateDatasetInstanceInput, \
     CreatePipelineInput, CreateApplicationInput, CreateTimerInput, \
-    SetSchemaAndSampleDataInput
+    SetSchemaAndSampleDataInput, CreateTenantInput, CreateDataRepoInput
 
 import explorer.airflow_lib as airflow_lib
 
@@ -58,6 +59,7 @@ class DatasetViewSet(viewsets.ModelViewSet):
     serializer_class = DatasetSerializer
     filter_backends = [DjangoFilterBackend, OrderingFilter]
     filterset_fields = {
+        'tenant_id'         : ['exact'],
         'name'              : ['exact'],
         'major_version'     : ['exact'],
         'minor_version'     : ['exact'],
@@ -122,6 +124,7 @@ class DatasetViewSet(viewsets.ModelViewSet):
 
         ds = Dataset.create(
             request.user,
+            create_dataset_input.tenant_id,
             create_dataset_input.name,
             create_dataset_input.major_version, create_dataset_input.minor_version,
             create_dataset_input.publish_time,
@@ -234,6 +237,7 @@ class PipelineViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend]
     filterset_fields = {
         'retired'           : ['exact'],
+        'tenant_id'         : ['exact'],
     }
 
     @transaction.atomic
@@ -247,6 +251,7 @@ class PipelineViewSet(viewsets.ModelViewSet):
 
         pipeline = Pipeline.create(
             request.user,
+            create_pipeline_input.tenant_id,
             create_pipeline_input.name,
             create_pipeline_input.description,
             create_pipeline_input.team,
@@ -308,6 +313,9 @@ class PipelineGroupViewSet(viewsets.ModelViewSet):
     serializer_class = PipelineGroupSerializer
 
     filter_backends = [DjangoFilterBackend, OrderingFilter]
+    filterset_fields = {
+        'tenant_id'         : ['exact'],
+    }
     ordering_fields = ['created_time']
 
     @action(detail=True, methods=['post'])
@@ -337,6 +345,7 @@ class ApplicationViewSet(viewsets.ModelViewSet):
     serializer_class = ApplicationSerializer
     filter_backends = [DjangoFilterBackend, OrderingFilter]
     filterset_fields = {
+        'tenant_id'         : ['exact'],
         'name'              : ['exact'],
         'sys_app_id'        : ['isnull', 'exact']
     }
@@ -353,6 +362,7 @@ class ApplicationViewSet(viewsets.ModelViewSet):
 
         app = Application.create(
             request.user,
+            create_application_input.tenant_id,
             create_application_input.name,
             create_application_input.description,
             create_application_input.team,
@@ -366,7 +376,10 @@ class TimerViewSet(viewsets.ModelViewSet):
     serializer_class = TimerSerializer
 
     filter_backends = [DjangoFilterBackend, OrderingFilter]
-    filterset_fields = ['topic']
+    filterset_fields = {
+        'tenant_id'         : ['exact'],
+        'topic'             : ['exact'],
+    }
     ordering_fields = ['name']
 
     @transaction.atomic
@@ -380,6 +393,7 @@ class TimerViewSet(viewsets.ModelViewSet):
 
         timer = Timer.create(
             request.user,
+            create_timer_input.tenant_id,
             create_timer_input.name,
             create_timer_input.description,
             create_timer_input.team,
@@ -409,5 +423,78 @@ class DataRepoViewSet(viewsets.ModelViewSet):
 
     filter_backends = [DjangoFilterBackend]
     filterset_fields = {
+        'tenant_id'         : ['exact'],
         'name'              : ['exact'],
     }
+
+    @transaction.atomic
+    def create(self, request):
+        """
+        Create a DataRepo
+        """
+
+        data = request.data
+        create_datarepo_input = CreateDataRepoInput.from_json(data)
+
+        data_repo = DataRepo.create(
+            request.user,
+            create_datarepo_input.tenant_id,
+            create_datarepo_input.name,
+            create_datarepo_input.description,
+            create_datarepo_input.type,
+            create_datarepo_input.context
+        )
+        response = DataRepoSerializer(instance=data_repo, context={'request': request}).data
+        return Response(response)
+
+
+class TenantViewSet(viewsets.ModelViewSet):
+    queryset = Tenant.objects.all()
+    serializer_class = TenantSerializer
+
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = {
+        'name'              : ['exact'],
+    }
+
+    @transaction.atomic
+    def create(self, request):
+        """
+        Create a Tenant
+        """
+
+        data = request.data
+        create_tenant_input = CreateTenantInput.from_json(data)
+
+        tenant = Tenant.create(
+            request.user,
+            create_tenant_input.name,
+            create_tenant_input.description,
+            create_tenant_input.config,
+            create_tenant_input.is_public
+        )
+        response = TenantSerializer(instance=tenant, context={'request': request}).data
+        return Response(response)
+
+
+
+class UserTenantSubscriptionViewSet(viewsets.ModelViewSet):
+    queryset = UserTenantSubscription.objects.all()
+    serializer_class = UserTenantSubscriptionSerializer
+
+    @transaction.atomic
+    def list(self, request):
+        # non-superuser only can query
+        # (1) all users for tenant owned by the requester
+        # (2) all tenants requester subscribed
+        queryset = self.filter_queryset(self.get_queryset())
+        if not request.user.is_superuser:
+            queryset = queryset.filter(user=request.user)
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)

@@ -11,7 +11,7 @@ import './pipeline.scss'
 export class PipelineLink extends React.Component {
     render() {
         return (
-            <a href={`/explorer/pipeline?id=${this.props.pipeline.id}`}>
+            <a href={`/explorer/${this.props.tenant_id}/pipeline?id=${this.props.pipeline.id}`}>
                 {this.props.pipeline.name}
             </a>
         );

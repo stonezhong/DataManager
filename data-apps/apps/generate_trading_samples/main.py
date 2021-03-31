@@ -31,6 +31,7 @@ def main(spark, input_args, sysops={}):
 
     print_json("input_args", input_args)
     application_id = input_args['application_id']
+    tenant_id = input_args['tenant_id']
 
     app_args = input_args['app_args']
     dt = app_args['dt']
@@ -69,6 +70,7 @@ def main(spark, input_args, sysops={}):
         location_to_write = os.path.join(app_args['base_location'], "tradings", dt, f"{market}.parquet")
         loader.write_asset(
             spark,
+            tenant_id,
             df,
             {
                 "repo_name": app_args["repo"],
@@ -83,6 +85,7 @@ def main(spark, input_args, sysops={}):
         sample_data = get_dataframe_sample_data(df)
         dsi = loader.register_asset(
             spark,
+            tenant_id,
             f'tradings:1.0:1:/{dt}_{market}', 'trading',
             'parquet', location_to_write,
             df.count(), df.schema.jsonValue(),
@@ -101,10 +104,11 @@ def main(spark, input_args, sysops={}):
         view_loader_args = view_loader['args']
 
         data_time = datetime.strptime(dt, "%Y-%m-%d")
-        df = loader.load_view(spark, view_loader_name, view_loader_args)
+        df = loader.load_view(spark, tenant_id, view_loader_name, view_loader_args)
         sample_data = get_dataframe_sample_data(df)
         loader.register_view(
             spark,
+            tenant_id,
             f'tradings:1.0:1:/{dt}',
             'trading',
             view_loader_name, view_loader_args,

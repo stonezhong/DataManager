@@ -160,6 +160,7 @@ class ExecuteTask:
         log_info_with_title("Runtime config", config)
         log_info_with_title("Task context", self.task_ctx)
 
+        tenant_id = config['tenant_id']
         pipeline_instance_id = config['pipeline_instance_id']
         pipeline_group_context = get_pipeline_group_context(pipeline_instance_id)
         log_info_with_title("pipeline group context context", pipeline_group_context)
@@ -182,6 +183,7 @@ class ExecuteTask:
             task_args = json.loads(task_args_str)
             args = {
                 "pipeline_group_context": pipeline_group_context,
+                "tenant_id": tenant_id,
                 "application_id": self.task_ctx['application_id'],
                 "app_args": task_args,
                 "team": self.team,
@@ -212,6 +214,7 @@ class ExecuteTask:
             task_ctx = json.loads(task_ctx_str)
             args = {
                 "pipeline_group_context": pipeline_group_context,
+                "tenant_id": tenant_id,
                 "application_id":application_id,
                 "app_args": {
                     "steps": task_ctx['steps'],
@@ -245,7 +248,7 @@ class ExecuteTask:
         else:
             handlers = None
         ret = job_submitter.run(appLocation, options=options, args=args, handlers=handlers)
-        
+
         logger.info("Done")
         return ret
 

@@ -1,0 +1,35 @@
+div.datalake-editor-modal {
+    & > div.modal-content {
+        width:  900px;
+        height: 768px;
+    }
+}
+
+div.subscription-table {
+    width: 600px;
+
+    & > div {
+        height: 680px;
+        overflow-y: auto;
+
+        & > table {
+            & > thead {
+                & > tr {
+                    & > th[data-role='name'] {
+                        width: 500px;
+                    }
+                    & > th[data-role='is_admin'] {
+                        text-align: center;
+                    }
+                }
+            }
+            & > tbody {
+                & > tr {
+                    & > td[data-role='is_admin'] {
+                        text-align: center;
+                    }
+                }
+            }
+        }
+    }
+}

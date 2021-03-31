@@ -1,7 +1,4 @@
 {% extends "base.html" %}
-
-{% block title %}Foo{% endblock %}
-
 {% block content %}
 
 <div class="row justify-content-center align-items-center">
@@ -9,25 +6,37 @@
         {% if user.is_authenticated %}
             <div class="alert alert-primary" role="alert">
                 You already logged in
-            </div>        
+            </div>
         {% else %}
             {% if msg %}
             <div class="alert alert-danger" role="alert">
                 {{ msg }}
-            </div>        
+            </div>
             {% endif %}
+            <div style="text-align:center;">
+                <h4>Login to Data Manager</h4>
+            </div>
             <form action="login" method="POST">
                 {% csrf_token %}
-                <div class="form-group">
-                    <input type="text" class="form-control form-control-lg" placeholder="Enter user name" name="username">
+                <div class="form-group row">
+                    <label for="username" class="col-sm-3 col-form-label">Username</label>
+                    <div class="col-sm-9">
+                        <input type="text" class="form-control form-control" name="username" id="username">
+                    </div>
                 </div>
-                <div class="form-group">
-                    <input type="password" class="form-control form-control-lg" placeholder="Enter password" name="password">
+                <div class="form-group row">
+                    <label for="password" class="col-sm-3 col-form-label">Password</label>
+                    <div class="col-sm-9">
+                        <input type="password" class="form-control form-control" placeholder="Enter password" name="password" id="password">
+                    </div>
                 </div>
-                <div class="form-group">
-                    <button class="btn btn-info btn-lg btn-block">Sign In</button>
+                <div style="text-align:center;">
+                    <button class="btn btn-info btn">Sign In</button>
                 </div>
             </form>
+            <p>
+                If you do not have an account and want to signup, please click <a href="/explorer/signup">here</a>.
+            </p>
         {% endif %}
     </div>
 </div>

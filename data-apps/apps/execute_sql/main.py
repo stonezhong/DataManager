@@ -14,7 +14,7 @@ def resolve(text, context):
     t = Template(text)
     return t.render(context)
 
-def execute_step(spark, step, application_id, loader, team, app_args, pipeline_group_context, src_dict):
+def execute_step(spark, tenant_id, step, application_id, loader, team, app_args, pipeline_group_context, src_dict):
     print(f"execute step: {step['name']}")
 
     src_list = []   # upstream asset path list
@@ -27,7 +27,7 @@ def execute_step(spark, step, application_id, loader, team, app_args, pipeline_g
             if imp_alias in src_dict:
                 raise Exception(f"View {imp_alias} is already defined")
             dataset_instance = resolve(imp['dsi_name'], pipeline_group_context)
-            df, dsi_path = loader.load_asset_ex(spark, dataset_instance)
+            df, dsi_path = loader.load_asset_ex(spark, tenant_id, dataset_instance)
             df.createOrReplaceTempView(imp_alias)
             src_list.append(dsi_path)
             print(f"loading imports: {imp_alias} ==> {dsi_path}")
@@ -60,7 +60,7 @@ def execute_step(spark, step, application_id, loader, team, app_args, pipeline_g
             'type': output['type'],
             'location': location
         }
-        loader.write_asset(spark, df, table, mode=output['write_mode'])
+        loader.write_asset(spark, tenant_id, df, table, mode=output['write_mode'])
         # TODO: if we have alias for output, maybe we should reload it from storage
     else:
         print(f"Won't save query result")
@@ -85,6 +85,7 @@ def execute_step(spark, step, application_id, loader, team, app_args, pipeline_g
         sample_data = get_dataframe_sample_data(df)
         dsi = loader.register_asset(
             spark,
+            tenant_id,
             register_dsi_full_path, team,
             output['type'],
             location,
@@ -134,11 +135,12 @@ def main(spark, input_args, sysops={}):
 
     app_args = input_args['app_args']
     application_id = input_args['application_id']
+    tenant_id = input_args['tenant_id']
     pipeline_group_context = input_args['pipeline_group_context']
 
     src_dict = {}
     # key: table alias
     # value: list of dsi_path (include revision)
     for step in app_args['steps']:
-        execute_step(spark, step, application_id, loader, team, app_args, pipeline_group_context, src_dict)
+        execute_step(spark, tenant_id, step, application_id, loader, team, app_args, pipeline_group_context, src_dict)
 

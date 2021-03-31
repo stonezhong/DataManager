@@ -62,6 +62,63 @@ class PermissionDeniedException(AppException):
 class DataCorruptionException(AppException):
     pass
 
+class Tenant(models.Model):
+    # public tenant: allow every to read
+    id                  = models.AutoField(primary_key=True)
+    name                = models.CharField(max_length=255, blank=False, unique=True)     # required
+    description         = models.TextField(blank=True)
+    is_public           = models.BooleanField(null=False)
+    config              = models.TextField(null=False)
+
+    # create a tenant
+    @classmethod
+    def create(cls, requester, name, description, config, is_public):
+        if not requester.is_authenticated:
+            raise PermissionDeniedException()
+
+        tenant = Tenant(
+            name = name,
+            description = description,
+            config = config,
+            is_public = is_public,
+        )
+        tenant.save()
+
+        user_tenant_subscription = UserTenantSubscription(
+            user = requester,
+            tenant = tenant,
+            is_admin = True,
+        )
+        user_tenant_subscription.save()
+
+        return tenant
+
+class UserTenantSubscription(models.Model):
+    id                  = models.AutoField(primary_key=True)
+    user                = models.ForeignKey(User,
+                            on_delete = models.PROTECT,
+                            null=False)
+    tenant              = models.ForeignKey(Tenant,
+                            on_delete = models.PROTECT,
+                            null=False)
+    is_admin            = models.BooleanField(null=False)
+
+    class Meta:
+        unique_together = [
+            ['tenant', 'user']
+        ]
+
+    # list all my subscriptions
+    @classmethod
+    def list_subscribed(cls, requester):
+        if not requester.is_authenticated:
+            raise PermissionDeniedException()
+
+        subscriptions = UserTenantSubscription.objects.filter(
+            user=requester
+        ).select_related('tenant').order_by('id')
+        return subscriptions
+
 class Application(models.Model):
 
     class SysAppID(Enum):
@@ -69,6 +126,7 @@ class Application(models.Model):
 
     # For now, assuming it is a spark app.
     id                  = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant              = models.ForeignKey(Tenant, on_delete = models.PROTECT, null=False)
     name                = models.CharField(max_length=255, blank=False, unique=True)     # required
     description         = models.TextField(blank=False)                     # description is required
     author              = models.ForeignKey(
@@ -88,11 +146,12 @@ class Application(models.Model):
 
     # create an application
     @classmethod
-    def create(cls, requester, name, description, team, app_location):
+    def create(cls, requester, tenant_id, name, description, team, app_location):
         if not requester.is_authenticated:
             raise PermissionDeniedException()
 
         application = Application(
+            tenant_id = tenant_id,
             name = name,
             description = description,
             author = requester,
@@ -114,6 +173,7 @@ class Application(models.Model):
 
 class Dataset(models.Model):
     id              = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant          = models.ForeignKey(Tenant, on_delete=models.PROTECT, null=False)
     name            = models.CharField(max_length=255, blank=False)     # required
     major_version   = models.CharField(max_length=10, blank=False)      # required
     minor_version   = models.IntegerField(null=False)                   # required
@@ -136,11 +196,6 @@ class Dataset(models.Model):
             ['name', 'major_version', 'minor_version']
         ]
 
-    @classmethod
-    def get_active_datasets(cls, requester):
-        # get all active datasets
-        return cls.objects.filter(expiration_time__isnull=True).all()
-
     # is this dataset active at given time?
     def is_active_at(self, dt):
         return self.expiration_time is None or self.expiration_time > dt
@@ -161,13 +216,14 @@ class Dataset(models.Model):
 
     # create a dataset
     @classmethod
-    def create(cls, requester, name, major_version, minor_version, publish_time,
+    def create(cls, requester, tenant_id, name, major_version, minor_version, publish_time,
                description, team):
 
         if not requester.is_authenticated:
             raise PermissionDeniedException()
 
-        ds = Dataset(name = name,
+        ds = Dataset(tenant_id = tenant_id,
+                     name = name,
                      major_version = major_version,
                      minor_version = minor_version,
                      publish_time = publish_time,
@@ -229,6 +285,7 @@ class Dataset(models.Model):
 # We call it asset in UI
 class DatasetInstance(models.Model):
     id                  = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant              = models.ForeignKey(Tenant, on_delete=models.PROTECT, null=False)
     dataset             = models.ForeignKey(Dataset, on_delete = models.PROTECT, null=False)       # non NULL field
     parent_instance     = models.ForeignKey('self', on_delete = models.PROTECT, null=True)         # NULLable, if NULL, then it is a top-level instance
     name                = models.CharField(max_length=255, blank=False)                            # required
@@ -379,6 +436,7 @@ class DatasetInstance(models.Model):
 
         # save data instance
         di = DatasetInstance(
+            tenant_id = dataset.tenant_id,
             dataset = dataset,
             parent_instance = parent_instance,
             name = name,
@@ -408,6 +466,7 @@ class DatasetInstance(models.Model):
                     repo_dict[repo_name] = repo
                 repo = repo_dict[repo_name]
             dl = DataLocation(
+                tenant_id = dataset.tenant_id,
                 dataset_instance = di,
                 type = location.type,
                 repo = repo,
@@ -429,6 +488,7 @@ class DatasetInstance(models.Model):
             if src_dsi is None:
                 raise InvalidOperationException(f"dataset {src_dsi_path} does not exist")
             dsi_dep = DatasetInstanceDep(
+                tenant_id = dataset.tenant_id,
                 src_dsi = src_dsi,
                 dst_dsi = di
             )
@@ -482,6 +542,7 @@ class DatasetInstance(models.Model):
 class DatasetInstanceDep(models.Model):
     # each row represent src dsi generates dst dsi. (aka dst depened on src)
     id                  = models.AutoField(primary_key=True)
+    tenant              = models.ForeignKey(Tenant, on_delete=models.PROTECT, null=False)
     src_dsi             = models.ForeignKey(DatasetInstance,
                                             on_delete = models.PROTECT,
                                             related_name = 'src_dsideps',
@@ -505,6 +566,7 @@ class DataRepo(models.Model):
         JDBC    = 3     # via JDBC connector
 
     id          = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant      = models.ForeignKey(Tenant, on_delete=models.PROTECT, null=False)
     name        = models.CharField(max_length=255, blank=True, unique=True)
     description = models.TextField(blank=True)
     type        = models.IntegerField(null=False)
@@ -517,9 +579,26 @@ class DataRepo(models.Model):
             return None
         return repos[0]
 
+    # create a data repo
+    @classmethod
+    def create(cls, requester, tenant_id, name, description, type, context):
+        if not requester.is_authenticated:
+            raise PermissionDeniedException()
+
+        data_repo = DataRepo(
+            tenant_id = tenant_id,
+            name = name,
+            description = description,
+            type = type,
+            context = context
+        )
+        data_repo.save()
+        return data_repo
+
 
 class DataLocation(models.Model):
     id                  = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant              = models.ForeignKey(Tenant, on_delete=models.PROTECT, null=False)
     dataset_instance    = models.ForeignKey(
         DatasetInstance,
         on_delete = models.PROTECT,
@@ -546,6 +625,7 @@ class PipelineGroup(models.Model):
     # context is usually a JSON object containing the context of the pipeline context
     # A pipeline context is finished if all pipeline in the context is finished
     id                  = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant              = models.ForeignKey(Tenant, on_delete=models.PROTECT, null=False)
     name                = models.CharField(max_length=255, blank=False, unique=True)     # required
     created_time        = models.DateTimeField(null=False)                                         # required
     category            = models.CharField(max_length=255, blank=False)                            # required
@@ -572,6 +652,7 @@ class PipelineGroup(models.Model):
 
 class Pipeline(models.Model):
     id                  = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant              = models.ForeignKey(Tenant, on_delete=models.PROTECT, null=False)
     name                = models.CharField(max_length=255, blank=False)     # required
     description         = models.TextField(blank=True)                     # description is required
     author              = models.ForeignKey(
@@ -603,11 +684,12 @@ class Pipeline(models.Model):
 
     # create a pipeline
     @classmethod
-    def create(cls, requester, name, description, team, category, context):
+    def create(cls, requester, tenant_id, name, description, team, category, context):
         if not requester.is_authenticated:
             raise PermissionDeniedException()
 
         pipeline = Pipeline(
+            tenant_id = tenant_id,
             name = name,
             description = description,
             author = requester,
@@ -638,6 +720,7 @@ class PipelineInstance(models.Model):
     # A pipeline instance lives inside a pipeline context
     # It is generated from a pipeline's on_context_created_method
     id                  = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant              = models.ForeignKey(Tenant, on_delete=models.PROTECT, null=False)
     pipeline            = models.ForeignKey(Pipeline, on_delete = models.PROTECT, null=False)           # non NULL field
 
     # the pipeline group this instance belongs to
@@ -675,6 +758,7 @@ class PipelineInstance(models.Model):
 
 class Timer(models.Model):
     id                  = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant              = models.ForeignKey(Tenant, on_delete=models.PROTECT, null=False)
     name                = models.CharField(max_length=255, blank=False, unique=True)     # required
     description         = models.TextField(blank=True)
     author              = models.ForeignKey(
@@ -706,7 +790,7 @@ class Timer(models.Model):
 
     # create a timer
     @classmethod
-    def create(cls, requester, name, description, team, paused,
+    def create(cls, requester, tenant_id, name, description, team, paused,
                interval_unit, interval_amount,
                start_from, topic, context, category="", end_at=None):
 
@@ -714,7 +798,8 @@ class Timer(models.Model):
             raise PermissionDeniedException()
 
         # TODO: validate arguments
-        timer = Timer(name = name,
+        timer = Timer(tenant_id = tenant_id,
+                      name = name,
                       description = description,
                       author = requester,
                       team = team,
@@ -746,6 +831,7 @@ class Timer(models.Model):
 
         se = ScheduledEvent(
             timer       = self,
+            tenant      = self.tenant,
             due         = due,
             acked       = False,
             topic       = self.topic,
@@ -782,6 +868,7 @@ class Timer(models.Model):
 
 class ScheduledEvent(models.Model):
     id                  = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant              = models.ForeignKey(Tenant, on_delete=models.PROTECT, null=False)
     timer               = models.ForeignKey(
         Timer,
         on_delete=models.PROTECT,

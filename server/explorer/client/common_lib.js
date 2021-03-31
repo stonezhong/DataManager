@@ -58,7 +58,15 @@ export function get_app_context() {
         return {}
 }
 
-export function pipeline_to_django_model(pipeline) {
+export function get_tenant_id() {
+    const elements = $("meta[name='tenant_id']");
+    if (elements)
+        return parseInt(elements[0].content);
+    else
+        return null
+}
+
+export function pipeline_to_django_model(tenant_id, pipeline) {
     const context = {
         type        : pipeline.type,
         dag_id      : pipeline.dag_id,
@@ -69,6 +77,7 @@ export function pipeline_to_django_model(pipeline) {
     };
 
     const to_post = {
+        tenant_id       : tenant_id,
         name            : pipeline.name,
         description     : pipeline.description,
         team            : pipeline.team,

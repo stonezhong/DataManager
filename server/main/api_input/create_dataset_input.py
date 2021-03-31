@@ -7,6 +7,7 @@ class CreateDatasetInput:
     def from_json(cls, data):
         validate_model("create_dataset_input", data)
         self = cls()
+        self.tenant_id = data["tenant_id"]
         self.name = data["name"]
         self.major_version = data["major_version"]
         self.minor_version = data["minor_version"]

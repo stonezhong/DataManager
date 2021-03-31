@@ -238,7 +238,7 @@ export class ApplicationTable extends React.Component {
     };
 
     render_name = application => {
-        return <ApplicationLink application={application} />;
+        return <ApplicationLink tenant_id={this.props.tenant_id} application={application} />;
     };
 
     render_retired = application => (
@@ -363,7 +363,7 @@ export class ApplicationViewer extends React.Component {
 export class ApplicationLink extends React.Component {
     render() {
         return (
-            <a href={`/explorer/application?id=${this.props.application.id}`}>
+            <a href={`/explorer/${this.props.tenant_id}/application?id=${this.props.application.id}`}>
                 { (this.props.application.sys_app_id === null)?this.props.application.name:<b>{this.props.application.name}</b> }
             </a>
         );

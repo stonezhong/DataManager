@@ -11,14 +11,15 @@ from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction
 from django.urls import reverse
 from django.http import HttpResponse
+from django.contrib.auth.models import User
 
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 
 from main.models import Dataset, Pipeline, PipelineGroup, PipelineInstance, \
-    Application, DatasetInstance, DataRepo
+    Application, DatasetInstance, DataRepo, Tenant, UserTenantSubscription
 from main.serializers import PipelineSerializer, DatasetSerializer, \
     ApplicationSerializer, PipelineGroupDetailsSerializer, \
-    DatasetInstanceSerializer, DataRepoSerializer
+    DatasetInstanceSerializer, DataRepoSerializer, UserTenantSubscriptionSerializer
 
 from rest_framework.renderers import JSONRenderer
 
@@ -58,7 +59,7 @@ def test(request):
 def index(request):
     return redirect(reverse('datasets'))
 
-def datasets(request):
+def datasets(request, tenant_id):
     return render(
         request,
         'common_page.html',
@@ -69,11 +70,12 @@ def datasets(request):
                 '/static/js-bundle/datasets.js'
             ],
             'nav_item_role': 'datasets',
-            'app_config': get_app_config()
+            'app_config': get_app_config(),
+            'tenant_id': tenant_id,
         }
     )
 
-def dataset(request):
+def dataset(request, tenant_id):
     dataset_id = request.GET['id']
 
     dataset = Dataset.objects.get(pk=dataset_id)
@@ -95,12 +97,13 @@ def dataset(request):
             'nav_item_role': 'datasets',
             'app_config': get_app_config(),
             'app_context': JSONRenderer().render(app_context).decode("utf-8"),
+            'tenant_id': tenant_id,
         }
     )
 
 def logout(request):
     do_logout(request)
-    return HttpResponseRedirect(f'/explorer')
+    return HttpResponseRedirect(f'/explorer/login')
 
 
 def login(request):
@@ -118,7 +121,7 @@ def login(request):
         user = do_authenticate(username=username, password=password)
         if user is not None:
             do_login(request, user)
-            return HttpResponseRedirect('/explorer')
+            return HttpResponseRedirect('/explorer/datalakes')
         # must be wrong
         return render(
             request,
@@ -128,7 +131,35 @@ def login(request):
             }
         )
 
-def pipelines(request):
+def signup(request):
+    if request.method == 'GET':
+        return render(
+            request,
+            'signup.html',
+            context={
+                'user': request.user,
+            }
+        )
+
+    if request.method == 'POST':
+        # TODO: maybe add some security check, like email validation and activation
+        username    = request.POST['username']
+        password    = request.POST['password']
+        first_name  = request.POST['first_name']
+        last_name   = request.POST['last_name']
+        email       = request.POST['email']
+
+        user = User.objects.create_user(
+            username,
+            email=email,
+            password=password,
+            first_name=first_name,
+            last_name=last_name
+        )
+        user.save()
+        return HttpResponseRedirect('/explorer/login')
+
+def pipelines(request, tenant_id):
     applications = Application.objects.filter(retired=False, sys_app_id__isnull=True)
 
     s = ApplicationSerializer(applications, many=True, context={"request": request})
@@ -148,6 +179,7 @@ def pipelines(request):
             'nav_item_role': 'pipelines',
             'app_config': get_app_config(),
             'app_context': JSONRenderer().render(app_context).decode("utf-8"),
+            'tenant_id': tenant_id,
         }
     )
 
@@ -168,7 +200,7 @@ def get_task_dep_svg(pipeline):
     return r
 
 
-def pipeline(request):
+def pipeline(request, tenant_id):
     pipeline_id = request.GET['id']
 
     pipeline = Pipeline.objects.get(pk=pipeline_id)
@@ -206,10 +238,11 @@ def pipeline(request):
             'nav_item_role': 'pipelines',
             'app_config': get_app_config(),
             'app_context': JSONRenderer().render(app_context).decode("utf-8"),
+            'tenant_id': tenant_id,
         }
     )
 
-def pipeline_groups(request):
+def pipeline_groups(request, tenant_id):
     return render(
         request,
         'common_page.html',
@@ -220,11 +253,12 @@ def pipeline_groups(request):
                 '/static/js-bundle/pipeline_groups.js'
             ],
             'nav_item_role': 'executions',
-            'app_config': get_app_config()
+            'app_config': get_app_config(),
+            'tenant_id': tenant_id,
         }
     )
 
-def pipeline_group(request):
+def pipeline_group(request, tenant_id):
     pipeline_group_id = request.GET['id']
 
     app_context = {
@@ -243,12 +277,13 @@ def pipeline_group(request):
             ],
             'nav_item_role': 'executions',
             'app_config': get_app_config(),
-            'app_context': JSONRenderer().render(app_context).decode("utf-8")
+            'app_context': JSONRenderer().render(app_context).decode("utf-8"),
+            'tenant_id': tenant_id,
         }
     )
 
 
-def applications(request):
+def applications(request, tenant_id):
     return render(
         request,
         'common_page.html',
@@ -259,12 +294,13 @@ def applications(request):
                 '/static/js-bundle/applications.js'
             ],
             'nav_item_role': 'applications',
-            'app_config': get_app_config()
+            'app_config': get_app_config(),
+            'tenant_id': tenant_id,
         }
     )
 
 
-def dataset_instance(request):
+def dataset_instance(request, tenant_id):
     dsi_path = request.GET['dsi_path']
 
     if dsi_path is None:
@@ -297,10 +333,11 @@ def dataset_instance(request):
             'nav_item_role': 'Asset',
             'app_config': get_app_config(),
             'app_context': JSONRenderer().render(app_context).decode('utf-8'),
+            'tenant_id': tenant_id,
         }
     )
 
-def schedulers(request):
+def schedulers(request, tenant_id):
     return render(
         request,
         'common_page.html',
@@ -311,11 +348,12 @@ def schedulers(request):
                 '/static/js-bundle/schedulers.js'
             ],
             'nav_item_role': 'schedulers',
-            'app_config': get_app_config()
+            'app_config': get_app_config(),
+            'tenant_id': tenant_id,
         }
     )
 
-def application(request):
+def application(request, tenant_id):
     application_id = request.GET['id']
 
     application = Application.objects.get(pk=application_id)
@@ -337,10 +375,11 @@ def application(request):
             'nav_item_role': 'applications',
             'app_config': get_app_config(),
             'app_context': JSONRenderer().render(app_context).decode("utf-8"),
+            'tenant_id': tenant_id,
         }
     )
 
-def datarepos(request):
+def datarepos(request, tenant_id):
     return render(
         request,
         'common_page.html',
@@ -351,11 +390,12 @@ def datarepos(request):
                 '/static/js-bundle/datarepos.js'
             ],
             'nav_item_role': 'datarepos',
-            'app_config': get_app_config()
+            'app_config': get_app_config(),
+            'tenant_id': tenant_id,
         }
     )
 
-def datarepo(request):
+def datarepo(request, tenant_id):
     try:
         datarepo_id = request.GET['id']
         datarepo = DataRepo.objects.get(pk=datarepo_id)
@@ -377,10 +417,26 @@ def datarepo(request):
                 'nav_item_role': 'datarepos',
                 'app_config': get_app_config(),
                 'app_context': JSONRenderer().render(app_context).decode("utf-8"),
+                'tenant_id': tenant_id,
             }
         )
     except (ObjectDoesNotExist, ValidationError, ):
         return HttpResponseNotFound("Page not found")
+
+def datalakes(request, tenant_id=None):
+    return render(
+        request,
+        'common_page.html',
+        context={
+            'user': request.user,
+            'sub_title': "Datalakes",
+            'scripts':[
+                '/static/js-bundle/datalakes.js'
+            ],
+            'nav_item_role': 'datalakes',
+            'app_config': get_app_config(),
+        }
+    )
 
 # this is required by Let's Encrypt to get free SSL cert.
 # def letsencrypt(request):

@@ -12,7 +12,7 @@ import {saveDataRepo} from '/apis'
 
 import $ from 'jquery'
 
-import {get_csrf_token, get_current_user, get_app_context} from '/common_lib'
+import {get_csrf_token, get_current_user, get_app_context, get_tenant_id} from '/common_lib'
 
 /*********************************************************************************
  * Purpose: Page to view a data repo
@@ -26,7 +26,12 @@ class DataRepoPage extends React.Component {
     theDataRepoEditorRef = React.createRef();
 
     saveDataRepoAndRefresh = (mode, datarepo) => {
-        return saveDataRepo(get_csrf_token(), mode, datarepo).then(() => {
+        return saveDataRepo(
+            get_csrf_token(),
+            this.props.tenant_id,
+            mode,
+            datarepo
+        ).then(() => {
             location.reload();
         });
     };
@@ -70,13 +75,15 @@ class DataRepoPage extends React.Component {
 }
 
 $(function() {
-    const current_user = get_current_user()
+    const current_user = get_current_user();
     const app_context = get_app_context();
+    const tenant_id = get_tenant_id();
 
     ReactDOM.render(
         <DataRepoPage
             current_user={current_user}
             datarepo={app_context.datarepo}
+            tenant_id={tenant_id}
         />,
         document.getElementById('app')
     );

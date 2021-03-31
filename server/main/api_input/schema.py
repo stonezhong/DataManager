@@ -36,6 +36,9 @@ models = {
     "create_dataset_input": {
         "type": "object",
         "properties": {
+            "tenant_id": {
+                "type": "integer"
+            },
             "name": {
                 "type": "string"
             },
@@ -57,7 +60,7 @@ models = {
             },
         },
         "additionalProperties": False,
-        "required": ["name", "major_version", "minor_version", "description", "team"]
+        "required": ["tenant_id", "name", "major_version", "minor_version", "description", "team"]
     },
     "create_dataset_instance": {
         "type": "object",
@@ -127,6 +130,9 @@ models = {
     "create_pipeline_input": {
         "type": "object",
         "properties": {
+            "tenant_id": {
+                "type": "integer"
+            },
             "name": {
                 "type": "string"
             },
@@ -144,11 +150,14 @@ models = {
             },
         },
         "additionalProperties": False,
-        "required": ["name", "description", "team", "category", "context"]
+        "required": ["tenant_id", "name", "description", "team", "category", "context"]
     },
     "create_application_input":{
         "type": "object",
         "properties": {
+            "tenant_id": {
+                "type": "integer"
+            },
             "name": {
                 "type": "string"
             },
@@ -163,11 +172,14 @@ models = {
             },
         },
         "additionalProperties": False,
-        "required": ["name", "description", "team", "app_location"]
+        "required": ["tenant_id", "name", "description", "team", "app_location"]
     },
     "create_timer_input": {
         "type": "object",
         "properties": {
+            "tenant_id": {
+                "type": "integer"
+            },
             "name": {
                 "type": "string"
             },
@@ -206,9 +218,31 @@ models = {
         },
         "additionalProperties": False,
         "required": [
-            "name", "description", "team", "paused", "interval_unit", "interval_amount", "start_from",
+            "tenant_id", "name", "description", "team", "paused", "interval_unit", "interval_amount", "start_from",
             "topic", "context", "category", "end_at"
         ]
+    },
+    "create_datarepo_input":{
+        "type": "object",
+        "properties": {
+            "tenant_id": {
+                "type": "integer"
+            },
+            "name": {
+                "type": "string"
+            },
+            "description": {
+                "type": "string"
+            },
+            "context": {
+                "type": "string"
+            },
+            "type": {
+                "type": "integer"
+            },
+        },
+        "additionalProperties": False,
+        "required": ["tenant_id", "name", "description", "context", "type"]
     },
     "set_schema_and_sample_data_input": {
         "type": "object",
@@ -223,6 +257,27 @@ models = {
         "additionalProperties": False,
         "required": [
             "schema"
+        ]
+    },
+    "create_tenant_input": {
+        "type": "object",
+        "properties": {
+            "name": {
+                "type": "string"
+            },
+            "description": {
+                "type": "string"
+            },
+            "config": {
+                "type": "string"
+            },
+            "is_public": {
+                "type": "boolean",
+            },
+        },
+        "additionalProperties": False,
+        "required": [
+            "name", "description", "config", "is_public"
         ]
     }
 }
