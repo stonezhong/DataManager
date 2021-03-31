@@ -54,6 +54,10 @@
     <meta name="app_context" content="{{ app_context }}">
     {% endif %}
 
+    {% if nav_item_role %}
+    <meta name="nav_item_role" content="{{ nav_item_role }}">
+    {% endif %}
+
     {% if tenant_id %}
     <meta name="tenant_id" content="{{ tenant_id }}">
     {% endif %}
@@ -62,15 +66,15 @@
     <meta name="user" content="{{user|user_to_json}}">
     {% endif %}
 
+    <script src="/static/js-bundle/header.js"></script>
+
     {% for script in scripts %}
     <script src="{{ script }}"></script>
     {% endfor %}
-
-
 </head>
 
 <body>
-    {% include "header.html" %}
+    <div id="global-header"></div>
 
     {% block content %}{% endblock %}
 </body>

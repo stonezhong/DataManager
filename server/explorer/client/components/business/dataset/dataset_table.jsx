@@ -1,14 +1,15 @@
-import React from 'react'
+import React from 'react';
 
-import Button from 'react-bootstrap/Button'
-import * as Icon from 'react-bootstrap-icons'
+import Button from 'react-bootstrap/Button';
+import * as Icon from 'react-bootstrap-icons';
 
-import {SchemaViewer, get_schema} from './schema_viewer.jsx'
-import {DataTable} from '/components/generic/datatable/main.jsx'
-import {SimpleDialogBox} from '/components/generic/dialogbox/simple.jsx'
-import {DatasetSample, has_sample_data} from '/components/business/dataset/dataset_sample.jsx'
+import {SchemaViewer, get_schema} from './schema_viewer.jsx';
+import {DataTable} from '/components/generic/datatable/main.jsx';
+import {DatasetLink} from '/components/business/dataset/utils.jsx';
+import {SimpleDialogBox} from '/components/generic/dialogbox/simple.jsx';
+import {DatasetSample, has_sample_data} from '/components/business/dataset/dataset_sample.jsx';
 
-import './dataset.scss'
+import './dataset.scss';
 
 /*********************************************************************************
  * Purpose: Show list of datasets
@@ -75,9 +76,7 @@ export class DatasetTable extends React.Component {
         );
     };
 
-    render_name = dataset =>
-        <a href={`dataset?id=${dataset.id}`}>{dataset.name}</a>
-    ;
+    render_name = dataset => <a href={`/explorer/${this.props.tenant_id}/dataset?id=${dataset.id}`}>{dataset.name}</a>;
 
     get_page = (offset, limit) => {
         return this.props.get_page(offset, limit, {showExpired: this.props.showExpired});

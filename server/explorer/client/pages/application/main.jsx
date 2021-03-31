@@ -78,7 +78,7 @@ class ApplicationPage extends React.Component {
 }
 
 $(function() {
-    const current_user = get_current_user()
+    const current_user = get_current_user();
     const app_context = get_app_context();
     const tenant_id = get_tenant_id();
 

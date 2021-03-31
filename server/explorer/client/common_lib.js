@@ -44,7 +44,7 @@ export function get_current_user() {
 
 export function get_app_config() {
     const elements = $("meta[name='app_config']");
-    if (elements)
+    if (elements.length > 0)
         return JSON.parse(elements[0].content);
     else
         return {}
@@ -52,7 +52,7 @@ export function get_app_config() {
 
 export function get_app_context() {
     const elements = $("meta[name='app_context']");
-    if (elements)
+    if (elements.length > 0)
         return JSON.parse(elements[0].content);
     else
         return {}
@@ -60,8 +60,16 @@ export function get_app_context() {
 
 export function get_tenant_id() {
     const elements = $("meta[name='tenant_id']");
-    if (elements)
+    if (elements.length > 0)
         return parseInt(elements[0].content);
+    else
+        return null
+}
+
+export function get_nav_item_role() {
+    const elements = $("meta[name='nav_item_role']");
+    if (elements.length > 0)
+        return elements[0].content;
     else
         return null
 }
