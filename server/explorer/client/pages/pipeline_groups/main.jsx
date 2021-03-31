@@ -8,7 +8,7 @@ import {PipelineGroupTable} from '/components/business/pipeline_group/pipeline_g
 import $ from 'jquery'
 const buildUrl = require('build-url');
 
-import {dt_2_utc_string, get_csrf_token, get_current_user, handle_json_response} from '/common_lib'
+import {dt_2_utc_string, get_csrf_token, get_current_user, get_tenant_id, handle_json_response} from '/common_lib'
 
 class PipelineGroupsPage extends React.Component {
     state = {
@@ -19,6 +19,7 @@ class PipelineGroupsPage extends React.Component {
         if (mode === "new") {
             const now = dt_2_utc_string(new Date());
             const to_post = {
+                tenant_id   : this.props.tenant_id,
                 name        : pipeline_group.name,
                 created_time: now,
                 category    : pipeline_group.category,
@@ -59,6 +60,7 @@ class PipelineGroupsPage extends React.Component {
             queryParams: {
                 offset: offset,
                 limit : limit,
+                tenant_id: this.props.tenant_id,
                 ordering: "-created_time"
             }
         };
@@ -71,6 +73,7 @@ class PipelineGroupsPage extends React.Component {
         return (
             <Container fluid>
                 <PipelineGroupTable
+                    tenant_id={this.props.tenant_id}
                     allowEdit={!!this.props.current_user}
                     allowNew={!!this.props.current_user}
                     onSave={this.onSave}
@@ -84,9 +87,14 @@ class PipelineGroupsPage extends React.Component {
 }
 
 $(function() {
-    const current_user = get_current_user()
+    const current_user = get_current_user();
+    const tenant_id = get_tenant_id();
+
     ReactDOM.render(
-        <PipelineGroupsPage current_user={current_user} />,
+        <PipelineGroupsPage
+            current_user={current_user}
+            tenant_id={tenant_id}
+        />,
         document.getElementById('app')
     );
 });

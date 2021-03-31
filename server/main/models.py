@@ -466,6 +466,7 @@ class DatasetInstance(models.Model):
                     repo_dict[repo_name] = repo
                 repo = repo_dict[repo_name]
             dl = DataLocation(
+                tenant_id = dataset.tenant_id,
                 dataset_instance = di,
                 type = location.type,
                 repo = repo,
@@ -487,6 +488,7 @@ class DatasetInstance(models.Model):
             if src_dsi is None:
                 raise InvalidOperationException(f"dataset {src_dsi_path} does not exist")
             dsi_dep = DatasetInstanceDep(
+                tenant_id = dataset.tenant_id,
                 src_dsi = src_dsi,
                 dst_dsi = di
             )
@@ -829,6 +831,7 @@ class Timer(models.Model):
 
         se = ScheduledEvent(
             timer       = self,
+            tenant      = self.tenant,
             due         = due,
             acked       = False,
             topic       = self.topic,

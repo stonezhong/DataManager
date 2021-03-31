@@ -147,6 +147,7 @@ class DatasetPage extends React.Component {
                     </Col>
                 </Row>
                 <DatasetInstanceTable
+                    tenant_id={this.props.tenant_id}
                     ds={this.props.dataset}
                     allowDelete={!!this.props.current_user}
                     onDelete={this.onDelete}

@@ -159,7 +159,11 @@ export class DatasetInstanceTable extends React.Component {
         </Button>);
     };
 
-    render_path = dataset_instance => <AssetLink ds={this.props.ds} dsi={dataset_instance} />;
+    render_path = dataset_instance => <AssetLink
+        tenant_id={this.props.tenant_id}
+        ds={this.props.ds}
+        dsi={dataset_instance}
+    />;
 
     get_page = (offset, limit) => {
         return this.props.get_page(offset, limit);

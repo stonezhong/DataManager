@@ -26,7 +26,7 @@ class DataCatalogClient:
         if auth is not None:
             self.session.auth = auth
 
-    def get_dataset(self, name, major_version, minor_version=None, spark=None):
+    def get_dataset(self, tenant_id, name, major_version, minor_version=None, spark=None):
         """Get dataset.
 
         Parameters
@@ -43,6 +43,7 @@ class DataCatalogClient:
 
         url = "{}/Datasets/".format(self.url_base)
         params = {
+            'tenant_id': tenant_id,
             'name': name,
             'major_version': major_version,
         }
@@ -67,11 +68,13 @@ class DataCatalogClient:
 
         return None
 
-    def create_dataset(self, name, major_version, minor_version, description, team, spark=None):
+    def create_dataset(self, tenant_id, name, major_version, minor_version, description, team, spark=None):
         """Create a dataset.
 
         Parameters
         ----------
+        tenant_id: integer
+            The id of the tenant.
         name: str
             The name of the dataset.
         major_version: str
@@ -86,6 +89,7 @@ class DataCatalogClient:
         """
         url = "{}/Datasets/".format(self.url_base)
         data = {
+            'tenant_id': tenant_id,
             'name': name,
             'major_version': major_version,
             'minor_version': minor_version,
@@ -136,11 +140,13 @@ class DataCatalogClient:
         r.raise_for_status()
 
 
-    def get_dataset_instance(self, name, major_version, minor_version, path, revision=None, spark=None):
+    def get_dataset_instance(self, tenant_id, name, major_version, minor_version, path, revision=None, spark=None):
         """Get a dataset instance.
 
         Parameters
         ----------
+        tenant_id: integer
+            The ID of the tenant.
         name: str
             The name of the dataset.
         major_version: str
@@ -154,12 +160,13 @@ class DataCatalogClient:
             Otherwise, the latest revision will be returned.
         spark: placeholder, to keep the API compatible
         """
-        dataset = self.get_dataset(name, major_version, minor_version)
+        dataset = self.get_dataset(tenant_id, name, major_version, minor_version)
         if dataset is None:
             return None
 
         url = "{}/DatasetInstances/".format(self.url_base)
         params = {
+            'tenant_id': tenant_id,
             'path': path,
             'dataset': dataset['id'],
         }
@@ -188,7 +195,7 @@ class DataCatalogClient:
         return None
 
 
-    def create_dataset_instance(self, name, major_version, minor_version, path, locations, data_time,
+    def create_dataset_instance(self, tenant_id, name, major_version, minor_version, path, locations, data_time,
                                 row_count=None, loader=None, src_dsi_paths=[],
                                 application_id = None, application_args = None, spark=None
 
@@ -197,6 +204,8 @@ class DataCatalogClient:
 
         Parameters
         ----------
+        tenant_id: integer
+            The ID of the tenant.
         name: str
             The name of the dataset.
         major_version: str
@@ -225,7 +234,7 @@ class DataCatalogClient:
             if present, it is the args passed to this application.
         spark: placeholder, to keep the API compatible
         """
-        dataset = self.get_dataset(name, major_version, minor_version)
+        dataset = self.get_dataset(tenant_id, name, major_version, minor_version)
         if dataset is None:
             raise Exception("dataset not found")
 
@@ -246,7 +255,7 @@ class DataCatalogClient:
             parent_instance = None
         else:
             new_path = '/' + '/'.join(di_names[:-1])
-            parent_instance = self.get_dataset_instance(name, major_version, minor_version, new_path)
+            parent_instance = self.get_dataset_instance(tenant_id, name, major_version, minor_version, new_path)
 
         url = "{}/DatasetInstances/".format(self.url_base)
         data = {
@@ -284,18 +293,21 @@ class DataCatalogClient:
         r = self.session.delete(url=url)
         r.raise_for_status()
 
-    def get_data_repo(self, name, spark=None):
+    def get_data_repo(self, tenant_id, name, spark=None):
         """Get a data repo by name.
         Data repo's name is unique
 
         Parameters
         ----------
+        tenant_id: integer
+            The ID of the tenant
         name: str
             The data repo name.
         spark: placeholder, to keep the API compatible
         """
         url = "{}/DataRepos/".format(self.url_base)
         params = {
+            'tenant_id': tenant_id,
             'name': name,
         }
         r = self.session.get(url=url, params = params)
@@ -319,20 +331,22 @@ class DataCatalogClientProxy:
             raise Exception("spark is not set")
         return server_ask_client(spark, self.channel, content, timeout=self.timeout, check_interval=self.check_interval)
 
-    def get_dataset(self, name, major_version, minor_version=None, spark=None):
+    def get_dataset(self, tenant_id, name, major_version, minor_version=None, spark=None):
         return self._ask(spark, {
             "topic": "dc_client.get_dataset",
             "payload": {
+                "tenant_id": tenant_id,
                 "name": name,
                 "major_version": major_version,
                 "minor_version": minor_version
             }
         })
 
-    def create_dataset(self, name, major_version, minor_version, description, team, spark=None):
+    def create_dataset(self, tenant_id, name, major_version, minor_version, description, team, spark=None):
         return self._ask(spark, {
             "topic": "dc_client.create_dataset",
             "payload": {
+                "tenant_id": tenant_id,
                 "name": name,
                 "major_version": major_version,
                 "minor_version": minor_version,
@@ -359,10 +373,11 @@ class DataCatalogClientProxy:
             }
         })
 
-    def get_dataset_instance(self, name, major_version, minor_version, path, revision=None, spark=None):
+    def get_dataset_instance(self, tenant_id, name, major_version, minor_version, path, revision=None, spark=None):
         return self._ask(spark, {
             "topic": "dc_client.get_dataset_instance",
             "payload": {
+                "tenant_id": tenant_id,
                 "name": name,
                 "major_version": major_version,
                 "minor_version": minor_version,
@@ -371,12 +386,13 @@ class DataCatalogClientProxy:
             }
         })
 
-    def create_dataset_instance(self, name, major_version, minor_version, path, locations, data_time,
+    def create_dataset_instance(self, tenant_id, name, major_version, minor_version, path, locations, data_time,
                                 row_count=None, loader=None, src_dsi_paths=[],
                                 application_id = None, application_args = None, spark=None):
         return self._ask(spark, {
             "topic": "dc_client.create_dataset_instance",
             "payload": {
+                "tenant_id": tenant_id,
                 "name": name,
                 "major_version": major_version,
                 "minor_version": minor_version,
@@ -399,10 +415,11 @@ class DataCatalogClientProxy:
             }
         })
 
-    def get_data_repo(self, name, spark=None):
+    def get_data_repo(self, tenant_id, name, spark=None):
         return self._ask(spark, {
             "topic": "dc_client.get_data_repo",
             "payload": {
+                "tenant_id": tenant_id,
                 "name": name,
             }
         })

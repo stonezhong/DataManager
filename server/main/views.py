@@ -313,6 +313,9 @@ class PipelineGroupViewSet(viewsets.ModelViewSet):
     serializer_class = PipelineGroupSerializer
 
     filter_backends = [DjangoFilterBackend, OrderingFilter]
+    filterset_fields = {
+        'tenant_id'         : ['exact'],
+    }
     ordering_fields = ['created_time']
 
     @action(detail=True, methods=['post'])
