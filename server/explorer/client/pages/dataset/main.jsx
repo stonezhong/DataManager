@@ -1,33 +1,33 @@
-import React from 'react'
-import ReactDOM from 'react-dom'
-import $ from 'jquery'
+import React from 'react';
+import ReactDOM from 'react-dom';
+import $ from 'jquery';
 
-import Col from 'react-bootstrap/Col'
-import Row from 'react-bootstrap/Row'
-import Container from 'react-bootstrap/Container'
-import Button from 'react-bootstrap/Button'
+import Col from 'react-bootstrap/Col';
+import Row from 'react-bootstrap/Row';
+import Container from 'react-bootstrap/Container';
+import Button from 'react-bootstrap/Button';
 
 const buildUrl = require('build-url');
 
-import {DatasetInstanceTable} from '/components/business/dataset/dataset_instance_table.jsx'
-import {SchemaViewer, get_schema} from '/components/business/dataset/schema_viewer.jsx'
-import {DatasetEditor} from '/components/business/dataset/dataset_editor.jsx'
-import {DatasetViewer} from '/components/business/dataset/dataset_viewer.jsx'
-import {TopMessage} from '/components/generic/top_message/main.jsx'
-import {PageHeader} from '/components/generic/page_tools'
-import {SimpleDialogBox} from '/components/generic/dialogbox/simple.jsx'
-import {DatasetSample, has_sample_data} from '/components/business/dataset/dataset_sample.jsx'
+import {DatasetInstanceTable} from '/components/business/dataset/dataset_instance_table.jsx';
+import {SchemaEditor, has_schema} from '/components/business/dataset/schema_editor.jsx';
+import {DatasetEditor} from '/components/business/dataset/dataset_editor.jsx';
+import {DatasetViewer} from '/components/business/dataset/dataset_viewer.jsx';
+import {TopMessage} from '/components/generic/top_message/main.jsx';
+import {PageHeader} from '/components/generic/page_tools';
+import {SimpleDialogBox} from '/components/generic/dialogbox/simple.jsx';
+import {DatasetSample, has_sample_data} from '/components/business/dataset/dataset_sample.jsx';
 
-import {get_app_context, get_csrf_token, get_current_user, get_tenant_id, handle_json_response} from '/common_lib'
-import {saveDataset} from '/apis'
+import {get_app_context, get_csrf_token, get_current_user, get_tenant_id, handle_json_response} from '/common_lib';
+import {saveDataset} from '/apis';
 
 
 class DatasetPage extends React.Component {
     theTopMessageRef    = React.createRef();
     theHelpDialogBoxRef = React.createRef();
-    theSchemaViewerRef  = React.createRef();
     theDatasetEditorRef = React.createRef();
     theSampleViewRef    = React.createRef();
+    theSchemaEditorRef  = React.createRef();
 
     state = {
         show_details: false,
@@ -52,6 +52,20 @@ class DatasetPage extends React.Component {
             this.props.tenant_id,
             mode,
             dataset
+        ).then(() => {
+            location.reload();
+        });
+    };
+
+    saveDatasetSchemaExtAndRefresh = (mode, dataset_id, schema_ext) => {
+        return saveDataset(
+            get_csrf_token(),
+            this.props.tenant_id,
+            mode,
+            {
+                id: dataset_id,
+                schema_ext: schema_ext
+            }
         ).then(() => {
             location.reload();
         });
@@ -102,21 +116,46 @@ class DatasetPage extends React.Component {
                                     Edit
                                 </Button>
                             }
-                            {get_schema(this.props.dataset) && <Button
-                                className="ml-2"
-                                variant="secondary"
-                                size="sm"
-                                onClick={
-                                    event => {
-                                        this.theSchemaViewerRef.current.openDialog(
-                                            "Schema",
-                                            <SchemaViewer dataset={this.props.dataset}/>
-                                        )
+
+                            {
+                                has_schema(this.props.dataset) &&
+                                <Button
+                                    className="ml-2"
+                                    variant="secondary"
+                                    size="sm"
+                                    onClick={
+                                        event => {
+                                            this.theSchemaEditorRef.current.openDialog({
+                                                mode: "edit",
+                                                dataset: this.props.dataset
+                                            });
+                                        }
                                     }
-                                }
-                            >
-                                Schema
-                            </Button>}
+                                >
+                                    Edit Schema
+                                </Button>
+                            }
+
+
+                            {
+                                has_schema(this.props.dataset) &&
+                                <Button
+                                    className="ml-2"
+                                    variant="secondary"
+                                    size="sm"
+                                    onClick={
+                                        event => {
+                                            this.theSchemaEditorRef.current.openDialog({
+                                                mode: "view",
+                                                dataset: this.props.dataset
+                                            });
+                                        }
+                                    }
+                                >
+                                    View Schema
+                                </Button>
+                            }
+
                             {
                                 has_sample_data(this.props.dataset) &&
                                 <Button
@@ -155,10 +194,6 @@ class DatasetPage extends React.Component {
                     page_size={15}
                     size="sm"
                 />
-                <SimpleDialogBox
-                    ref={this.theSchemaViewerRef}
-                    dialogClassName="md-modal"
-                />
                 <DatasetEditor
                     ref={this.theDatasetEditorRef}
                     onSave={this.saveDatasetAndRefresh}
@@ -166,6 +201,10 @@ class DatasetPage extends React.Component {
                 <SimpleDialogBox
                     ref={this.theSampleViewRef}
                     dialogClassName="md-modal"
+                />
+                <SchemaEditor
+                    ref={this.theSchemaEditorRef}
+                    onSave={this.saveDatasetSchemaExtAndRefresh}
                 />
             </Container>
         )

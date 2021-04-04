@@ -79,6 +79,7 @@ div.dataset-table {
 }
 
 .dataset-schema-table {
+    width: 100%;
     th[data-role='type'] {
         width: 120px;
     }
@@ -87,6 +88,15 @@ div.dataset-table {
     }
     th[data-role='nullable'] {
         width: 75px;
+    }
+    th[data-role='pk'] {
+        width: 60px;
+    }
+    th[data-role='is_unique'] {
+        width: 60px;
+    }
+    th[data-role='description'] {
+        width: 400px;
     }
 }
 
@@ -243,5 +253,12 @@ div.dataset-editor-modal {
     & > div.modal-content {
         width:  840px;
         height: 786px;
+    }
+}
+
+div.schema-editor-modal {
+    & > div.modal-content {
+        width: 1192px;
+        height: 600px;
     }
 }

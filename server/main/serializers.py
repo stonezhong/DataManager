@@ -47,7 +47,7 @@ class DatasetSerializer(serializers.ModelSerializer):
             'url',
             'id', 'tenant_id', 'name', 'major_version', 'minor_version',
             'publish_time', 'expiration_time', 'description',
-            'author', 'team', 'schema', 'sample_data'
+            'author', 'team', 'schema', 'sample_data', 'schema_ext'
         ]
 
 class DataRepoSerializer(serializers.ModelSerializer):

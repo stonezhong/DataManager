@@ -3,11 +3,11 @@ import React from 'react';
 import Button from 'react-bootstrap/Button';
 import * as Icon from 'react-bootstrap-icons';
 
-import {SchemaViewer, get_schema} from './schema_viewer.jsx';
 import {DataTable} from '/components/generic/datatable/main.jsx';
 import {DatasetLink} from '/components/business/dataset/utils.jsx';
 import {SimpleDialogBox} from '/components/generic/dialogbox/simple.jsx';
 import {DatasetSample, has_sample_data} from '/components/business/dataset/dataset_sample.jsx';
+import {SchemaEditor, has_schema} from '/components/business/dataset/schema_editor.jsx';
 
 import './dataset.scss';
 
@@ -32,22 +32,22 @@ import './dataset.scss';
  *
  */
 export class DatasetTable extends React.Component {
-    theSchemaViewerRef  = React.createRef();
+    theSchemaEditorRef  = React.createRef();
     theDataTableRef     = React.createRef();
     theSampleViewRef    = React.createRef();
 
     render_schema = dataset => {
         return (
-            get_schema(dataset) &&
+            has_schema(dataset) &&
             <Button
                 variant="secondary"
                 size="sm"
                 onClick={
                     event => {
-                        this.theSchemaViewerRef.current.openDialog(
-                            "Schema",
-                            <SchemaViewer dataset={dataset}/>
-                        )
+                        this.theSchemaEditorRef.current.openDialog({
+                            mode: "view",
+                            dataset: dataset
+                        });
                     }
                 }
             >
@@ -114,9 +114,9 @@ export class DatasetTable extends React.Component {
                     get_page={this.get_page}
                 />
 
-                <SimpleDialogBox
-                    ref={this.theSchemaViewerRef}
-                    dialogClassName="md-modal"
+                <SchemaEditor
+                    ref={this.theSchemaEditorRef}
+                    onSave={this.saveDatasetSchemaExtAndRefresh}
                 />
 
                 <SimpleDialogBox

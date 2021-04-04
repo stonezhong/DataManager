@@ -188,8 +188,9 @@ class Dataset(models.Model):
         related_name='ds_created'
     )                                                                   # required
     team            = models.CharField(max_length=64, blank=False)      # required
-    schema          = models.TextField(blank=True)
+    schema          = models.TextField(blank=True)                      # schema from dataframe
     sample_data     = models.TextField(blank=True)
+    schema_ext      = models.TextField(blank=True)                      # extended schema
 
     class Meta:
         unique_together = [
