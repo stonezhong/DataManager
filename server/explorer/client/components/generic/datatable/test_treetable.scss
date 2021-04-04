@@ -1,0 +1,12 @@
+.test-treetable {
+    width: 800px;
+    th[data-role='symbol'] {
+        width: 72px;
+    }
+    th[data-role='price'] {
+        width: 120px;
+    }
+    th[data-role='trend'] {
+        width: 120px;
+    }
+}

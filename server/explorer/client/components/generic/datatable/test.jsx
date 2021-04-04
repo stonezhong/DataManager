@@ -1,7 +1,12 @@
-import React from 'react'
+import React from 'react';
 
-import Container from 'react-bootstrap/Container'
-import {DataTable} from './main.jsx'
+import Container from 'react-bootstrap/Container';
+import {DataTable} from './main.jsx';
+import {TreeTable} from './treetable.jsx';
+import Col from 'react-bootstrap/Col';
+import Row from 'react-bootstrap/Row';
+
+import "./test_treetable.scss";
 
 export class TestDataTable extends React.Component {
     testDataTableRef = React.createRef();
@@ -71,6 +76,51 @@ export class TestDataTable extends React.Component {
                     fast_step_count={5}
                     ref={this.testDataTableRef}
                 />
+            </Container>
+        );
+    }
+}
+
+
+export class TestTreeTable extends React.Component {
+    render() {
+        const render_symbol = (payload) => {
+            if (!payload.symbol) {
+                return null;
+            }
+            return <a href={`https://finance.yahoo.com/quote/${payload.symbol}?p=${payload.symbol}`}>{payload.symbol}</a>
+        };
+        const columns = {
+            name:   {display: "Name"},
+            symbol: {display: "Symbol", render_data: render_symbol},
+            price:  {display: "Price"},
+            trend:  {display: "Trend"},
+        };
+        const nodes = [
+            {id: 'industry',   payload: {name: 'industry'}, children: [
+                {id: 'GE',   payload: {name: 'General Electric', symbol: 'GE', price: 30.0,    trend: 'up'}},
+                {id: 'BA',   payload: {name: 'Boeing', symbol: 'BA', price: 200.0,   trend: 'up'}},
+            ]},
+            {id: 'technology', payload: {name: 'technology'}, children: [
+                {id: 'MSFT', payload: {name: 'Microsoft', symbol: 'MSFT', price: 100.0, trend: 'down'}},
+                {id: 'GOOG', payload: {name: 'Google', symbol: 'GOOG', price: 500.0, trend: 'up'}},
+            ]},
+        ];
+
+        return (
+            <Container fluid>
+                <h2>Test TreeTable</h2>
+                <Row>
+                    <Col>
+                    <TreeTable
+                        className="test-treetable"
+                        columns={columns}
+                        nodes={nodes}
+                    >
+
+                    </TreeTable>
+                    </Col>
+                </Row>
             </Container>
         );
     }
