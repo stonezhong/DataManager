@@ -30,7 +30,8 @@ export function saveDataset(csrf_token, tenant_id, mode, dataset) {
         const to_patch = {
             description     : dataset.description,
             team            : dataset.team,
-            expiration_time : (dataset.expiration_time==='')?null:dataset.expiration_time
+            expiration_time : (dataset.expiration_time==='')?null:dataset.expiration_time,
+            schema_ext      : dataset.schema_ext,
         }
 
         return fetch(`/api/Datasets/${dataset.id}/`, {
