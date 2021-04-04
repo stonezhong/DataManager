@@ -11,6 +11,7 @@ import {TestAlertBox}               from '/components/generic/alert/test.jsx';
 import {TestTopMessage}             from '/components/generic/top_message/test.jsx';
 import {TestSimpleDialogBox}        from '/components/generic/dialogbox/test_simple.jsx';
 import {TestDataTable}              from '/components/generic/datatable/test.jsx';
+import {TestTreeTable}              from '/components/generic/datatable/test.jsx';
 import {TestPageHeader}             from '/components/generic/page_tools/test.jsx';
 import {TestAppIcon}                from '/components/generic/icons/test.jsx';
 
@@ -59,6 +60,13 @@ class TestPage extends React.Component {
             classname   : "DataTable",
             create      : () => <TestDataTable />,
             tested: "2020-11-13"
+        },
+        {
+            category    : "generic",
+            component   : "datatable",
+            classname   : "TreeTable",
+            create      : () => <TestTreeTable />,
+            tested: "2021-04-03"
         },
         {
             category    : "generic",
