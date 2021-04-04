@@ -138,9 +138,8 @@ class GlobalHeader extends React.Component {
                 }
 
             </Nav>
-            {
-                this.props.current_user &&
-                <DropdownButton title={this.props.current_user.name} variant="light">
+            {   this.props.current_user &&
+                <DropdownButton id="user-profile" title={this.props.current_user.name} variant="light">
                     <Dropdown.Item href="/explorer/logout">
                         Logout
                     </Dropdown.Item>
