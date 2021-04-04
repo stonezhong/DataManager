@@ -1,30 +1,32 @@
-import React from 'react'
-import ReactDOM from 'react-dom'
-import $ from 'jquery'
+import React from 'react';
+import ReactDOM from 'react-dom';
+import $ from 'jquery';
 
-import Container from 'react-bootstrap/Container'
-import Table from 'react-bootstrap/Table'
+import Container from 'react-bootstrap/Container';
+import Table from 'react-bootstrap/Table';
 
-import {get_app_context} from '/common_lib'
+import {get_app_context} from '/common_lib';
 
-import {TestAlertBox}               from '/components/generic/alert/test.jsx'
-import {TestTopMessage}             from '/components/generic/top_message/test.jsx'
-import {TestSimpleDialogBox}        from '/components/generic/dialogbox/test_simple.jsx'
-import {TestDataTable}              from '/components/generic/datatable/test.jsx'
+import {TestAlertBox}               from '/components/generic/alert/test.jsx';
+import {TestTopMessage}             from '/components/generic/top_message/test.jsx';
+import {TestSimpleDialogBox}        from '/components/generic/dialogbox/test_simple.jsx';
+import {TestDataTable}              from '/components/generic/datatable/test.jsx';
+import {TestPageHeader}             from '/components/generic/page_tools/test.jsx';
+import {TestAppIcon}                from '/components/generic/icons/test.jsx';
 
-import {TestDatasetEditor}          from '/components/business/dataset/test_dataset_editor.jsx'
-import {TestDatasetTable}           from '/components/business/dataset/test_dataset_table.jsx'
-import {TestSchemaViewer}           from '/components/business/dataset/test_schema_viewer.jsx'
+import {TestDatasetEditor}          from '/components/business/dataset/test_dataset_editor.jsx';
+import {TestDatasetTable}           from '/components/business/dataset/test_dataset_table.jsx';
+import {TestSchemaViewer}           from '/components/business/dataset/test_schema_viewer.jsx';
 
-import {TestTimerTable}             from '/components/business/timer/test.jsx'
-import {TestApplicationEditor}      from '/components/business/application/test.jsx'
-import {TestPipelineGroupEditor}    from '/components/business/pipeline_group/test.jsx'
-import {TestPipelineTable}          from '/components/business/pipeline/test_pipeline_table.jsx'
-import {TestPipelineEditor}         from '/components/business/pipeline/test_pipeline_editor.jsx'
-import {TestTaskEditor}             from '/components/business/pipeline/test_task_editor.jsx'
-import {TestSQLStepEditor}          from '/components/business/pipeline/test_sql_step_editor.jsx'
+import {TestTimerTable}             from '/components/business/timer/test.jsx';
+import {TestApplicationEditor}      from '/components/business/application/test.jsx';
+import {TestPipelineGroupEditor}    from '/components/business/pipeline_group/test.jsx';
+import {TestPipelineTable}          from '/components/business/pipeline/test_pipeline_table.jsx';
+import {TestPipelineEditor}         from '/components/business/pipeline/test_pipeline_editor.jsx';
+import {TestTaskEditor}             from '/components/business/pipeline/test_task_editor.jsx';
+import {TestSQLStepEditor}          from '/components/business/pipeline/test_sql_step_editor.jsx';
 
-import "./test.scss"
+import "./test.scss";
 
 const _ = require("lodash");
 
@@ -57,6 +59,20 @@ class TestPage extends React.Component {
             classname   : "DataTable",
             create      : () => <TestDataTable />,
             tested: "2020-11-13"
+        },
+        {
+            category    : "generic",
+            component   : "page_tools",
+            classname   : "PageHeader",
+            create      : () => <TestPageHeader />,
+            tested: "2021-04-03"
+        },
+        {
+            category    : "generic",
+            component   : "icons",
+            classname   : "AppIcon",
+            create      : () => <TestAppIcon />,
+            tested: "2021-04-03"
         },
         {
             category    : "business",
@@ -201,13 +217,27 @@ class TestPage extends React.Component {
     }
 
     render() {
-        return (
-            <Container fluid>
-                {
-                    this.props.classname?this.renderTestClass():this.renderTestList()
-                }
-            </Container>
-        );
+        if (this.props.classname) {
+            return (
+                <Container fluid>
+                    {
+                        this.renderTestClass()
+                    }
+                    <br/><br/><br/><br/>
+                    <p>
+                        <a href="/explorer/test">Go back</a>
+                    </p>
+                </Container>
+            );
+        } else {
+            return (
+                <Container fluid>
+                    {
+                        this.renderTestList()
+                    }
+                </Container>
+            );
+        }
     }
 }
 
