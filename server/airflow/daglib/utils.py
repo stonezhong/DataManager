@@ -143,6 +143,59 @@ def get_job_submitter(job_submitter_config):
     kwargs  = job_submitter_config.get("kwargs", {})
     return klass(*args, **kwargs)
 
+def get_job_submitter_for_tenancy(tenant_id):
+
+    config = None
+    with get_mysql_connection() as cur:
+        cur.execute("SELECT config FROM main_tenant WHERE id='%s'" % (tenant_id))
+        for row in cur:
+            config = json.loads(row[0])
+            break
+
+    if config is None:
+        raise Exception(f"Missing configuration for tenant {tenant_id}")
+
+    # print(json.dumps(config, indent=4))
+    if config['type'] == 'aws-emr':
+        master_node = config['aws_emr']['master_node']
+        ssh_key = config['aws_emr']['ssh_key']
+        run_dir = config['aws_emr']['run_dir']
+        job_submitter_config = {
+            "class": "spark_etl.job_submitters.livy_job_submitter.LivyJobSubmitter",
+            "args": [{
+                "service_url"   : f"http://{master_node}:8998/",
+                "bridge"        : master_node,
+                "stage_dir"     : "/home/hadoop/.stage",
+                "ssh_key"       : ssh_key,
+                "ssh_username"  : "hadoop",
+                "run_dir"       : run_dir
+            }]
+        }
+        return get_job_submitter(job_submitter_config)
+
+    raise Exception(f"{config['type']} is not supported")
+
+def get_dc_config_for_tenancy(tenant_id):
+
+    config = None
+    with get_mysql_connection() as cur:
+        cur.execute("SELECT config FROM main_tenant WHERE id='%s'" % (tenant_id))
+        for row in cur:
+            config = json.loads(row[0])
+            break
+
+    if config is None:
+        raise Exception(f"Missing configuration for tenant {tenant_id}")
+
+    # print(json.dumps(config, indent=4))
+    if config['type'] == 'aws-emr':
+        dm_username = config['aws_emr']['dm_username']
+        dm_password = config['aws_emr']['dm_password']
+
+        dc_config = load_dm_config("dc_config.json")
+        dc_config['username'] = dm_username
+        dc_config['password'] = dm_password
+        return dc_config
 
 class ExecuteTask:
     def __init__(self, task_ctx, team):
@@ -173,7 +226,7 @@ class ExecuteTask:
 
         spark_etl_cfg = load_dmapps_config("config.json")
         dm_offline = spark_etl_cfg.get("dm_offline")
-        dc_config = load_dm_config("dc_config.json")
+        dc_config = get_dc_config_for_tenancy(tenant_id)
         print(f"dm_offline = {dm_offline}")
 
         task_spark_options = None
@@ -232,7 +285,7 @@ class ExecuteTask:
             if task_spark_options_str:
                 task_spark_options = json.loads(task_spark_options_str)
 
-        job_submitter = get_job_submitter(spark_etl_cfg['job_submitter'])
+        job_submitter = get_job_submitter_for_tenancy(tenant_id)
         options=spark_etl_cfg.get("job_run_options", {})
         options['display_name'] = appName
 

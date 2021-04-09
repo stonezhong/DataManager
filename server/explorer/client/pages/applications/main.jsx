@@ -40,10 +40,6 @@ class ApplicationsPage extends React.Component {
                 limit : limit,
             }
         };
-        if (!this.props.current_user || !this.props.current_user.is_superuser) {
-            // non-admin should not see system apps
-            buildArgs.queryParams.sys_app_id__isnull = "True";
-        }
         const url = buildUrl('', buildArgs);
         return fetch(url).then(handle_json_response);
     };
