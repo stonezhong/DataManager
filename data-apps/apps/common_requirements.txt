@@ -1,4 +1,4 @@
-spark-etl==0.0.92
+spark-etl==0.0.95
 dc-client==0.0.111
 dm-job-lib==0.0.49
 Jinja2==2.11.2

@@ -53,7 +53,7 @@ class DatalakePage extends React.Component {
                     <Col>
                         <PageHeader title="Datalake">
                             {
-                                !!this.props.current_user && this.props.current_user.is_superuser &&
+                                !!this.props.current_user &&
                                 <Button
                                     size="sm"
                                     className="c-vc ml-2"
@@ -72,6 +72,7 @@ class DatalakePage extends React.Component {
                     <Col>
                         <SubscriptionTable
                             ref={this.theSubscriptionTableRef}
+                            csrf_token={get_csrf_token()}
                             get_page={this.get_page}
                             page_size={15}
                             size="sm"

@@ -127,7 +127,7 @@ class Application(models.Model):
     # For now, assuming it is a spark app.
     id                  = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     tenant              = models.ForeignKey(Tenant, on_delete = models.PROTECT, null=False)
-    name                = models.CharField(max_length=255, blank=False, unique=True)     # required
+    name                = models.CharField(max_length=255, blank=False)     # required
     description         = models.TextField(blank=False)                     # description is required
     author              = models.ForeignKey(
         User,
@@ -143,6 +143,11 @@ class Application(models.Model):
     # If sys_app_id is null, then it is not a system app, otherwise, it is a
     # system app, all system app is defined in SysAppID
     sys_app_id          = models.IntegerField(null=True,)
+
+    class Meta:
+        unique_together = [
+            ['tenant', 'name']
+        ]
 
     # create an application
     @classmethod
@@ -194,7 +199,7 @@ class Dataset(models.Model):
 
     class Meta:
         unique_together = [
-            ['name', 'major_version', 'minor_version']
+            ['tenant', 'name', 'major_version', 'minor_version']
         ]
 
     # is this dataset active at given time?
@@ -318,8 +323,8 @@ class DatasetInstance(models.Model):
 
     class Meta:
         unique_together = [
-            ['dataset', 'parent_instance', 'name', 'revision'],
-            ['dataset', 'path', 'revision']
+            ['tenant', 'dataset', 'parent_instance', 'name', 'revision'],
+            ['tenant', 'dataset', 'path', 'revision']
         ]
 
     # return all dataset instance path this dataset depend on (aka lead to this dataset)
@@ -555,7 +560,7 @@ class DatasetInstanceDep(models.Model):
 
     class Meta:
         unique_together = [
-            ['src_dsi', 'dst_dsi']
+            ['tenant', 'src_dsi', 'dst_dsi']
         ]
 
 
@@ -568,10 +573,15 @@ class DataRepo(models.Model):
 
     id          = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     tenant      = models.ForeignKey(Tenant, on_delete=models.PROTECT, null=False)
-    name        = models.CharField(max_length=255, blank=True, unique=True)
+    name        = models.CharField(max_length=255, blank=True)
     description = models.TextField(blank=True)
     type        = models.IntegerField(null=False)
     context     = models.TextField(blank=True)
+
+    class Meta:
+        unique_together = [
+            ['tenant', 'name']
+        ]
 
     @classmethod
     def get_by_name(cls, name):
@@ -627,7 +637,7 @@ class PipelineGroup(models.Model):
     # A pipeline context is finished if all pipeline in the context is finished
     id                  = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     tenant              = models.ForeignKey(Tenant, on_delete=models.PROTECT, null=False)
-    name                = models.CharField(max_length=255, blank=False, unique=True)     # required
+    name                = models.CharField(max_length=255, blank=False)                            # required
     created_time        = models.DateTimeField(null=False)                                         # required
     category            = models.CharField(max_length=255, blank=False)                            # required
     context             = models.TextField(blank=False)
@@ -636,6 +646,11 @@ class PipelineGroup(models.Model):
 
     # only non-manual pipeline group has due, it is the due for the timer
     due                 = models.DateTimeField(null=True)                                         # required
+
+    class Meta:
+        unique_together = [
+            ['tenant', 'name']
+        ]
 
     # attach bunch of pipelines to this pipeline group
     def attach(self, pipeline_ids):
@@ -760,7 +775,7 @@ class PipelineInstance(models.Model):
 class Timer(models.Model):
     id                  = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     tenant              = models.ForeignKey(Tenant, on_delete=models.PROTECT, null=False)
-    name                = models.CharField(max_length=255, blank=False, unique=True)     # required
+    name                = models.CharField(max_length=255, blank=False)     # required
     description         = models.TextField(blank=True)
     author              = models.ForeignKey(
         User,
@@ -788,6 +803,11 @@ class Timer(models.Model):
 
     # matters only when the topic is "pipeline"
     category            = models.CharField(max_length=255, blank=True)
+
+    class Meta:
+        unique_together = [
+            ['tenant', 'name']
+        ]
 
     # create a timer
     @classmethod
