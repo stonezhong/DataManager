@@ -57,6 +57,8 @@ def test(request):
     )
 
 def index(request):
+    if not request.user.is_authenticated:
+        return redirect(reverse('login'))
     return redirect(reverse('datalakes'))
 
 def datasets(request, tenant_id):
