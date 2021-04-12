@@ -761,8 +761,8 @@ class PipelineInstance(models.Model):
     # for the same schedule, same pipeline, we should invoke one at a time
     def get_prior_instance(self):
         q = PipelineInstance.objects.select_related("group").filter(
-            pipeline=self.pipeline
-        ).filter(
+            tenant=self.tenant,
+            pipeline=self.pipeline,
             group__due__lt = self.group.due
         ).order_by("-group__due")[:1]
 

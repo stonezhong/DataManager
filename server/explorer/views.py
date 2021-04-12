@@ -219,7 +219,7 @@ def pipelines(request, tenant_id):
     if not request.user.is_authenticated:
         return redirect(reverse('login'))
 
-    applications = Application.objects.filter(retired=False, sys_app_id__isnull=True)
+    applications = Application.objects.filter(retired=False, sys_app_id__isnull=True, tenant__id=tenant_id)
 
     s = ApplicationSerializer(applications, many=True, context={"request": request})
     app_context = {
@@ -278,7 +278,7 @@ def pipeline(request, tenant_id):
     applications = Application.objects.filter(id__in=application_ids)
     s_apps = ApplicationSerializer(applications, many=True, context={"request": request})
 
-    active_apps = Application.objects.filter(retired=False, sys_app_id__isnull=True)
+    active_apps = Application.objects.filter(retired=False, sys_app_id__isnull=True, tenant__id=tenant_id)
     s_active_apps = ApplicationSerializer(active_apps, many=True, context={"request": request})
 
     app_context = {
