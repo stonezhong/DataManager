@@ -41,7 +41,7 @@ import explorer.airflow_lib as airflow_lib
 # (3) trigger
 ################################################################################
 
-def is_dataset_instance_ready(di_path):
+def is_dataset_instance_ready(tenant, di_path):
     # di_path is in format: name:major_version:minor_version/path
     # example: trading_version:1.0:1:/2020-09-23
     di_path_segs = di_path.split(":")
@@ -56,7 +56,11 @@ def is_dataset_instance_ready(di_path):
         logger.error(f"is_dataset_instance_ready('{di_path}'), No, asset path {di_path} is invalid, minor version MUST be integer")
         return False
 
-    dss = Dataset.objects.filter(name=dataset_name, major_version=major_version, minor_version=minor_version)
+    dss = Dataset.objects.filter(
+        name=dataset_name,
+        major_version=major_version, minor_version=minor_version,
+        tenant=tenant
+    )
     if len(dss) == 0:
         logger.info(f"is_dataset_instance_ready('{di_path}'): No, dataset {dataset_name}:{major_version}:{minor_version} does not exist")
         return False
@@ -66,7 +70,10 @@ def is_dataset_instance_ready(di_path):
     ds = dss[0]
 
     # ignore the deleted instance
-    diss = DatasetInstance.objects.filter(path=path, dataset=ds, deleted_time=None)
+    diss = DatasetInstance.objects.filter(
+        path=path, dataset=ds, deleted_time=None,
+        tenant=tenant
+    )
 
     if len(diss) == 0:
         logger.info(f"is_dataset_instance_ready('{di_path}'): No")
@@ -109,7 +116,7 @@ def handle_pipeline_instance_created(pi):
     for rdit in pipeline_ctx.get('requiredDSIs', []):
         tmp = jinja2.Template(rdit)
         di_path = tmp.render(**group_ctx)
-        if not is_dataset_instance_ready(di_path):
+        if not is_dataset_instance_ready(pi.tenant, di_path):
             logger.info(f"skip: asset {di_path} is not ready!")
             ready = False
             break
@@ -173,7 +180,7 @@ def event_handler(scheduled_event):
     # Attach pipeline to it
     for pipeline in Pipeline.objects.filter(
         category=scheduled_event.category
-    ).filter(retired=False):
+    ).filter(retired=False, tenant=scheduled_event.tenant):
         # yes, we will attach paused pipeline, but they won't trigger
         # until the pipeline is unpaused
         pipeline_instance = PipelineInstance(
@@ -226,7 +233,7 @@ def update_pending_pipeline_group(pg):
     now = datetime.utcnow().replace(tzinfo=pytz.UTC)
     for pipeline in Pipeline.objects.filter(
         category=pg.category
-    ).filter(retired=False):
+    ).filter(retired=False, tenant=pg.tenant):
         if pipeline.id in pipeline_ids:
             # skip since the pg already has this pipeline
             continue
