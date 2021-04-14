@@ -1,8 +1,0 @@
-{
-    "server":   "100.73.58.223",
-    "username": "admin",
-    "password": "****",
-    "db_name":  "dmdemo2-dm",
-    "airflow_db_name": "dmdemo2-airflow",
-    "charset":  "utf8"
-}

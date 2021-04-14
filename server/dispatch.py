@@ -129,16 +129,19 @@ def config_airflow_venv():
     os.rename(AIRFLOW_CFG, OLD_AIRFLOW_CFG)
 
     with open(MYSQL_CFG_FILENAME, "r") as f:
-        mysql_cfg = json.load(f)
+        mysql_cfg = json.load(f)['airflow']
     with open(DJANGO_CFG_FILENAME, "r") as f:
         django_cfg = json.load(f)
 
-    airflow_db_name = mysql_cfg['airflow_db_name']
+    db_server   = mysql_cfg['server']
+    db_username = mysql_cfg['username']
+    db_password = mysql_cfg['password']
+    db_name     = mysql_cfg['db_name']
 
     def handle_airflow_line(section, line):
         if section == "[core]":
             if line.startswith("sql_alchemy_conn = "):
-                l = f"sql_alchemy_conn = mysql://{mysql_cfg['username']}:{mysql_cfg['password']}@{mysql_cfg['server']}:3306/{airflow_db_name}?charset=utf8mb4&binary_prefix=true"
+                l = f"sql_alchemy_conn = mysql://{db_username}:{db_password}@{db_server}:3306/{db_name}?charset=utf8mb4&binary_prefix=true"
                 return l
             if line.startswith("executor = "):
                 return "executor = LocalExecutor"
@@ -171,9 +174,6 @@ def config_airflow_venv():
 
     print("Update airflow config ...")
     process_config_file(OLD_AIRFLOW_CFG, AIRFLOW_CFG, handle_airflow_line)
-
-    print(f"Create airflow database: {airflow_db_name}")
-    execute_sql(mysql_cfg, f"CREATE SCHEMA IF NOT EXISTS `{airflow_db_name}` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_bin")
 
     # initdb
     print("Initializing airflow database ...")
@@ -211,13 +211,6 @@ def do_stop_airflow():
     subprocess.call([cmd], shell=True)
 
 def do_setup_dm(args):
-    with open(MYSQL_CFG_FILENAME, "r") as f:
-        mysql_cfg = json.load(f)
-
-    dm_db_name = mysql_cfg['db_name']
-    print(f"Create data manager database: {dm_db_name}")
-    execute_sql(mysql_cfg, f"CREATE SCHEMA IF NOT EXISTS `{dm_db_name}` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_bin")
-
     # Initialize db
     print("Initialize data manager database")
     migration_dir = os.path.expandvars("$ENV_HOME/apps/dm/current/main/migrations")
@@ -236,22 +229,6 @@ def do_setup_dm(args):
         f"python manage.py createsuperuser --email {admin_email} --username {admin_name}"
     ], shell=True)
 
-    print("**********************************************")
-    print("* Create System App: Execute SQL             *")
-    print("**********************************************")
-    with open(os.path.expandvars("$ENV_HOME/configs/dmapps/config.json"), "r") as f:
-        dmapp_config = json.load(f)
-
-    app = Application(
-        name="Execute SQL",
-        description="System Application for Executing SQL statements",
-        team="admins",
-        retired=False,
-        app_location=f"{dmapp_config['deploy_base']}/execute_sql/1.0.0.0",
-        sys_app_id=Application.SysAppID.EXECUTE_SQL.value,
-        author_id=1, # the first user which is admin
-    )
-    app.save()
 
 
 def read_password(prompt):
