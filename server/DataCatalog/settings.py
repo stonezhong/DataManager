@@ -25,7 +25,7 @@ __DJANGO_CONFIG   = get_mordor_config_json_template(
         "log_dir": get_log_path()
     }
 )
-__DB_CONFIG       = get_mordor_config_json_template("db.json")
+__DB_CONFIG       = get_mordor_config_json_template("db.json")["dm"]
 
 # config logging
 import logging.config
