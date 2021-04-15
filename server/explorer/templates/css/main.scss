@@ -113,3 +113,43 @@ div.standard-modal {
         border: 1px solid darkgrey;
     }
 }
+
+div.text-editor-modal {
+    max-width: none !important;
+    max-height: none !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+
+    & > div.modal-content {
+        & > div.modal-header {
+            background-color: royalblue;
+            cursor: move;
+            padding: 6px;
+
+            & > div.modal-title {
+                color: white;
+                font-weight: bold;
+                font-size: 18px;
+            }
+
+            & > button.close {
+                cursor: default;
+            }
+        }
+
+        & > div.modal-body {
+            background-color: #fafafa;
+            & > div.container-fluid {
+                width: 100%;
+                height: calc(100% - 8px);
+                & > textarea {
+                    width: 100%;
+                    height: 100%;
+                    font-family:monospace;
+                }
+            }
+        }
+
+        border: 1px solid darkgrey;
+    }
+}

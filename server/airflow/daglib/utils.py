@@ -32,7 +32,7 @@ def load_dm_config(name):
 
 
 def get_mysql_connection():
-    mysql_cfg = load_dm_config("db.json")
+    mysql_cfg = load_dm_config("db.json")['dm']
 
     conn = MySQLdb.connect(
         host    = mysql_cfg['server'],
@@ -173,6 +173,33 @@ def get_job_submitter_for_tenancy(tenant_id):
         }
         return get_job_submitter(job_submitter_config)
 
+    if config['type'] == 'on-premise':
+        print(json.dumps(config, indent=4))
+        on_premise_cfg = config['on_premise']
+
+        livy_submitter_cfg = {
+            "livy": {
+                "host"      : on_premise_cfg['livy_host'],
+                "port"      : on_premise_cfg['livy_port'],
+                "protocol"  : on_premise_cfg['livy_protocol'],
+                'via_tunnel': on_premise_cfg['livy_via_tunnel'],
+            },
+            "bridge"        : on_premise_cfg['bridge'],
+            "stage_dir"     : "/root/.stage",   # hack, need to allow user to config via UI
+            "run_dir"       : on_premise_cfg['run_dir'],
+            "ssh_config"    : on_premise_cfg['ssh_config']
+        }
+        if len(on_premise_cfg['livy_username']) > 0:
+            livy_submitter_cfg['livy']['username'] = on_premise_cfg['livy_username']
+            livy_submitter_cfg['livy']['password'] = on_premise_cfg['livy_password']
+
+
+        job_submitter_config = {
+            "class": "spark_etl.job_submitters.livy_job_submitter.LivyJobSubmitter",
+            "args": [livy_submitter_cfg]
+        }
+        return get_job_submitter(job_submitter_config)
+
     raise Exception(f"{config['type']} is not supported")
 
 def get_dc_config_for_tenancy(tenant_id):
@@ -196,6 +223,17 @@ def get_dc_config_for_tenancy(tenant_id):
         dc_config['username'] = dm_username
         dc_config['password'] = dm_password
         return dc_config
+
+    if config['type'] == 'on-premise':
+        dm_username = config['on_premise']['dm_username']
+        dm_password = config['on_premise']['dm_password']
+
+        dc_config = load_dm_config("dc_config.json")
+        dc_config['username'] = dm_username
+        dc_config['password'] = dm_password
+        return dc_config
+
+    raise Exception("Don't know how to get dc config")
 
 class ExecuteTask:
     def __init__(self, task_ctx, team):
