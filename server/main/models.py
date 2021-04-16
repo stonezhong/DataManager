@@ -485,7 +485,7 @@ class DatasetInstance(models.Model):
                 repo = None
             else:
                 if repo_name not in repo_dict:
-                    repo = DataRepo.get_by_name(repo_name)
+                    repo = DataRepo.get_by_name(tenant_id, repo_name)
                     if repo is None:
                         raise InvalidOperationException("Invalid repo name: {}".format(repo_name))
                     repo_dict[repo_name] = repo
@@ -603,8 +603,8 @@ class DataRepo(models.Model):
         ]
 
     @classmethod
-    def get_by_name(cls, name):
-        repos = DataRepo.objects.filter(name=name)
+    def get_by_name(cls, tenant_id, name):
+        repos = DataRepo.objects.filter(tenant__id=tenant_id,name=name)
         if len(repos) == 0:
             return None
         return repos[0]
