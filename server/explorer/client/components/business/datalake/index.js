@@ -36,6 +36,7 @@ const modelApis = {
                 livy_password: '',
                 livy_via_tunnel: true,
                 bridge: '',
+                stage_dir: '',
                 run_dir: '',
                 ssh_config: {
                     config: '',
@@ -384,6 +385,32 @@ export class DatalakeEditor extends StandardDialogbox {
                                 this.setState(
                                     state => {
                                         state.payload.dl_config.on_premise.bridge = v;
+                                        return state;
+                                    }
+                                )
+                            }}
+                        />
+                        <Form.Control.Feedback tooltip type="invalid">
+                            Cannot be empty.
+                        </Form.Control.Feedback>
+                    </Col>
+                </Form.Group>
+
+                <Form.Group as={Row} controlId="stage-dir">
+                    <Form.Label column sm={2}>Stage Directory</Form.Label>
+                    <Col sm={10}>
+                        <Form.Control
+                            size="sm"
+                            disabled = {mode==='view'}
+                            value={on_premise.stage_dir}
+                            isInvalid={!this.validate_field(
+                                dl_config, DATALAKE_TYPE_ON_PREMISE, 'fieldNotEmptyAfterTrim', 'stage_dir'
+                            )}
+                            onChange={(event) => {
+                                const v = event.target.value;
+                                this.setState(
+                                    state => {
+                                        state.payload.dl_config.on_premise.stage_dir = v;
                                         return state;
                                     }
                                 )

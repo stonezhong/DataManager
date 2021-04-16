@@ -91,6 +91,19 @@ class Tenant(models.Model):
         )
         user_tenant_subscription.save()
 
+        # let's create system application
+        app = Application(
+            tenant = tenant,
+            name = "Execute SQL",
+            description = "System Application for Executing SQL statements",
+            author = requester,
+            team = "admins",
+            retired = False,
+            app_location = "s3://data-manager-apps/execute_sql/1.0.0.0",
+            sys_app_id = Application.SysAppID.EXECUTE_SQL.value
+        )
+        app.save()
+
         return tenant
 
 class UserTenantSubscription(models.Model):
@@ -207,8 +220,9 @@ class Dataset(models.Model):
         return self.expiration_time is None or self.expiration_time > dt
 
     @classmethod
-    def from_name_and_version(cls, name, major_version, minor_version):
+    def from_name_and_version(cls, tenant_id, name, major_version, minor_version):
         ds_list = Dataset.objects.filter(
+            tenant_id = tenant_id,
             name = name,
             major_version = major_version,
             minor_version = minor_version
@@ -350,15 +364,16 @@ class DatasetInstance(models.Model):
         return f"{self.dataset.name}:{self.dataset.major_version}:{self.dataset.minor_version}:{self.path}:{self.revision}"
 
     @classmethod
-    def revisions_from_dsi_path(cls, dsi_path):
+    def revisions_from_dsi_path(cls, tenant_id, dsi_path):
         # all the dataset_instance belongs to the same dataset
         # if return is not None, it MUST be a non-empty list
         dataset_name, major_version, minor_version, path = dsi_path.split(':')[:4]
-        ds = Dataset.from_name_and_version(dataset_name, major_version, int(minor_version))
+        ds = Dataset.from_name_and_version(tenant_id, dataset_name, major_version, int(minor_version))
         if ds is None:
             return None
 
         dsi_list = DatasetInstance.objects.filter(
+            tenant_id = tenant_id,
             dataset = ds,
             path = path,
         ).order_by('-revision')
@@ -369,11 +384,12 @@ class DatasetInstance(models.Model):
         return dsi_list
 
     @classmethod
-    def from_dsi_path(cls, dsi_path):
+    def from_dsi_path(cls, tenant_id, dsi_path):
         dataset_name, major_version, minor_version, path, revision = dsi_path.split(':')
-        ds = Dataset.from_name_and_version(dataset_name, major_version, int(minor_version))
+        ds = Dataset.from_name_and_version(tenant_id, dataset_name, major_version, int(minor_version))
 
         dsi_list = DatasetInstance.objects.filter(
+            tenant_id = tenant_id,
             dataset = ds,
             path = path,
             revision = revision,
@@ -403,7 +419,10 @@ class DatasetInstance(models.Model):
 
         instance_path = parent_instance.path if parent_instance is not None else ""
 
+        tenant_id = dataset.tenant.id
+
         dis = DatasetInstance.objects.filter(
+            tenant_id = tenant_id,
             dataset=dataset,
             name=name,
             parent_instance=parent_instance
@@ -442,7 +461,7 @@ class DatasetInstance(models.Model):
 
         # save data instance
         di = DatasetInstance(
-            tenant_id = dataset.tenant_id,
+            tenant_id = tenant_id,
             dataset = dataset,
             parent_instance = parent_instance,
             name = name,
@@ -472,7 +491,7 @@ class DatasetInstance(models.Model):
                     repo_dict[repo_name] = repo
                 repo = repo_dict[repo_name]
             dl = DataLocation(
-                tenant_id = dataset.tenant_id,
+                tenant_id = tenant_id,
                 dataset_instance = di,
                 type = location.type,
                 repo = repo,
@@ -490,7 +509,7 @@ class DatasetInstance(models.Model):
 
         # save dependencies
         for src_dsi_path in src_dsi_paths:
-            src_dsi = DatasetInstance.from_dsi_path(src_dsi_path)
+            src_dsi = DatasetInstance.from_dsi_path(tenant_id, src_dsi_path)
             if src_dsi is None:
                 raise InvalidOperationException(f"dataset {src_dsi_path} does not exist")
             dsi_dep = DatasetInstanceDep(

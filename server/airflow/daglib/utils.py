@@ -157,24 +157,32 @@ def get_job_submitter_for_tenancy(tenant_id):
 
     # print(json.dumps(config, indent=4))
     if config['type'] == 'aws-emr':
-        master_node = config['aws_emr']['master_node']
-        ssh_key = config['aws_emr']['ssh_key']
-        run_dir = config['aws_emr']['run_dir']
+        # print(json.dumps(config, indent=4))
+        aws_emr_cfg = config['aws_emr']
+        master_node = aws_emr_cfg['master_node']
+        run_dir = aws_emr_cfg['run_dir']
+
+        livy_submitter_cfg = {
+            "livy": {
+                "host"      : "127.0.0.1",
+                "port"      : 8998,
+                "protocol"  : "http",
+                'via_tunnel': True,
+            },
+            "bridge"        : master_node,
+            "stage_dir"     : "/home/hadoop/.stage",
+            "run_dir"       : run_dir,
+            "ssh_config"    : aws_emr_cfg['ssh_config']
+        }
+
         job_submitter_config = {
             "class": "spark_etl.job_submitters.livy_job_submitter.LivyJobSubmitter",
-            "args": [{
-                "service_url"   : f"http://{master_node}:8998/",
-                "bridge"        : master_node,
-                "stage_dir"     : "/home/hadoop/.stage",
-                "ssh_key"       : ssh_key,
-                "ssh_username"  : "hadoop",
-                "run_dir"       : run_dir
-            }]
+            "args": [livy_submitter_cfg]
         }
         return get_job_submitter(job_submitter_config)
 
     if config['type'] == 'on-premise':
-        print(json.dumps(config, indent=4))
+        # print(json.dumps(config, indent=4))
         on_premise_cfg = config['on_premise']
 
         livy_submitter_cfg = {
@@ -185,7 +193,7 @@ def get_job_submitter_for_tenancy(tenant_id):
                 'via_tunnel': on_premise_cfg['livy_via_tunnel'],
             },
             "bridge"        : on_premise_cfg['bridge'],
-            "stage_dir"     : "/root/.stage",   # hack, need to allow user to config via UI
+            "stage_dir"     : on_premise_cfg['stage_dir'],
             "run_dir"       : on_premise_cfg['run_dir'],
             "ssh_config"    : on_premise_cfg['ssh_config']
         }
