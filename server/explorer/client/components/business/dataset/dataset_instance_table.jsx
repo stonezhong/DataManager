@@ -39,7 +39,11 @@ export class DatasetInstanceTable extends React.Component {
                         <tr key={location.offset}>
                             <td><small><code>
                                 {
-                                    location.repo && <DataRepoLink datarepo={location.repo} />
+                                    location.repo && <DataRepoLink
+                                        datarepo={location.repo}
+                                        tenant_id={this.props.tenant_id}
+
+                                    />
                                 }
                             </code></small></td>
                             <td><small><code>{location.type}</code></small></td>
