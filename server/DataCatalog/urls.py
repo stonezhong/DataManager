@@ -11,5 +11,4 @@ urlpatterns = [
     url(r'^api/', include('main.urls')),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     url(r'^explorer/', include('explorer.urls')),
-#    path('.well-known/acme-challenge/mlhSihbAVhD1xOT4H8RsFj5cVLepXtkG3Xc82plLLZQ', views.letsencrypt, name='letsencrypt'),
 ]

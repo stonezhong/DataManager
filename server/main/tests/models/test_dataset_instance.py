@@ -1,5 +1,5 @@
 from django.contrib.auth.models import User
-from main.models import Dataset, DatasetInstance, DataRepo
+from main.models import Tenant, Dataset, DatasetInstance, DataRepo
 from datetime import datetime, timedelta
 import json
 
@@ -17,6 +17,9 @@ class DatasetInstanceTestCase(TestCase):
             username='testuser',
             password='12345'
         )
+        self.tenant = Tenant.create(
+            self.user, "test tenant", "blah...", "{}", False
+        )
 
     def create_dsis(self, repo_name=None):
         if repo_name is not None:
@@ -24,6 +27,7 @@ class DatasetInstanceTestCase(TestCase):
                 "base_dir": "/beta/data"
             }
             repo = DataRepo(
+                tenant=self.tenant,
                 name=repo_name,
                 description="",
                 type=DataRepo.RepoType.LFS.value,
@@ -33,6 +37,7 @@ class DatasetInstanceTestCase(TestCase):
 
         ds = Dataset.create(
             self.user,
+            self.tenant.id,
             "test-name", "1.0", 1,
             self.now,
             "test-description",
@@ -75,6 +80,7 @@ class DatasetInstanceTestCase(TestCase):
 
     def test_create(self):
         ds, dsi, _ = self.create_dsis()
+        self.assertEqual(dsi.tenant.id, self.tenant.id)
         self.assertEqual(dsi.dataset.id, ds.id)
         self.assertEqual(dsi.parent_instance, None)
         self.assertEqual(dsi.name, "foo")
@@ -90,6 +96,7 @@ class DatasetInstanceTestCase(TestCase):
 
     def test_create_with_repo(self):
         ds, dsi, _ = self.create_dsis('myrepo')
+        self.assertEqual(dsi.tenant.id, self.tenant.id)
         self.assertEqual(dsi.dataset.id, ds.id)
         self.assertEqual(dsi.parent_instance, None)
         self.assertEqual(dsi.name, "foo")
@@ -123,6 +130,7 @@ class DatasetInstanceTestCase(TestCase):
                 "test-name:1.0:1:/foo:0"
             ]
         )
+        self.assertEqual(dsi2_new.tenant.id, self.tenant.id)
         self.assertEqual(dsi2_new.dataset.id, ds.id)
         self.assertEqual(dsi2_new.parent_instance, None)
         self.assertEqual(dsi2_new.name, "bar")
@@ -175,27 +183,27 @@ class DatasetInstanceTestCase(TestCase):
     def test_from_dsi_path(self):
         _, dsi1, dsi2 = self.create_dsis()
         self.assertEqual(
-            DatasetInstance.from_dsi_path("test-name:1.0:1:/foo:0").id,
+            DatasetInstance.from_dsi_path(self.tenant.id, "test-name:1.0:1:/foo:0").id,
             dsi1.id
         )
         self.assertIsNone(
-            DatasetInstance.from_dsi_path("test-name:1.0:1:/foo:1")
+            DatasetInstance.from_dsi_path(self.tenant.id, "test-name:1.0:1:/foo:1")
         )
         self.assertIsNone(
-            DatasetInstance.from_dsi_path("test-name:1.0:1:/fooX:0")
+            DatasetInstance.from_dsi_path(self.tenant.id, "test-name:1.0:1:/fooX:0")
         )
         self.assertIsNone(
-            DatasetInstance.from_dsi_path("test-nameX:1.0:1:/fooX:0")
+            DatasetInstance.from_dsi_path(self.tenant.id, "test-nameX:1.0:1:/fooX:0")
         )
 
         # if a dataset instance is deleted, you should not be able to find it
         self.assertEqual(
-            DatasetInstance.from_dsi_path("test-name:1.0:1:/bar:0").id,
+            DatasetInstance.from_dsi_path(self.tenant.id, "test-name:1.0:1:/bar:0").id,
             dsi2.id
         )
         dsi2.soft_delete(self.user)
         self.assertIsNone(
-            DatasetInstance.from_dsi_path("test-name:1.0:1:/bar:0")
+            DatasetInstance.from_dsi_path(self.tenant.id, "test-name:1.0:1:/bar:0")
         )
 
 

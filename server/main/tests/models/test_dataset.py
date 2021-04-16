@@ -1,5 +1,5 @@
 from django.contrib.auth.models import User
-from main.models import Dataset
+from main.models import Tenant, Dataset
 from datetime import datetime, timedelta
 
 import pytz
@@ -13,16 +13,21 @@ class DatasetTestCase(TestCase):
             username='testuser',
             password='12345'
         )
+        self.tenant = Tenant.create(
+            self.user, "test tenant", "blah...", "{}", False
+        )
 
     def test_create(self):
         ds = Dataset.create(
             self.user,
+            self.tenant.id,
             "test-name", "1.0", 1,
             self.now,
             "test-description",
             "test-team"
         )
 
+        self.assertEqual(ds.tenant.id, self.tenant.id)
         self.assertEqual(ds.name, "test-name")
         self.assertEqual(ds.major_version, "1.0")
         self.assertEqual(ds.minor_version, 1)
@@ -38,6 +43,7 @@ class DatasetTestCase(TestCase):
     def test_set_schema_and_sample_data(self):
         ds = Dataset.create(
             self.user,
+            self.tenant.id,
             "test-name", "1.0", 1,
             self.now,
             "test-description",
@@ -52,19 +58,21 @@ class DatasetTestCase(TestCase):
     def test_from_name_and_version(self):
         ds1 = Dataset.create(
             self.user,
+            self.tenant.id,
             "test-name", "1.0", 1,
             self.now,
             "test-description",
             "test-team"
         )
 
-        ds = Dataset.from_name_and_version("test-name", "1.0", 1)
+        ds = Dataset.from_name_and_version(self.tenant.id, "test-name", "1.0", 1)
         self.assertEqual(ds.id, ds1.id)
 
 
     def test_is_active_at(self):
         ds = Dataset.create(
             self.user,
+            self.tenant.id,
             "test-name", "1.0", 1,
             self.now,
             "test-description",

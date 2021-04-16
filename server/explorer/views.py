@@ -382,7 +382,7 @@ def dataset_instance(request, tenant_id):
 
     execute_sql_app = Application.get_execute_sql_app(request.user)
 
-    dsi_list = DatasetInstance.revisions_from_dsi_path(dsi_path)
+    dsi_list = DatasetInstance.revisions_from_dsi_path(tenant_id, dsi_path)
     ds = dsi_list[0].dataset
 
     dsi_list_rendered = DatasetInstanceSerializer(dsi_list, many=True, context={"request": request})
@@ -527,6 +527,3 @@ def datalakes(request, tenant_id=None):
         }
     )
 
-# this is required by Let's Encrypt to get free SSL cert.
-# def letsencrypt(request):
-#     return HttpResponse("mlhSihbAVhD1xOT4H8RsFj5cVLepXtkG3Xc82plLLZQ.sywOEQ5dSXlmO1xrkMppiEh2IRAjylAg7cjNfrLejj0")

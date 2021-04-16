@@ -1,5 +1,5 @@
 from django.contrib.auth.models import User
-from main.models import Pipeline, PipelineInstance, PipelineGroup
+from main.models import Tenant, Pipeline, PipelineInstance, PipelineGroup
 from datetime import datetime, timedelta
 
 import pytz
@@ -13,9 +13,13 @@ class PipelineInstanceTestCase(TestCase):
             username='testuser',
             password='12345'
         )
+        self.tenant = Tenant.create(
+            self.user, "test tenant", "blah...", "{}", False
+        )
 
     def test_get_prior_instance(self):
         pipeline = Pipeline(
+            tenant      = self.tenant,
             name        = "foo-pipeline",
             description = "blah...",
             author      = self.user,
@@ -30,17 +34,19 @@ class PipelineInstanceTestCase(TestCase):
         pipeline.save()
 
         pg1 = PipelineGroup(
-            name="foo-pipeline-group",
+            tenant = self.tenant,
+            name = "foo-pipeline-group",
             created_time = self.now,
-            category='test',
-            context='',
-            finished=False,
-            manual=False,
-            due=datetime(2020, 1, 1).replace(tzinfo=pytz.UTC)
+            category = 'test',
+            context = '',
+            finished = False,
+            manual = False,
+            due = datetime(2020, 1, 1).replace(tzinfo=pytz.UTC)
         )
         pg1.save()
 
         pi1 = PipelineInstance(
+            tenant = self.tenant,
             pipeline = pipeline,
             group = pg1,
             context = '',
@@ -50,17 +56,19 @@ class PipelineInstanceTestCase(TestCase):
         pi1.save()
 
         pg2 = PipelineGroup(
-            name="bar-pipeline-group",
+            tenant = self.tenant,
+            name = "bar-pipeline-group",
             created_time = self.now,
-            category='test',
-            context='',
-            finished=False,
-            manual=False,
-            due=datetime(2020, 1, 2).replace(tzinfo=pytz.UTC)
+            category = 'test',
+            context = '',
+            finished = False,
+            manual = False,
+            due = datetime(2020, 1, 2).replace(tzinfo=pytz.UTC)
         )
         pg2.save()
 
         pi2 = PipelineInstance(
+            tenant = self.tenant,
             pipeline = pipeline,
             group = pg2,
             context = '',
