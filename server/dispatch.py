@@ -153,7 +153,7 @@ def config_airflow_venv():
 
         if section == "[scheduler]":
             if line.startswith("min_file_process_interval = "):
-                return "min_file_process_interval = 30"
+                return "min_file_process_interval = 0"
             if line.startswith("dag_dir_list_interval = "):
                 return "dag_dir_list_interval = 30"
             return line

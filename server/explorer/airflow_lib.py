@@ -5,6 +5,8 @@ import requests
 import time
 from DataCatalog.settings import AIRFLOW_VENV, AIRFLOW_API_BASE_URL
 
+AIRFLOW_HOME = os.environ['AIRFLOW_HOME']
+
 ######################################
 # This lib has functions to interact with airflow
 # Assumptions:
@@ -32,31 +34,38 @@ def is_dag_exist(dag_id):
 
     return False
 
+def get_dag_tenant_dir(tenant_id):
+    return os.path.join(AIRFLOW_HOME, 'dags', str(tenant_id))
 
 
+def get_dag_py_filename(tenant_id, pipeline_id):
+    return os.path.join(AIRFLOW_HOME, 'dags', str(tenant_id), f"{pipeline_id}.py")
+
+def has_dag_py_file(tenant_id, pipeline_id):
+    return os.path.exists(
+        get_dag_py_filename(tenant_id, pipeline_id)
+    )
+
+def get_dag_info_filename(tenant_id, pipeline_id):
+    return os.path.join(AIRFLOW_HOME, 'dags', str(tenant_id), f"{pipeline_id}.json")
 
 # Create a DAG
 # the python code is stored in content
 # when run the code, the dag created should have name dag_name
 # the python code should be saved as filename
-def create_dag(filename, dag_id, content):
-    airflow_home = os.environ['AIRFLOW_HOME']
-    dag_dir = os.path.join(airflow_home, 'dags')
-    dag_filename = os.path.join(dag_dir, filename)
-
+def create_dag_py(tenant_id, pipeline_id, content):
+    os.makedirs(get_dag_tenant_dir(tenant_id), exist_ok=True)
+    dag_py_filename = get_dag_py_filename(tenant_id, pipeline_id)
     # step 1: create the dag file
-    print(f"create dag file: {dag_filename}")
-    with open(dag_filename, "wt") as dag_f:
+    print(f"create dag file: {dag_py_filename}")
+    with open(dag_py_filename, "wt") as dag_f:
         dag_f.write(content)
 
-    # Do not run the day file, let airflow to run it so we know when airflow picked up the new version
-    # # step 2: run the dag (make sure it does not fail)
-    # print("Invoke the dag")
-    # p = subprocess.run(
-    #     [f"{AIRFLOW_VENV}/bin/python", f"{dag_filename}"],
-    #     check=True
-    # )
 
+def delete_dag_info(tenant_id, pipeline_id):
+    dag_info_filename = get_dag_info_filename(tenant_id, pipeline_id)
+    if os.path.exists(dag_info_filename):
+        os.remove(dag_info_filename)
 
 
 def unpause_dag(dag_id):
