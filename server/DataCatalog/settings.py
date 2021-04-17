@@ -38,6 +38,8 @@ if not logging_helper.logging_initialized:
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = __DJANGO_CONFIG['SECRET_KEY']
+TOKEN_KEY = __DJANGO_CONFIG['TOKEN_KEY']
+BASE_URL = __DJANGO_CONFIG['base_url']
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True

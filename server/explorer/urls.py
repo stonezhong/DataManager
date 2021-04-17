@@ -19,5 +19,6 @@ urlpatterns = [
     path('logout', views.logout, name='logout'),
     path('login', views.login, name='login'),
     path('signup', views.signup, name='signup'),
+    path('signup-validate', views.signup_validate, name='signup-validate'),
     path('test', views.test, name='test'), # for testing UI components
 ]

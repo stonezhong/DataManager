@@ -7,6 +7,9 @@ from django.contrib.auth.models import User
 import pytz
 from django.core.exceptions import ValidationError
 
+from DataCatalog.settings import TOKEN_KEY
+from cryptography.fernet import Fernet
+
 TIME_UNIT_YEAR      = "YEAR"
 TIME_UNIT_MONTH     = "MONTH"
 TIME_UNIT_DAY       = "DAY"
@@ -922,3 +925,155 @@ class ScheduledEvent(models.Model):
 
     # matters only when the topic is "pipeline"
     category            = models.CharField(max_length=255, blank=True)
+
+
+class AccessToken(models.Model):
+    class Purpose(Enum):
+        SIGNUP_VALIDATE         = 1   # verify user upon signup
+        RESET_PASSWORD          = 2   # for user to reset password
+        API_TOKEN               = 3   # for accessing DM from spark job
+
+    id                  = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    content             = models.TextField(blank=True)
+    tenant              = models.ForeignKey(Tenant, on_delete=models.PROTECT, null=True)
+    user                = models.ForeignKey(User,
+                            on_delete = models.PROTECT,
+                            null=False)
+    create_time         = models.DateTimeField(null=False)
+    expire_time         = models.DateTimeField(null=False)
+    purpose             = models.IntegerField(null=False)
+
+    @classmethod
+    def create_token(cls, user, duration, purpose, tenant=None):
+        now = datetime.utcnow().replace(tzinfo=pytz.UTC)
+
+        access_token = AccessToken(
+            tenant = tenant,
+            user = user,
+            create_time = now,
+            expire_time = now + duration,
+            purpose = purpose.value
+        )
+        access_token.save()
+
+        f = Fernet(TOKEN_KEY.encode('utf-8'))
+        msg = str(access_token.id).encode('utf-8')
+        raw_content = f.encrypt(msg)
+        content = raw_content.decode('utf-8')
+        access_token.content = content
+        access_token.save()
+        return content
+
+    @classmethod
+    def authenticate(cls, user, token, purpose, tenant=None):
+        access_tokens = AccessToken.objects.filter(content=token, user=user, purpose=purpose.value)
+        if len(access_tokens) == 0:
+            return False
+        if len(access_tokens) > 1:
+            raise DataCorruptionException(f"Found duplicate auth token for {user.username}")
+
+        access_token = access_tokens[0]
+        now = datetime.utcnow().replace(tzinfo=pytz.UTC)
+
+        if access_token.expire_time < now:
+            # token is expired
+            return False
+
+        if purpose == AccessToken.Purpose.SIGNUP_VALIDATE:
+            return True
+
+        # TODO: validate for other tokens
+        raise Exception("Unrecognized purpose")
+
+
+def do_signup_user(username, password, password1, first_name, last_name, email):
+    msg = None
+    while True:
+        if len(username)==0:
+            msg = "Username cannot be empty"
+            break
+        if len(password)==0:
+            msg = "Password cannot be empty"
+            break
+        if len(password1)==0:
+            msg = "Password cannot be empty"
+            break
+        if len(first_name)==0:
+            msg = "First name cannot be empty"
+            break
+        if len(last_name)==0:
+            msg = "Last name cannot be empty"
+            break
+        if len(email)==0:
+            msg = "Email name cannot be empty"
+            break
+        if password != password1:
+            msg = "Password does not match"
+            break
+        break
+    if msg is not None:
+        return {
+            "success": False,
+            "msg": msg
+        }
+
+    users = User.objects.filter(username=username)
+    found_user = None
+    if len(users) > 1:
+        raise DataCorruptionException(f"More than 1 user has name {username}")
+    if len(users) == 1:
+        found_user = users[0]
+    if found_user is not None:
+        if found_user.is_active:
+            return {
+                "success": False,
+                "msg": "Invalid username or email!"
+            }
+        if found_user.email != email:
+            return {
+                "success": False,
+                "msg": "Invalid username or email!"
+            }
+
+        token = AccessToken.create_token(
+            found_user, timedelta(days=1), AccessToken.Purpose.SIGNUP_VALIDATE,
+        )
+
+        return {
+            "success": True,
+            "msg": f"An account validation email has been sent to {email}, please click the link in the email to validate your account",
+            "send_email": True,
+            "token": token,
+            "user": found_user
+        }
+
+    users = User.objects.filter(email=email)
+    if len(users) > 0:
+        return {
+            "success": False,
+            "msg": "Use a different email!"
+        }
+
+
+    user = User.objects.create_user(
+        username,
+        email=email,
+        password=password,
+        first_name=first_name,
+        last_name=last_name,
+        is_active=False
+    )
+    user.save()
+
+    token = AccessToken.create_token(
+        user, timedelta(days=1), AccessToken.Purpose.SIGNUP_VALIDATE,
+    )
+
+    return {
+        "success": True,
+        "msg": f"An account validation email has been sent to {email}, please click the link in the email to validate your account",
+        "send_email": True,
+        "token": token,
+        "user": user
+    }
+

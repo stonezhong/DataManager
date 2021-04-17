@@ -1,6 +1,6 @@
 import os
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from django.shortcuts import render, redirect
 from django.http import  HttpResponseBadRequest, HttpResponseRedirect, JsonResponse, \
@@ -16,7 +16,8 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 
 from main.models import Dataset, Pipeline, PipelineGroup, PipelineInstance, \
-    Application, DatasetInstance, DataRepo, Tenant, UserTenantSubscription
+    Application, DatasetInstance, DataRepo, Tenant, UserTenantSubscription, \
+    AccessToken, do_signup_user
 from main.serializers import PipelineSerializer, DatasetSerializer, \
     ApplicationSerializer, PipelineGroupDetailsSerializer, \
     DatasetInstanceSerializer, DataRepoSerializer, UserTenantSubscriptionSerializer
@@ -28,6 +29,8 @@ import explorer.airflow_lib as airflow_lib
 
 import jinja2
 from graphviz import Digraph
+
+from email_tools import send_signup_validate_email
 
 def get_app_config():
     config = {
@@ -178,42 +181,65 @@ def signup(request):
         if request.user.is_authenticated:
             return HttpResponseForbidden()
 
-        # TODO: maybe add some security check, like email validation and activation
-        username    = request.POST['username']
-        password    = request.POST['password']
-        password1   = request.POST['password1']
-        first_name  = request.POST['first_name']
-        last_name   = request.POST['last_name']
-        email       = request.POST['email']
+        username    = request.POST.get('username', '').strip()
+        password    = request.POST.get('password', '').strip()
+        password1   = request.POST.get('password1', '').strip()
+        first_name  = request.POST.get('first_name', '').strip()
+        last_name   = request.POST.get('last_name', '').strip()
+        email       = request.POST.get('email', '').strip()
 
-        if password != password1:
-            app_context = {
-                'msg': "Password does not match, please retry!"
+        result = do_signup_user(username, password, password1, first_name, last_name, email)
+        if result.get('send_email'):
+            send_signup_validate_email(result['user'], result['token'])
+
+        app_context = {
+            'success': result['success'],
+            'msg': result['msg']
+        }
+        return render(
+            request,
+            'common_page.html',
+            context={
+                'user': request.user,
+                'sub_title': "Signup",
+                'scripts':[
+                    '/static/js-bundle/signup.js'
+                ],
+                'nav_item_role': 'signup',
+                'app_context': JSONRenderer().render(app_context).decode("utf-8"),
             }
-            return render(
-                request,
-                'common_page.html',
-                context={
-                    'user': request.user,
-                    'sub_title': "Signup",
-                    'scripts':[
-                        '/static/js-bundle/signup.js'
-                    ],
-                    'nav_item_role': 'signup',
-                    'app_context': JSONRenderer().render(app_context).decode("utf-8"),
-                }
-            )
-
-
-        user = User.objects.create_user(
-            username,
-            email=email,
-            password=password,
-            first_name=first_name,
-            last_name=last_name
         )
-        user.save()
-        return HttpResponseRedirect('/explorer/login')
+
+
+def signup_validate(request):
+    if request.method != 'GET':
+        # only work for GET
+        return HttpResponseForbidden()
+
+    username    = request.GET.get('username', '').strip()
+    token       = request.GET.get('token', '').strip()
+
+    users = User.objects.filter(username=username)
+    if len(users) == 0:
+        return HttpResponseForbidden()
+
+    user = users[0]
+    if not AccessToken.authenticate(
+        user, token, AccessToken.Purpose.SIGNUP_VALIDATE
+    ):
+        return HttpResponseForbidden()
+
+    if user.is_active:
+        # already activated
+        return HttpResponseForbidden()
+
+    user.is_active = True
+    user.save()
+    if request.user.is_authenticated:
+        do_logout(request)
+    do_login(request, user)
+    return HttpResponseRedirect('/explorer/datalakes')
+
 
 def pipelines(request, tenant_id):
     if not request.user.is_authenticated:

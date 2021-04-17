@@ -34,8 +34,14 @@ class SignupPage extends React.Component {
                         <center><h4>Signup to Data Manager</h4></center>
                         <br />
                         {
-                            this.props.app_context.msg &&
+                            this.props.app_context.msg && !this.props.app_context.success &&
                             <Alert variant="danger">
+                                { this.props.app_context.msg }
+                            </Alert>
+                        }
+                        {
+                            this.props.app_context.msg && this.props.app_context.success &&
+                            <Alert variant="success">
                                 { this.props.app_context.msg }
                             </Alert>
                         }
