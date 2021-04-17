@@ -15,7 +15,7 @@ from daglib import create_simple_flow_dag
 
 # Templated variables
 try:
-    dag = create_simple_flow_dag("{{pipeline_id}}", "{{dag_id}}.{{pipeline_id}}")
+    dag = create_simple_flow_dag({{tenant_id}}, "{{pipeline_id}}", "{{dag_id}}.{{pipeline_id}}")
     dag
 except:
     logger.exception("Failed to create dag")

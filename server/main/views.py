@@ -264,6 +264,26 @@ class PipelineViewSet(viewsets.ModelViewSet):
         ).data
         return Response(response)
 
+
+    @transaction.atomic
+    def update(self, request, *args, **kwargs):
+        # TODO: do not delete the dag cache if we are just pause the dag
+        pk = kwargs.get('pk', None)
+
+        ret = super(PipelineViewSet, self).update(request, *args, **kwargs)
+
+        if pk is not None:
+            pipeline = Pipeline.objects.get(pk=uuid.UUID(pk))
+            tenant_id = pipeline.tenant_id
+            pipeline_id = pipeline.id
+            if not airflow_lib.has_dag_py_file(tenant_id, pipeline_id):
+                self.do_create_dag(pipeline)
+            else:
+                airflow_lib.delete_dag_info(tenant_id, pipeline_id)
+
+        return ret
+
+
     @transaction.atomic
     @action(detail=False, methods=['get'])
     def active(self, request, pk=None):
@@ -278,13 +298,12 @@ class PipelineViewSet(viewsets.ModelViewSet):
         ).data
         return Response(response)
 
-
-    # Create the airflow DAG
-    @action(detail=True, methods=['post'])
-    def create_dag(self, request, pk=None):
-        pipeline = Pipeline.objects.get(pk=pk)
+    def do_create_dag(self, pipeline):
         context = json.loads(pipeline.context)
         template_name = None
+
+        tenant_id = pipeline.tenant.id
+        pipeline_id = pipeline.id
 
         if context['type'] == 'simple-flow':
             template_name = 'simple-flow'
@@ -298,14 +317,19 @@ class PipelineViewSet(viewsets.ModelViewSet):
                 content = f.read()
             template = jinja2.Template(content)
             to_write = template.render({
-                'pipeline_id': str(pipeline.id).replace("-", ""),
+                'tenant_id': tenant_id,
+                'pipeline_id': str(pipeline_id).replace("-", ""),
                 'dag_id': pipeline.name,
             })
-            airflow_lib.create_dag(f"{pipeline.id}.py", pipeline.name, to_write)
-        # response = PipelineSerializer(
-        #     instance=pipeline,
-        #     context={'request': request}
-        # ).data
+            airflow_lib.delete_dag_info(tenant_id, pipeline_id)
+            airflow_lib.create_dag_py(tenant_id, pipeline_id, to_write)
+
+
+    # Create the airflow DAG
+    @action(detail=True, methods=['post'])
+    def create_dag(self, request, pk=None):
+        pipeline = Pipeline.objects.get(pk=pk)
+        self.do_create_dag(pipeline)
         return Response({})
 
 class PipelineGroupViewSet(viewsets.ModelViewSet):

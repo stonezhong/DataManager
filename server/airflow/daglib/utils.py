@@ -3,6 +3,7 @@ import json
 import logging
 import importlib
 from datetime import datetime
+import uuid
 
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
@@ -376,16 +377,42 @@ def on_dag_run_failure(context):
         logger.exception("on_dag_run_failure")
         raise
 
-def create_simple_flow_dag(pipeline_id, dag_id):
-    logger.info(f"Creating dag, pipeline_id={pipeline_id}, dag_id={dag_id}")
-    pipeline_context, pipeline_version, dag_version, team = get_pipeline_details(pipeline_id)
+def create_dag_info_file(dag_info_filename, tenant_id, pipeline_id, dag_id):
+    with open(dag_info_filename, "wt") as dag_info_f:
+        pipeline_context, pipeline_version, dag_version, team = get_pipeline_details(pipeline_id)
+        dag_info = {
+            "pipeline_context": pipeline_context,
+            "pipeline_version": pipeline_version,
+            "dag_version": dag_version,
+            "team": team
+        }
+        dag_info_f.write(json.dumps(dag_info, indent=4))
+
+
+def create_simple_flow_dag(tenant_id, pipeline_id, dag_id):
+    # logger.info(f"Creating dag, pipeline_id={pipeline_id}, dag_id={dag_id}")
+
+    update_dag_version = False
+    # too bad we are not importing airflow_lib, so we are computing dag_info_filename
+    dag_info_filename = os.path.join(AIRFLOW_HOME, "dags", str(tenant_id), f"{uuid.UUID(pipeline_id)}.json")
+    if not os.path.exists(dag_info_filename):
+        create_dag_info_file(dag_info_filename, tenant_id, pipeline_id, dag_id)
+        update_dag_version = True
+    with open(dag_info_filename, "rt") as dag_info_f:
+        dag_info = json.load(dag_info_f)
+
+    pipeline_context = dag_info['pipeline_context']
+    pipeline_version = dag_info['pipeline_version']
+    dag_version      = dag_info['dag_version']
+    team             = dag_info['team']
+
     if pipeline_context is None:
         raise Exception(f"Pipeline {pipeline_id} does not exist!")
 
-    log_info_with_title("Pipeline context", pipeline_context)
-    logger.info(f"Pipeline version: {pipeline_version}")
-    logger.info(f"DAG version     : {dag_version}")
-    logger.info(f"team            : {team}")
+    # log_info_with_title("Pipeline context", pipeline_context)
+    # logger.info(f"Pipeline version: {pipeline_version}")
+    # logger.info(f"DAG version     : {dag_version}")
+    # logger.info(f"team            : {team}")
 
     task_dict = {}
 
@@ -422,8 +449,10 @@ def create_simple_flow_dag(pipeline_id, dag_id):
         dst_task = task_dict[dependency['dst']]
         src_task << dst_task
 
-
-    if dag_version < pipeline_version:
+    if update_dag_version:
         update_pipeline_version(pipeline_id, pipeline_version)
-    logger.info(f"DAG is created")
+        logger.info(f"DAG(tenant={tenant_id}, pipeline={pipeline_id}, dag_id={dag_id}) created from DB")
+    else:
+        logger.info(f"DAG(tenant={tenant_id}, pipeline={pipeline_id}, dag_id={dag_id}) created from cache")
+
     return dag
