@@ -1,10 +1,13 @@
 from .schema import validate_model
 from datetime import datetime
 from django.core.exceptions import SuspiciousOperation
-from main.models import Dataset, DatasetInstance, DataLocation
+from main.models import Dataset, Asset, DataLocation, Application
 import pytz
 
-class CreateDatasetInstanceInput:
+from main.view_tools import get_model_by_pk
+from common_tool import none_or, q
+
+class CreateAssetInput:
     class _BriefLocation:
         def __init__(self, type, location, size, repo_name):
             # if repo_name is None, the location is a repo-less location
@@ -15,37 +18,24 @@ class CreateDatasetInstanceInput:
             self.repo_name = repo_name
 
     @classmethod
-    def from_json(cls, data):
+    def from_json(cls, data, tenant_id):
         validate_model("create_dataset_instance", data)
         self = cls()
 
-        dataset_id = data["dataset_id"]
-        dataset = Dataset.objects.filter(pk=data['dataset_id']).first()
-        if dataset is None:
-            raise SuspiciousOperation(f"Invalid dataset id: {dataset_id}")
-        self.dataset = dataset
-
-        parent_instance_id = data['parent_instance_id']
-        if parent_instance_id is None:
-            parent_instance = None
-        else:
-            parent_instance = DatasetInstance.objects.filter(pk=parent_instance_id).first()
-            if parent_instance is None:
-                raise SuspiciousOperation(f"Invalid parent_instance")
-        self.parent_instance = parent_instance
-
+        self.dataset = get_model_by_pk(Dataset, data['dataset_id'], tenant_id)
+        self.parent_instance = none_or(
+            data.get('parent_instance_id'),
+            lambda parent_instance_id: get_model_by_pk(Asset, parent_instance_id, tenant_id)
+        )
         self.name = data["name"]
         self.row_count = data.get("row_count")
-
         self.loader = data.get("loader")
 
-        if "publish_time" in data:
-            publish_time = datetime.strptime(data["publish_time"], "%Y-%m-%d %H:%M:%S")
-        else:
-            publish_time = datetime.utcnow()
-        publish_time = publish_time.replace(tzinfo = pytz.UTC)
-        self.publish_time = publish_time
-
+        self.publish_time = q(
+            "publish_time" in data,
+            lambda : datetime.strptime(data["publish_time"], "%Y-%m-%d %H:%M:%S"),
+            lambda : datetime.utcnow()
+        ).replace(tzinfo=pytz.UTC)
         self.data_time = datetime.strptime(data["data_time"], "%Y-%m-%d %H:%M:%S")
 
         locations = []
@@ -57,6 +47,9 @@ class CreateDatasetInstanceInput:
 
         self.src_dsi_paths = data.get("src_dsi_paths", [])
 
-        self.application_id = data.get("application_id")
+        self.application = none_or(
+            data['application_id'],
+            lambda application_id: get_model_by_pk(Application, data['application_id'], tenant_id)
+        )
         self.application_args = data.get("application_args")
         return self

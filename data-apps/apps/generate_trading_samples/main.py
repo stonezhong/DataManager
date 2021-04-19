@@ -45,7 +45,8 @@ def main(spark, input_args, sysops={}):
         dc_config = input_args['dc_config']
         dcc = DataCatalogClient(
             url_base = dc_config['url_base'],
-            auth = (dc_config['username'], dc_config['password'])
+            dm_username = dc_config['dm_username'],
+            dm_token = dc_config['dm_token']
         )
 
     loader = Loader(dcc=dcc)

@@ -5,8 +5,8 @@ from rest_framework import routers
 from . import views
 
 router = routers.DefaultRouter()
-router.register('Datasets',                 views.DatasetViewSet)
-router.register('DatasetInstances',         views.DatasetInstanceViewSet)
+router.register(r'(?P<tenant_id_str>\d{1,5})/Datasets', views.DatasetViewSet)
+router.register('Asset',                    views.AssetViewSet)
 router.register('DataLocation',             views.DataLocationViewSet)
 router.register('Pipelines',                views.PipelineViewSet)
 router.register('PipelineGroups',           views.PipelineGroupViewSet)

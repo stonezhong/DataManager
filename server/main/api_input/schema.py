@@ -36,9 +36,6 @@ models = {
     "create_dataset_input": {
         "type": "object",
         "properties": {
-            "tenant_id": {
-                "type": "integer"
-            },
             "name": {
                 "type": "string"
             },
@@ -60,7 +57,7 @@ models = {
             },
         },
         "additionalProperties": False,
-        "required": ["tenant_id", "name", "major_version", "minor_version", "description", "team"]
+        "required": ["name", "major_version", "minor_version", "description", "team"]
     },
     "create_dataset_instance": {
         "type": "object",
@@ -104,6 +101,7 @@ models = {
                             "type": "integer"
                         }
                     },
+                    "minItems": 1,
                     "required": ["type", "location"],
                     "additionalProperties": False,
                 }
@@ -123,8 +121,7 @@ models = {
         },
         "additionalProperties": False,
         "required": [
-            "dataset_id", "parent_instance_id", "name", "data_time", "locations", "src_dsi_paths",
-            "application_id", "application_args"
+            "dataset_id", "name", "data_time", "locations"
         ]
     },
     "create_pipeline_input": {

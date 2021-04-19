@@ -14,23 +14,27 @@ from django.http import Http404
 from django.conf import settings
 import os
 from django.http import JsonResponse
+from rest_framework import permissions
+from rest_framework.exceptions import PermissionDenied, APIException
 
 import jinja2
 import json
 
-from .models import Dataset, DatasetInstance, DataLocation, Pipeline, \
+from .models import Dataset, Asset, DataLocation, Pipeline, \
     PipelineGroup, PipelineInstance, Application, Timer, ScheduledEvent, \
-    DataRepo, Tenant, UserTenantSubscription
-from .serializers import DatasetSerializer, DatasetInstanceSerializer, \
+    DataRepo, Tenant, UserTenantSubscription, AccessToken, PermissionDeniedException
+from .serializers import DatasetSerializer, AssetSerializer, \
     DataLocationSerializer, PipelineSerializer, PipelineGroupSerializer, \
     PipelineInstanceSerializer, ApplicationSerializer, PipelineGroupDetailsSerializer, \
     TimerSerializer, ScheduledEventSerializer, DataRepoSerializer, TenantSerializer, \
     UserTenantSubscriptionSerializer
-from .api_input import CreateDatasetInput, CreateDatasetInstanceInput, \
+from .api_input import CreateDatasetInput, CreateAssetInput, \
     CreatePipelineInput, CreateApplicationInput, CreateTimerInput, \
     SetSchemaAndSampleDataInput, CreateTenantInput, CreateDataRepoInput
 
 import explorer.airflow_lib as airflow_lib
+
+from .view_tools import get_model_by_pk
 
 def get_offset(request):
     try:
@@ -48,13 +52,115 @@ def get_limit(request):
         if limit_str is None:
             return None
         limit = int(limit_str)
-        if limit <= 0:
+        if limit < 0:
             return None
         return limit
     except ValueError:
         return None
 
-class DatasetViewSet(viewsets.ModelViewSet):
+
+def get_model_page_response(request, model_list, serlaizer_class):
+    offset = get_offset(request)
+    limit = get_limit(request)
+    if limit is None:
+        page = model_list[offset:]
+    else:
+        page = model_list[offset:offset+limit]
+
+    serializer = serlaizer_class(page, many=True)
+    return Response({
+        'count': len(model_list),
+        'results': serializer.data
+    })
+
+
+def check_api_permission(request, tenant_id):
+    can_access = False
+
+    if request.user.is_authenticated:
+        subscriptions = UserTenantSubscription.objects.filter(
+            user=request.user,
+            tenant__id=tenant_id
+        )
+        can_access = (len(subscriptions) > 0)
+    else:
+        if request.method in ["GET", "DELETE"]:
+            dm_username = request.GET.get('dm_username', None)
+            dm_token    = request.GET.get('dm_token', None)
+        elif request.method in ["POST", "PATCH"]:
+            dm_username = request.data.get('dm_username', None)
+            dm_token    = request.data.get('dm_token', None)
+
+        if dm_username is None or dm_token is None:
+            dm_token = None
+            dm_username = None
+
+        if dm_username is not None:
+            subscriptions = UserTenantSubscription.objects.filter(
+                user__username=dm_username,
+                tenant__id=tenant_id
+            )
+            if len(subscriptions) > 0:
+                subscription = subscriptions[0]
+                can_access = AccessToken.authenticate(
+                    subscription.user, dm_token,
+                    AccessToken.Purpose.API_TOKEN,
+                    tenant=subscription.tenant
+                )
+
+    if not can_access:
+        raise PermissionDenied({"message": f"You are not subscribed to this datalake: {tenant_id}"})
+
+class APIBaseView(viewsets.ModelViewSet):
+    # override a method from ListModeMixin
+    def list(self, request, tenant_id_str=None, *args, **kwargs):
+        tenant_id = int(tenant_id_str)
+        check_api_permission(request, tenant_id)
+        return super(APIBaseView, self).list(request, *args, **kwargs)
+
+
+    # override a method from RetrieveModelMixin
+    def retrieve(self, request, tenant_id_str=None, *args, **kwargs):
+        tenant_id = int(tenant_id_str)
+        check_api_permission(request, tenant_id)
+        instance = self.get_object()
+        if instance.tenant_id != tenant_id:
+            # user asks to get an object which does not belong to the
+            # tenant user claimed to be
+            # It is proper to tell user the object does not exist
+            raise Http404
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+
+
+    # override a method from DestroyModelMixin
+    def destroy(self, request, tenant_id_str=None, *args, **kwargs):
+        tenant_id = int(tenant_id_str)
+        check_api_permission(request, tenant_id)
+        return super(APIBaseView, self).destroy(request, *args, **kwargs)
+
+    # override a method from UpdateModelMixin
+    def update(self, request, tenant_id_str=None, *args, **kwargs):
+        tenant_id = int(tenant_id_str)
+        check_api_permission(request, tenant_id)
+
+        # User cannot change tenant_id
+        if 'tenant_id' in request.data:
+            raise PermissionDenied({"message":"Change tenant is not allowed"})
+
+        return super(APIBaseView, self).update(request, *args, **kwargs)
+
+    # override a method from CreateModelMixin
+    def create(self, request, tenant_id_str=None, *args, **kwargs):
+        tenant_id = int(tenant_id_str)
+        check_api_permission(request, tenant_id)
+        return super(APIBaseView, self).create(request, *args, **kwargs)
+
+
+
+class DatasetViewSet(APIBaseView):
+    permission_classes = []
+
     queryset = Dataset.objects.all()
     serializer_class = DatasetSerializer
     filter_backends = [DjangoFilterBackend, OrderingFilter]
@@ -68,49 +174,43 @@ class DatasetViewSet(viewsets.ModelViewSet):
     ordering_fields = ['name', 'major_version', 'minor_version', 'publish_time']
 
     @action(detail=True, methods=['get'])
-    def children(self, request, pk=None):
+    def children(self, request, pk=None, tenant_id_str=None):
         """
         Return all direct child dataset instances
         Deleted dataset instance is ignored.
         """
-        offset = get_offset(request)
-        limit  = get_limit(request)
-        dataset = Dataset.objects.get(pk=pk)
-        dataset_instances = dataset.get_children(request.user)
-        if limit is None:
-            dataset_instances_page = dataset_instances[offset:]
-        else:
-            dataset_instances_page = dataset_instances[offset:offset+limit]
-        serializer = DatasetInstanceSerializer(
-            dataset_instances_page, many=True,
-            context={'request': request}
+        tenant_id = int(tenant_id_str)
+        check_api_permission(request, tenant_id)
+        dataset = get_model_by_pk(Dataset, pk, tenant_id)
+
+        dataset_instances = dataset.get_children()
+
+        return get_model_page_response(
+            request, dataset_instances, AssetSerializer
         )
-        # return JsonResponse({'count': len(dataset_instances), 'results': serializer.data})
-        return Response({
-            'count': len(dataset_instances),
-            'results': serializer.data
-        })
 
     @action(detail=True, methods=['get'])
-    def child(self, request, pk=None):
+    def child(self, request, pk=None, tenant_id_str=None):
         """
         Return direct child dataset instance that match the name
         Deleted dataset instance is ignored.
         """
-        dataset = Dataset.objects.get(pk=pk)
+        tenant_id = int(tenant_id_str)
+        check_api_permission(request, tenant_id)
+        dataset = get_model_by_pk(Dataset, pk, tenant_id)
+
         instance_name = request.GET['name']
-        dataset_instance = dataset.get_child(request.user, instance_name)
+        dataset_instance = dataset.get_child(instance_name)
         if dataset_instance is None:
             raise Http404
 
-        serializer = DatasetInstanceSerializer(
-            dataset_instance, many=False,
-            context={'request': request}
+        serializer = AssetSerializer(
+            dataset_instance, many=False
         )
         return Response(serializer.data)
 
     @transaction.atomic
-    def create(self, request):
+    def create(self, request, tenant_id_str=None):
         """
         Create a dataset
         Deleted dataset instance is ignored.
@@ -118,89 +218,107 @@ class DatasetViewSet(viewsets.ModelViewSet):
 
         # TODO: Need to make sure minor version is the largest for
         #       the same dataset name and major version
+        tenant_id = int(tenant_id_str)
+        check_api_permission(request, tenant_id)
 
         data = request.data
-        create_dataset_input = CreateDatasetInput.from_json(data)
+        create_dataset_input = CreateDatasetInput.from_json(data, tenant_id)
 
         ds = Dataset.create(
-            request.user,
-            create_dataset_input.tenant_id,
+            tenant_id,
             create_dataset_input.name,
             create_dataset_input.major_version, create_dataset_input.minor_version,
             create_dataset_input.publish_time,
             create_dataset_input.description,
             create_dataset_input.team
         )
-        response = DatasetSerializer(instance=ds, context={'request': request}).data
+        response = DatasetSerializer(instance=ds).data
         return Response(response)
 
     @action(detail=True, methods=['post'])
     @transaction.atomic
-    def set_schema_and_sample_data(self, request, pk=None):
+    def set_schema_and_sample_data(self, request, pk=None, tenant_id_str=None):
         """
         Update schema and/or sample data
         """
-        ds = Dataset.objects.get(pk=pk)
+        tenant_id = int(tenant_id_str)
+        check_api_permission(request, tenant_id)
+        ds = get_model_by_pk(Dataset, pk, tenant_id)
         data = request.data
-        ssasd_input = SetSchemaAndSampleDataInput.from_json(data)
+        ssasd_input = SetSchemaAndSampleDataInput.from_json(data, tenant_id)
         ds.set_schema_and_sample_data(
             request.user,
             ssasd_input.schema,
             ssasd_input.sample_data
         )
-        response = DatasetSerializer(instance=ds, context={'request': request}).data
+        response = DatasetSerializer(instance=ds).data
         return Response(response)
 
 
-class DatasetInstanceViewSet(viewsets.ModelViewSet):
-    queryset = DatasetInstance.objects.all()
-    serializer_class = DatasetInstanceSerializer
+class AssetViewSet(APIBaseView):
+    permission_classes = []
+
+    queryset = Asset.objects.all()
+    serializer_class = AssetSerializer
     filter_backends = [DjangoFilterBackend, OrderingFilter]
-    filterset_fields = ['dataset', 'path', 'name', 'revision']
+    filterset_fields = {
+        'tenant_id'         : ['exact'],
+        'dataset'           : ['exact'],
+        'path'              : ['exact'],
+        'name'              : ['exact'],
+        'revision'          : ['exact'],
+    }
 
     @action(detail=True, methods=['get'])
-    def children(self, request, pk=None):
+    def children(self, request, pk=None, tenant_id_str=None):
         """
         Return all direct child dataset instances
         Deleted dataset instance is ignored.
         """
-        this_instance = DatasetInstance.objects.get(pk=pk)
+        tenant_id = int(tenant_id_str)
+        check_api_permission(request, tenant_id)
+        this_instance = get_model_by_pk(Asset, pk, tenant_id)
         dataset_instances = this_instance.get_children(request.user)
-        serializer = self.get_serializer(
-            dataset_instances, many=True,
-            context={'request': request}
+
+        return get_model_page_response(
+            request, dataset_instances, AssetSerializer
         )
-        return Response(serializer.data)
+
 
     @action(detail=True, methods=['get'])
-    def child(self, request, pk=None):
+    def child(self, request, pk=None, tenant_id_str=None):
         """
         Return direct child dataset instance that match the name
         Deleted dataset instance is ignored.
         """
+        tenant_id = int(tenant_id_str)
+        check_api_permission(request, tenant_id)
+
+        this_instance = get_model_by_pk(Asset, pk, tenant_id)
+
         instance_name = request.GET['name']
-        this_instance = DatasetInstance.objects.get(pk=pk)
-        dataset_instance = this_instance.get_child(request.user, instance_name)
+        dataset_instance = this_instance.get_child(instance_name)
         if dataset_instance is None:
             raise Http404
 
         serializer = self.get_serializer(
-            dataset_instance, many=False,
-            context={'request': request}
+            dataset_instance, many=False
         )
         return Response(serializer.data)
 
     @transaction.atomic
-    def create(self, request):
+    def create(self, request, tenant_id_str=None):
         """
         Create a dataset instance
         """
+        tenant_id = int(tenant_id_str)
+        check_api_permission(request, tenant_id)
+
         data = request.data
         # cdii stands for create_dataset_instance_input
-        cdii = CreateDatasetInstanceInput.from_json(data)
+        cdii = CreateAssetInput.from_json(data, tenant_id)
 
-        di = DatasetInstance.create(
-            request.user,
+        di = Asset.create(
             cdii.dataset,
             cdii.parent_instance,
             cdii.name,
@@ -210,20 +328,25 @@ class DatasetInstanceViewSet(viewsets.ModelViewSet):
             cdii.locations,
             loader = cdii.loader,
             src_dsi_paths = cdii.src_dsi_paths,
-            application_id = cdii.application_id,
+            application = cdii.application,
             application_args = cdii.application_args,
         )
 
-        response = DatasetInstanceSerializer(instance=di, context={'request': request}).data
+        response = AssetSerializer(instance=di).data
         return Response(response)
 
     @transaction.atomic
-    def destroy(self, request, pk=None):
-        this_instance = DatasetInstance.objects.get(pk=pk)
-        this_instance.soft_delete(request.user)
+    def destroy(self, request, pk=None, tenant_id_str=None):
+        try:
+            tenant_id = int(tenant_id_str)
+            check_api_permission(request, tenant_id)
+            this_instance = get_model_by_pk(Asset, pk, tenant_id)
+            this_instance.soft_delete()
 
-        response = DatasetInstanceSerializer(instance=this_instance, context={'request': request}).data
-        return Response(response)
+            response = AssetSerializer(instance=this_instance, context={'request': request}).data
+            return Response(response)
+        except PermissionDeniedException as e:
+            raise PermissionDenied({"message": e.message})
 
 
 class DataLocationViewSet(viewsets.ModelViewSet):

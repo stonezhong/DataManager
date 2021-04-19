@@ -127,6 +127,14 @@ def handle_pipeline_instance_created(pi):
         logger.info(f"handle_pipeline_instance_created: exit")
         return
 
+    # we need to generate a DM access token
+    token = AccessToken(
+        pi.pipeline.author,
+        timedelta(days=1),
+        AccessToken.Purpose.API_TOKEN,
+        tenant=pi.tenant
+    )
+
     logger.info("ALL required assets are ready!!")
     logger.info(f"triggering DAG {pi.pipeline.name}")
     pipeline_instance_id = str(pi.id).replace("-", "")
@@ -136,7 +144,9 @@ def handle_pipeline_instance_created(pi):
         f"{pi.pipeline.name}.{pipeline_id}",
         {
             "pipeline_instance_id": pipeline_instance_id,
-            "tenant_id": tenant_id
+            "tenant_id": tenant_id,
+            "dm_username": pi.pipeline.author.username,
+            "dm_token": token
         }
     )
 
@@ -179,8 +189,10 @@ def event_handler(scheduled_event):
 
     # Attach pipeline to it
     for pipeline in Pipeline.objects.filter(
-        category=scheduled_event.category
-    ).filter(retired=False, tenant=scheduled_event.tenant):
+        category=scheduled_event.category,
+        retired=False,
+        tenant=scheduled_event.tenant
+    ):
         # yes, we will attach paused pipeline, but they won't trigger
         # until the pipeline is unpaused
         pipeline_instance = PipelineInstance(
@@ -210,9 +222,10 @@ def create_pipeline_group_from_timers():
 #   for pi in "created" status, check if we can launch it
 ########################################################################################
 def handle_pipeline_instances_created():
-    for pi in PipelineInstance.objects.select_related("pipeline")\
-            .filter(pipeline__paused=False)\
-            .filter(status=PipelineInstance.CREATED_STATUS):
+    for pi in PipelineInstance.objects.select_related("pipeline").filter(
+        pipeline__paused=False,
+        status=PipelineInstance.CREATED_STATUS
+    ):
         handle_pipeline_instance_created(pi)
 
 ########################################################################################

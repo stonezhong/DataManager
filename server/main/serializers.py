@@ -1,9 +1,9 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 
-from .models import Dataset, DatasetInstance, DataLocation, Pipeline, \
+from .models import Dataset, Asset, DataLocation, Pipeline, \
     PipelineGroup, PipelineInstance, Application, Timer, ScheduledEvent, \
-    DatasetInstanceDep, DataRepo, Tenant, UserTenantSubscription
+    AssetDep, DataRepo, Tenant, UserTenantSubscription
 
 class ApplicationSerializer(serializers.ModelSerializer):
     author = serializers.ReadOnlyField(source='author.username')
@@ -11,17 +11,16 @@ class ApplicationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Application
         fields = [
-            'url',
             'id', 'tenant_id', 'name', 'description', 'author', 'team',
             'retired', 'app_location', 'sys_app_id'
         ]
 
-class NestDatasetInstanceDepSerializer(serializers.ModelSerializer):
+class NestAssetDepSerializer(serializers.ModelSerializer):
     src_dsi_path = serializers.ReadOnlyField(source='src_dsi.dsi_path')
     dst_dsi_path = serializers.ReadOnlyField(source='dst_dsi.dsi_path')
 
     class Meta:
-        model = DatasetInstanceDep
+        model = AssetDep
         fields = [
             'src_dsi_path',
             'dst_dsi_path',
@@ -44,7 +43,6 @@ class DatasetSerializer(serializers.ModelSerializer):
     class Meta:
         model = Dataset
         fields = [
-            'url',
             'id', 'tenant_id', 'name', 'major_version', 'minor_version',
             'publish_time', 'expiration_time', 'description',
             'author', 'team', 'schema', 'sample_data', 'schema_ext'
@@ -54,7 +52,6 @@ class DataRepoSerializer(serializers.ModelSerializer):
     class Meta:
         model = DataRepo
         fields = [
-            'url',
             'id', 'tenant_id', 'name', 'description', 'type', 'context'
         ]
 
@@ -62,7 +59,6 @@ class DataLocationSerializer(serializers.ModelSerializer):
     class Meta:
         model = DataLocation
         fields = [
-            'url',
             'id', 'tenant_id', 'dataset_instance', 'type', 'repo', 'location', 'size', 'offset'
         ]
 
@@ -78,7 +74,7 @@ class NestDataLocationSerializer(serializers.ModelSerializer):
             'repo', 'location', 'type', 'size', 'offset'
         ]
 
-class DatasetInstanceSerializer(serializers.ModelSerializer):
+class AssetSerializer(serializers.ModelSerializer):
     publish_time = serializers.DateTimeField(
         format='%Y-%m-%d %H:%M:%S',
         input_formats=['%Y-%m-%d %H:%M:%S']
@@ -100,9 +96,8 @@ class DatasetInstanceSerializer(serializers.ModelSerializer):
     application = ApplicationSerializer(many=False, read_only=True)
 
     class Meta:
-        model = DatasetInstance
+        model = Asset
         fields = [
-            'url',
             'id', 'tenant_id', 'dataset', 'parent_instance', 'name', 'path',
             'publish_time', 'deleted_time', 'data_time', 'revision', 'row_count', 'loader',
             'locations', 'src_dataset_instances', 'dst_dataset_instances',
@@ -116,7 +111,6 @@ class PipelineSerializer(serializers.ModelSerializer):
     class Meta:
         model = Pipeline
         fields = [
-            'url',
             'id', 'tenant_id', 'name', 'description', 'author', 'team', 'retired',
             'category', 'context', 'paused', 'version', 'dag_version'
         ]
@@ -138,7 +132,6 @@ class PipelineInstanceSerializer(serializers.ModelSerializer):
     class Meta:
         model = PipelineInstance
         fields = [
-            'url',
             'id', 'tenant_id', 'pipeline', 'group', 'context', 'status',
             'created_time', 'started_time', 'finished_time', 'failed_time',
         ]
@@ -154,7 +147,6 @@ class PipelineInstanceDetailsSerializer(serializers.ModelSerializer):
     class Meta:
         model = PipelineInstance
         fields = [
-            'url',
             'id', 'tenant_id', 'pipeline', 'group', 'context', 'status',
             'created_time', 'started_time', 'finished_time', 'failed_time',
         ]
@@ -174,7 +166,6 @@ class PipelineGroupSerializer(serializers.ModelSerializer):
     class Meta:
         model = PipelineGroup
         fields = [
-            'url',
             'id', 'tenant_id', 'name', 'created_time', 'category', 'context', 'finished', 'manual', 'due'
         ]
 
@@ -189,7 +180,6 @@ class PipelineGroupDetailsSerializer(serializers.ModelSerializer):
     class Meta:
         model = PipelineGroup
         fields = [
-            'url',
             'id', 'tenant_id', 'name', 'created_time', 'category', 'context', 'finished', 'manual',
             'pis'
         ]
@@ -212,7 +202,6 @@ class TimerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Timer
         fields = [
-            'url',
             'id', 'tenant_id', 'name', 'description', 'author', 'team',
             'paused',
             'interval_unit', 'interval_amount',
@@ -233,7 +222,6 @@ class ScheduledEventSerializer(serializers.ModelSerializer):
     class Meta:
         model = ScheduledEvent
         fields = [
-            'url',
             'id', 'tenant_id', 'timer', 'due', 'acked', 'topic', 'context', 'category'
         ]
 
@@ -241,7 +229,6 @@ class TenantSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tenant
         fields = [
-            'url',
             'id', 'name', 'description', 'is_public', 'config'
         ]
 
@@ -251,6 +238,5 @@ class UserTenantSubscriptionSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserTenantSubscription
         fields = [
-            'url',
             'id', 'user', 'tenant', 'is_admin'
         ]

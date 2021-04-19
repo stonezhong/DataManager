@@ -16,11 +16,11 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 
 from main.models import Dataset, Pipeline, PipelineGroup, PipelineInstance, \
-    Application, DatasetInstance, DataRepo, Tenant, UserTenantSubscription, \
+    Application, Asset, DataRepo, Tenant, UserTenantSubscription, \
     AccessToken, do_signup_user
 from main.serializers import PipelineSerializer, DatasetSerializer, \
     ApplicationSerializer, PipelineGroupDetailsSerializer, \
-    DatasetInstanceSerializer, DataRepoSerializer, UserTenantSubscriptionSerializer
+    AssetSerializer, DataRepoSerializer, UserTenantSubscriptionSerializer
 
 from rest_framework.renderers import JSONRenderer
 
@@ -408,10 +408,10 @@ def dataset_instance(request, tenant_id):
 
     execute_sql_app = Application.get_execute_sql_app(request.user)
 
-    dsi_list = DatasetInstance.revisions_from_dsi_path(tenant_id, dsi_path)
+    dsi_list = Asset.revisions_from_dsi_path(tenant_id, dsi_path)
     ds = dsi_list[0].dataset
 
-    dsi_list_rendered = DatasetInstanceSerializer(dsi_list, many=True, context={"request": request})
+    dsi_list_rendered = AssetSerializer(dsi_list, many=True, context={"request": request})
     ds_rendered = DatasetSerializer(ds, context={"request": request})
 
     app_context = {

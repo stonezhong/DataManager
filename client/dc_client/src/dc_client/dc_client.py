@@ -12,7 +12,7 @@ def _update_locations(locations):
 class DataCatalogClient:
     """Data Catalog Client"""
 
-    def __init__(self, url_base, auth=None):
+    def __init__(self, url_base, auth=None, dm_username=None, dm_token=None):
         """
         Parameters
         ----------
@@ -20,11 +20,24 @@ class DataCatalogClient:
             The endpoint of the API. For example, http://www.myserver.com:8080/api
         auth: tuple
             Tuple of username and password. Optional.
+        dm_username:
+            when auth is not provided, user can use "token" auth
+            this is the username who owns the auth token
+        dm_token
+            A one-time toekn for API call
         """
         self.url_base = url_base
         self.session = requests.Session()
-        if auth is not None:
+        if auth is None:
+            self.dm_username = dm_username
+            self.dm_token    = dm_token
+        else:
             self.session.auth = auth
+
+    def inject_token(self, params):
+        if self.dm_username is not None:
+            params['dm_username'] = this.dm_username
+            params['dm_token']    = this.dm_token
 
     def get_dataset(self, tenant_id, name, major_version, minor_version=None, spark=None):
         """Get dataset.
@@ -47,6 +60,8 @@ class DataCatalogClient:
             'name': name,
             'major_version': major_version,
         }
+        self.inject_token(params)
+
         if minor_version is None:
             # minor_version not specified, let's have the highest
             # minor_version at the top
@@ -96,6 +111,7 @@ class DataCatalogClient:
             'description': description,
             'team': team
         }
+        self.inject_token(data)
 
         r = self.session.post(url=url, json = data)
         r.raise_for_status()
@@ -120,6 +136,7 @@ class DataCatalogClient:
             'schema': schema,
             'sample_data': sample_data,
         }
+        self.inject_token(data)
 
         r = self.session.post(url=url, json = data)
         r.raise_for_status()
@@ -136,7 +153,9 @@ class DataCatalogClient:
         spark: placeholder, to keep the API compatible
         """
         url = "{}/Datasets/{}".format(self.url_base, id)
-        r = self.session.delete(url=url)
+        params = {}
+        self.inject_token(params)
+        r = self.session.delete(url=url, params=params)
         r.raise_for_status()
 
 
@@ -180,6 +199,7 @@ class DataCatalogClient:
             params.update({
                 "revision": revision
             })
+        self.inject_token(params)
 
         r = self.session.get(url=url, params = params)
         r.raise_for_status()
@@ -272,6 +292,7 @@ class DataCatalogClient:
         }
         if row_count is None:
             data.pop("row_count")
+        self.inject_token(data)
 
         r = self.session.post(url=url, json = data)
         r.raise_for_status()
@@ -290,7 +311,9 @@ class DataCatalogClient:
         spark: placeholder, to keep the API compatible
         """
         url = "{}/DatasetInstances/{id}".format(self.url_base)
-        r = self.session.delete(url=url)
+        params = {}
+        self.inject_token(params)
+        r = self.session.delete(url=url, params=params)
         r.raise_for_status()
 
     def get_data_repo(self, tenant_id, name, spark=None):
@@ -310,6 +333,7 @@ class DataCatalogClient:
             'tenant_id': tenant_id,
             'name': name,
         }
+        self.inject_token(params)
         r = self.session.get(url=url, params = params)
         r.raise_for_status()
 
