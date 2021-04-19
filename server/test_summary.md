@@ -25,9 +25,9 @@ Models
         Asset                               [ X ]
         AssetDep                            [ X ]
         DataLocation                        [ X ]
+        Pipeline                            [ X ] TODO, need to add unique keys
+        PipelineGroup                       [ X ]
 
-        PipelineGroup                       [ ? ]
-        Pipeline                            [ ? ]
         PipelineInstance                    [ ? ]
         Timer                               [ ? ]
         ScheduledEvent                      [ ? ]

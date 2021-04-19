@@ -280,6 +280,30 @@ class Tenant(models.Model):
         return asset
 
 
+    def create_pipeline(self, author, name, description, team, category, context):
+        if not self.is_user_subscribed(author):
+            raise PermissionDenied("User is not subscribed to the tenant")
+
+        pipeline = Pipeline(
+            tenant = self,
+            name = name,
+            description = description,
+            author = author,
+            team = team,
+            retired = False,
+            paused = True,
+            category = category,
+            context = context,
+        )
+        pipeline.save()
+        return pipeline
+
+    def get_active_pipelines(self):
+        # get all active pipelines
+        return Pipeline.objects.filter(tenant = self, retired__exact=False).all()
+
+
+
 class UserTenantSubscription(models.Model):
     id                  = models.AutoField(primary_key=True)
     user                = models.ForeignKey(User,
@@ -683,18 +707,21 @@ class PipelineGroup(models.Model):
         ]
 
     # attach bunch of pipelines to this pipeline group
-    def attach(self, pipeline_ids):
-        now = datetime.utcnow().replace(tzinfo=pytz.UTC)
+    def attach(self, pipeline):
+        if pipeline.tenant.id != self.tenant.id:
+            raise ValidationError("Invalid tenant")
 
-        for pipeline_id in pipeline_ids:
-            pi = PipelineInstance(
-                pipeline_id = pipeline_id,
-                group_id = self.id,
-                context = "{}",
-                status = PipelineInstance.CREATED_STATUS,
-                created_time = now
-            )
-            pi.save()
+        now = datetime.utcnow().replace(tzinfo=pytz.UTC)
+        pi = PipelineInstance(
+            tenant=self.tenant,
+            pipeline = pipeline,
+            group = self,
+            context = "{}",
+            status = PipelineInstance.CREATED_STATUS,
+            created_time = now
+        )
+        pi.save()
+        return pi
 
 class Pipeline(models.Model):
     id                  = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -723,30 +750,6 @@ class Pipeline(models.Model):
     dag_version         = models.IntegerField(null=False, default=0)
 
 
-    @classmethod
-    def get_active_pipelines(cls, requester):
-        # get all active datasets
-        return cls.objects.filter(retired__exact=False).all()
-
-    # create a pipeline
-    @classmethod
-    def create(cls, requester, tenant_id, name, description, team, category, context):
-        if not requester.is_authenticated:
-            raise PermissionDeniedException()
-
-        pipeline = Pipeline(
-            tenant_id = tenant_id,
-            name = name,
-            description = description,
-            author = requester,
-            team = team,
-            retired = False,
-            paused = True,
-            category = category,
-            context = context,
-        )
-        pipeline.save()
-        return pipeline
 
 class PipelineInstance(models.Model):
     # status

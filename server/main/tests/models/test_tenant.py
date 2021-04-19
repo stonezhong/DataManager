@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User
-from main.models import Tenant, Application, UserTenantSubscription, Dataset, DataRepo, Asset
+from main.models import Tenant, Application, UserTenantSubscription, Dataset, \
+    DataRepo, Asset, Pipeline
 from datetime import datetime, timedelta
 import pytz
 
@@ -360,4 +361,60 @@ class TenantTestCase3(TestCase):
         # asset not found
         asset = self.tenant.get_asset_from_path("test-name:1.0:1:asset-other:1")
         self.assertEqual(asset, None)
+
+
+class TenantTestCase4(TestCase):
+    def setUp(self):
+        # we have a tenant created
+        # we have a pipeline created
+        self.now = datetime.utcnow().replace(tzinfo=pytz.UTC)
+        self.user = User.objects.create_user(
+            username='testuser',
+            password='12345'
+        )
+        self.tenant = Tenant.create(
+            self.user,
+            "datalake name",
+            "datalake description",
+            "{}",
+            False
+        )
+
+    def test_create_pipeline(self):
+        pipeline = self.tenant.create_pipeline(
+            self.user, "foo-pipeline", "foo-pipeline-description",
+            "admins", "test-category", "{}"
+        )
+
+        # make sure dataset is created with the right attributes
+        self.assertEqual(pipeline, Pipeline.objects.get(pk=pipeline.id))
+        self.assertEqual(pipeline.tenant.id, self.tenant.id)
+        self.assertEqual(pipeline.name, "foo-pipeline")
+        self.assertEqual(pipeline.description, "foo-pipeline-description")
+        self.assertEqual(pipeline.author.id, self.user.id)
+        self.assertEqual(pipeline.team, "admins")
+        self.assertFalse(pipeline.retired)
+        self.assertEqual(pipeline.category, "test-category")
+        self.assertEqual(pipeline.context, "{}")
+        self.assertTrue(pipeline.paused)
+        self.assertEqual(pipeline.version, 1)
+        self.assertEqual(pipeline.dag_version, 0)
+
+    def test_get_active_pipelines(self):
+        pipeline1 = self.tenant.create_pipeline(
+            self.user, "foo-pipeline1", "foo-pipeline1-description",
+            "admins", "test-category", "{}"
+        )
+        pipeline2 = self.tenant.create_pipeline(
+            self.user, "foo-pipeline2", "foo-pipeline2-description",
+            "admins", "test-category", "{}"
+        )
+        pipeline1.retired=True
+        pipeline1.save()
+
+        pipelines = self.tenant.get_active_pipelines()
+        self.assertEqual(len(pipelines), 1)
+        self.assertEqual(pipelines[0].id, pipeline2.id)
+
+
 
