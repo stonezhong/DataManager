@@ -14,14 +14,17 @@ To test a given method:
 ```
 
 ```
+                                                           Coverage
+------------------------------------------------------------------------------------------------------
 Models
     main
         Tenant                              [ X ]
+
         User                                [ X ]
         UserTenantSubscription              [ X ]
         Application                         [ X ]
         DataRepo                            [ X ]
-        Dataset                             [ X ]
+        Dataset                             [ X ]          100%
         Asset                               [ X ]
         AssetDep                            [ X ]
         DataLocation                        [ X ]

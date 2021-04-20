@@ -9,4 +9,7 @@ schedule==0.6.0
 Jinja2==2.11.2
 graphviz==0.15
 cryptography==3.4.7
-# mock==4.0.3              # only install it in unit test
+
+# below is for testing only
+# mock==4.0.3
+# coverage==5.5
