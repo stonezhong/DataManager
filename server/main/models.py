@@ -302,6 +302,19 @@ class Tenant(models.Model):
         # get all active pipelines
         return Pipeline.objects.filter(tenant = self, retired__exact=False).all()
 
+    def create_pipeline_group(self, name, category, context, manual=False, due=None):
+        pipeline_group = PipelineGroup(
+            tenant = self,
+            name = name,
+            created_time = datetime.utcnow().replace(tzinfo=pytz.UTC),
+            category = category,
+            context = context,
+            finished = False,
+            manual = manual,
+            due = due
+        )
+        pipeline_group.save()
+        return pipeline_group
 
 
 class UserTenantSubscription(models.Model):
@@ -789,6 +802,8 @@ class PipelineInstance(models.Model):
     started_time        = models.DateTimeField(null=True)
     finished_time       = models.DateTimeField(null=True)
     failed_time         = models.DateTimeField(null=True)
+
+    # TODO: define unique policy
 
     # get the prior pipeline instance of the same pipeline
     # for the same schedule, same pipeline, we should invoke one at a time

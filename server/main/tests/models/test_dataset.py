@@ -7,7 +7,7 @@ from django.core.exceptions import ValidationError, PermissionDenied
 
 from main.models import Tenant, Dataset, Asset, DataRepo
 from main.api_input import CreateAssetInput
-from main.tests.models.tools import create_test_user, create_tenant, now_utc
+from main.tests.models.tools import create_test_user, create_test_tenant, now_utc
 
 LOC = CreateAssetInput._BriefLocation
 
@@ -16,9 +16,7 @@ class DatasetTestCase(TestCase):
         self.now = now_utc()
         self.user = create_test_user(name="testuser")
         self.user2 = create_test_user(name="testuser2")
-        self.tenant = create_tenant(
-            user=self.user, name="datalake name", description="datalake description"
-        )
+        self.tenant = create_test_tenant(user=self.user)
         self.tenant.subscribe_user(self.user2)
 
 
@@ -160,11 +158,7 @@ class DatasetAssetTestCase(TestCase):
     def setUp(self):
         self.now = now_utc()
         self.user = create_test_user(name="testuser")
-        self.tenant = create_tenant(
-            user=self.user,
-            name="datalake name",
-            description="datalake description"
-        )
+        self.tenant = create_test_tenant(user=self.user)
 
         self.dataset = self.tenant.create_dataset(
             "test-name", "1.0", 1, self.now,
@@ -198,11 +192,7 @@ class DatasetAssetTestCase(TestCase):
     def test_create_asset_bad_application(self):
         # Try to create asset and claim it is created by an application not belong
         # to the dataset's tenant
-        tenant2 = create_tenant(
-            user=self.user,
-            name="datalake name2",
-            description="datalake description"
-        )
+        tenant2 = create_test_tenant(user=self.user, name="DL2")
         application = tenant2.create_application(
             self.user, "fooapp", "fooapp description", "admin", "s3://bucket/name"
         )

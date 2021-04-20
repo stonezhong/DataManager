@@ -8,7 +8,7 @@ from main.models import Tenant
 def create_test_user(*, name=None):
     return User.objects.create_user(username=name, password='12345')
 
-def create_tenant(*, user=None, name=None, description=None):
+def create_test_tenant(*, user=None, name="datalake name", description="datalake description"):
     return Tenant.create(user, name, description, "{}", False)
 
 def now_utc():

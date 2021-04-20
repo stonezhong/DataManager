@@ -1,28 +1,17 @@
-from django.contrib.auth.models import User
 from main.models import Tenant, UserTenantSubscription
 
 from django.test import TestCase
 from django.db.utils import IntegrityError
 
+from main.tests.models.tools import create_test_user, create_test_tenant, now_utc
+
 class UserTenantSubscriptionTestCase(TestCase):
     def setUp(self):
-        self.user1 = User.objects.create_user(
-            username='testuser1',
-            password='12345'
-        )
-        self.user2 = User.objects.create_user(
-            username='testuser2',
-            password='12345'
-        )
+        self.user1 = create_test_user(name='testuser1')
+        self.user2 = create_test_user(name='testuser2')
 
     def test_uniqueness(self):
-        tenant = Tenant.create(
-            self.user1,
-            "datalake name",
-            "datalake description",
-            "{}",
-            False
-        )
+        tenant = create_test_tenant(user=self.user1)
 
         subscription1 = UserTenantSubscription(user = self.user2, tenant=tenant, is_admin=True)
         subscription1.save()
@@ -33,20 +22,8 @@ class UserTenantSubscriptionTestCase(TestCase):
         self.assertRegex(cm.exception.args[1], r"^Duplicate entry.*$")
 
     def test_get_subscriptions_for_user(self):
-        tenant1 = Tenant.create(
-            self.user1,
-            "datalake name1",
-            "datalake description1",
-            "{}",
-            False
-        )
-        tenant2 = Tenant.create(
-            self.user1,
-            "datalake name2",
-            "datalake description2",
-            "{}",
-            False
-        )
+        tenant1 = create_test_tenant(user=self.user1, name="DL1")
+        tenant2 = create_test_tenant(user=self.user1, name="DL2")
 
         subscriptions = UserTenantSubscription.get_subscriptions_for_user(self.user1)
         self.assertEqual(len(subscriptions), 2)
@@ -57,9 +34,3 @@ class UserTenantSubscriptionTestCase(TestCase):
         self.assertEqual(subscriptions[1].user.id, self.user1.id)
         self.assertEqual(subscriptions[1].tenant.id, tenant2.id)
         self.assertTrue(subscriptions[1].is_admin)
-
-
-
-
-
-

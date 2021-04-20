@@ -1,13 +1,14 @@
 from datetime import datetime, timedelta
 import pytz
+import mock
 
 from django.test import TestCase
 from django.core.exceptions import ValidationError, PermissionDenied
 
 from main.models import Tenant, Application, UserTenantSubscription, Dataset, \
-    DataRepo, Asset, Pipeline
+    DataRepo, Asset, Pipeline, PipelineGroup
 from main.api_input import CreateAssetInput
-from main.tests.models.tools import create_test_user, create_tenant, now_utc
+from main.tests.models.tools import create_test_user, create_test_tenant, now_utc
 
 LOC = CreateAssetInput._BriefLocation
 
@@ -62,10 +63,10 @@ class TenantTestCase2(TestCase):
         #         self.user3 subscribed to the tenant as non-admin
         self.now = now_utc()
         self.user = create_test_user(name="testuser")
-        self.tenant = create_tenant(
+        self.tenant = create_test_tenant(
             user=self.user,
-            name="datalake name",
-            description="datalake description"
+            name="DL",
+
         )
         self.user2 = create_test_user(name='testuser2')
         self.user3 = create_test_user(name='testuser3')
@@ -215,7 +216,7 @@ class TenantTestCase3(TestCase):
         # we have an asset added to the dataset
         self.now = now_utc()
         self.user = create_test_user(name='testuser',)
-        self.tenant = create_tenant(user=self.user, name="datalake name", description="datalake description")
+        self.tenant = create_test_tenant(user=self.user, name="datalake name", description="datalake description")
         self.tenant.create_data_repo("main-repo", "data-repo-description", DataRepo.RepoType.HDFS, "{}")
         self.application = self.tenant.create_application(
             self.user, "test-app", "test-app-description", "admins", "s3://data-manager-apps/test/1.0.0.0"
@@ -314,7 +315,7 @@ class TenantTestCase4(TestCase):
         # we have a pipeline created
         self.now = now_utc()
         self.user = create_test_user(name='testuser')
-        self.tenant = Tenant.create(self.user, "datalake name", "datalake description", "{}", False)
+        self.tenant = create_test_tenant(user=self.user)
 
     def test_create_pipeline(self):
         pipeline = self.tenant.create_pipeline(
@@ -362,3 +363,25 @@ class TenantTestCase4(TestCase):
         pipelines = self.tenant.get_active_pipelines()
         self.assertEqual(len(pipelines), 1)
         self.assertEqual(pipelines[0].id, pipeline2.id)
+
+    @mock.patch('main.models.datetime')
+    def test_create_pipeline_group(self, mock_dt):
+        due = self.now + timedelta(days=1)
+        mock_dt.utcnow = mock.Mock(return_value=self.now)
+
+        pipeline = self.tenant.create_pipeline(
+            self.user, "foo-pipeline", "description", "team", "category", "{}"
+        )
+        pg = self.tenant.create_pipeline_group(
+            "foo-pipeline-group", "category", '{"x": 1}', due=due
+        )
+        self.assertEqual(pg, PipelineGroup.objects.get(pk=pg.id))
+        self.assertEqual(pg.tenant.id, self.tenant.id)
+        self.assertEqual(pg.name, "foo-pipeline-group")
+        self.assertEqual(pg.created_time, self.now)
+        self.assertEqual(pg.category, "category")
+        self.assertEqual(pg.context, '{"x": 1}')
+        self.assertFalse(pg.finished)
+        self.assertFalse(pg.manual)
+        self.assertEqual(pg.due, due)
+

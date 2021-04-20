@@ -1,43 +1,26 @@
-from django.contrib.auth.models import User
-from main.models import Tenant, Application
-
 from django.test import TestCase
 from django.db.utils import IntegrityError
 
+from main.models import Tenant, Application
+from main.tests.models.tools import create_test_user, create_test_tenant
+
+
 class ApplicationTestCase(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(
-            username='testuser',
-            password='12345'
-        )
-        self.tenant = Tenant.create(
-            self.user,
-            "datalake name",
-            "datalake description",
-            "{}",
-            False
-        )
-        self.user2 = User.objects.create_user(
-            username='testuser2',
-            password='12345'
-        )
+        self.user = create_test_user(name='testuser')
+        self.tenant = Tenant.create(self.user, "datalake name", "datalake description", "{}", False)
+        self.user2 = create_test_user(name='testuser2')
         self.tenant.subscribe_user(self.user2)
 
 
     def test_uniqueness(self):
         self.tenant.create_application(
-            self.user,
-            "test-app",
-            "test-app-description",
-            "admins",
+            self.user, "test-app", "test-app-description", "admins",
             "s3://data-manager-apps/test/1.0.0.0",
         )
         with self.assertRaises(IntegrityError) as cm:
             self.tenant.create_application(
-                self.user2,
-                "test-app",
-                "test-app-description2",
-                "admins2",
+                self.user2, "test-app", "test-app-description2", "admins2",
                 "s3://data-manager-apps/test/1.0.0.1",
             )
 

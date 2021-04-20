@@ -1,22 +1,14 @@
-from django.contrib.auth.models import User
-from main.models import Tenant, DataRepo
-
 from django.test import TestCase
 from django.db.utils import IntegrityError
 
+from main.models import Tenant, DataRepo
+from main.tests.models.tools import create_test_user, create_test_tenant, now_utc
+
+
 class DataRepoTestCase(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(
-            username='testuser',
-            password='12345'
-        )
-        self.tenant = Tenant.create(
-            self.user,
-            "datalake name",
-            "datalake description",
-            "{}",
-            False
-        )
+        self.user = create_test_user(name='testuser')
+        self.tenant = create_test_tenant(user=self.user)
 
 
 
