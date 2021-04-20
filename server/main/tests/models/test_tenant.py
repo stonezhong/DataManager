@@ -1,32 +1,25 @@
-from django.contrib.auth.models import User
-from main.models import Tenant, Application, UserTenantSubscription, Dataset, \
-    DataRepo, Asset, Pipeline
 from datetime import datetime, timedelta
 import pytz
 
 from django.test import TestCase
 from django.core.exceptions import ValidationError, PermissionDenied
 
+from main.models import Tenant, Application, UserTenantSubscription, Dataset, \
+    DataRepo, Asset, Pipeline
 from main.api_input import CreateAssetInput
+from main.tests.models.tools import create_test_user, create_tenant, now_utc
+
+LOC = CreateAssetInput._BriefLocation
 
 class TenantTestCase1(TestCase):
     def setUp(self):
         # simple setup, only a user is created
-        self.now = datetime.utcnow().replace(tzinfo=pytz.UTC)
-        self.user = User.objects.create_user(
-            username='testuser',
-            password='12345'
-        )
+        self.now = now_utc()
+        self.user = create_test_user(name="testuser")
 
 
     def test_create(self):
-        tenant = Tenant.create(
-            self.user,
-            "datalake name",
-            "datalake description",
-            "{}",
-            False
-        )
+        tenant = Tenant.create(self.user, "datalake name", "datalake description", "{}", False)
 
         # make sure tenant is created with the right attributes
         self.assertEqual(tenant, Tenant.objects.get(pk=tenant.id))
@@ -60,32 +53,22 @@ class TenantTestCase1(TestCase):
         self.assertEqual(app.app_location, "s3://data-manager-apps/execute_sql/1.0.0.0")
         self.assertEqual(app.sys_app_id, Application.SysAppID.EXECUTE_SQL.value)
 
+
 class TenantTestCase2(TestCase):
     def setUp(self):
         # simple setup, we have a tenant created
         # we have self.user1 subscribed to the tenant as admin
         #         self.user2 not subscribed to the tenant
         #         self.user3 subscribed to the tenant as non-admin
-        self.now = datetime.utcnow().replace(tzinfo=pytz.UTC)
-        self.user = User.objects.create_user(
-            username='testuser',
-            password='12345'
+        self.now = now_utc()
+        self.user = create_test_user(name="testuser")
+        self.tenant = create_tenant(
+            user=self.user,
+            name="datalake name",
+            description="datalake description"
         )
-        self.tenant = Tenant.create(
-            self.user,
-            "datalake name",
-            "datalake description",
-            "{}",
-            False
-        )
-        self.user2 = User.objects.create_user(
-            username='testuser2',
-            password='12345'
-        )
-        self.user3 = User.objects.create_user(
-            username='testuser3',
-            password='12345'
-        )
+        self.user2 = create_test_user(name='testuser2')
+        self.user3 = create_test_user(name='testuser3')
         self.tenant.subscribe_user(self.user3, is_admin=False)
 
     def test_is_user_subscribed(self):
@@ -132,11 +115,7 @@ class TenantTestCase2(TestCase):
 
     def test_create_dataset(self):
         dataset = self.tenant.create_dataset(
-            "test-name", "1.0", 1,
-            self.now,
-            "test-description",
-            self.user,
-            "test-team"
+            "test-name", "1.0", 1, self.now, "test-description", self.user, "test-team"
         )
 
         # make sure dataset is created with the right attributes
@@ -156,21 +135,13 @@ class TenantTestCase2(TestCase):
     def test_create_dataset_no_permission(self):
         with self.assertRaises(PermissionDenied) as cm:
             self.tenant.create_dataset(
-                "test-name", "1.0", 1,
-                self.now,
-                "test-description",
-                self.user2,
-                "test-team"
+                "test-name", "1.0", 1, self.now, "test-description", self.user2, "test-team"
             )
         self.assertEqual(cm.exception.args[0], "User is not subscribed to the tenant")
 
     def test_get_dataset(self):
         dataset = self.tenant.create_dataset(
-            "test-name", "1.0", 1,
-            self.now,
-            "test-description",
-            self.user,
-            "test-team"
+            "test-name", "1.0", 1, self.now, "test-description", self.user, "test-team"
         )
 
         dataset_found = self.tenant.get_dataset("test-name", "1.0", 1)
@@ -187,11 +158,7 @@ class TenantTestCase2(TestCase):
 
     def test_create_application(self):
         application = self.tenant.create_application(
-            self.user,
-            "test-app",
-            "test-app-description",
-            "admins",
-            "s3://data-manager-apps/test/1.0.0.0",
+            self.user, "test-app", "test-app-description", "admins", "s3://data-manager-apps/test/1.0.0.0",
         )
         self.assertEqual(application, Application.objects.get(pk=application.id))
         self.assertEqual(application.tenant.id, self.tenant.id)
@@ -202,6 +169,13 @@ class TenantTestCase2(TestCase):
         self.assertFalse(application.retired)
         self.assertEqual(application.app_location, "s3://data-manager-apps/test/1.0.0.0")
 
+    def test_create_application_no_permission(self):
+        with self.assertRaises(PermissionDenied) as cm:
+            application = self.tenant.create_application(
+                self.user2, "test-app", "test-app-description", "admins", "s3://data-manager-apps/test/1.0.0.0",
+            )
+        self.assertEqual(cm.exception.args[0], "User is not subscribed to the tenant")
+
     def test_get_application_by_sys_app_id(self):
         execute_sql_app = self.tenant.get_application_by_sys_app_id(
             Application.SysAppID.EXECUTE_SQL
@@ -209,12 +183,20 @@ class TenantTestCase2(TestCase):
         self.assertIsNotNone(execute_sql_app)
         self.assertEqual(execute_sql_app.tenant.id, self.tenant.id)
 
+    def test_get_application_by_sys_app_id_not_found(self):
+        execute_sql_app = self.tenant.get_application_by_sys_app_id(
+            Application.SysAppID.EXECUTE_SQL
+        )
+        execute_sql_app.delete()
+
+        execute_sql_app = self.tenant.get_application_by_sys_app_id(
+            Application.SysAppID.EXECUTE_SQL
+        )
+        self.assertIsNone(execute_sql_app)
+
     def test_create_data_repo(self):
         data_repo = self.tenant.create_data_repo(
-            "data-repo-name",
-            "data-repo-description",
-            DataRepo.RepoType.HDFS,
-            "{}"
+            "data-repo-name", "data-repo-description", DataRepo.RepoType.HDFS, "{}"
         )
         self.assertEqual(data_repo, DataRepo.objects.get(pk=data_repo.id))
         self.assertEqual(data_repo.tenant.id, self.tenant.id)
@@ -231,49 +213,21 @@ class TenantTestCase3(TestCase):
         # we have a repo added to tenant
         # we have a dataset added to tenant
         # we have an asset added to the dataset
-        self.now = datetime.utcnow().replace(tzinfo=pytz.UTC)
-        self.user = User.objects.create_user(
-            username='testuser',
-            password='12345'
-        )
-        self.tenant = Tenant.create(
-            self.user,
-            "datalake name",
-            "datalake description",
-            "{}",
-            False
-        )
-        self.tenant.create_data_repo(
-            "main-repo",
-            "data-repo-description",
-            DataRepo.RepoType.HDFS,
-            "{}"
-        )
+        self.now = now_utc()
+        self.user = create_test_user(name='testuser',)
+        self.tenant = create_tenant(user=self.user, name="datalake name", description="datalake description")
+        self.tenant.create_data_repo("main-repo", "data-repo-description", DataRepo.RepoType.HDFS, "{}")
         self.application = self.tenant.create_application(
-            self.user,
-            "test-app",
-            "test-app-description",
-            "admins",
-            "s3://data-manager-apps/test/1.0.0.0",
+            self.user, "test-app", "test-app-description", "admins", "s3://data-manager-apps/test/1.0.0.0"
         )
         self.dataset = self.tenant.create_dataset(
-            "test-name", "1.0", 1,
-            self.now,
-            "test-description",
-            self.user,
-            "test-team"
+            "test-name", "1.0", 1, self.now, "test-description", self.user, "test-team"
         )
         self.other_asset = self.dataset.create_asset(
-            "asset-other", 10,
-            self.now,
-            self.now,
+            "asset-other", 10, self.now, self.now,
             [
-                CreateAssetInput._BriefLocation(
-                    "parquet", "/data/foo1.parquet", 100, "main-repo"
-                ),
-                CreateAssetInput._BriefLocation(
-                    "json", "/data/foo2.json", 150, "main-repo"
-                ),
+                LOC("parquet", "/data/foo1.parquet", 100, "main-repo"),
+                LOC("json", "/data/foo2.json", 150, "main-repo"),
             ],
             loader='{"type": "union"}',
             application=self.application,
@@ -282,10 +236,7 @@ class TenantTestCase3(TestCase):
 
     def test_get_data_repo_by_name(self):
         data_repo = self.tenant.create_data_repo(
-            "data-repo-name",
-            "data-repo-description",
-            DataRepo.RepoType.HDFS,
-            "{}"
+            "data-repo-name", "data-repo-description", DataRepo.RepoType.HDFS, "{}"
         )
 
         data_repo_found = self.tenant.get_data_repo_by_name("data-repo-name")
@@ -303,25 +254,19 @@ class TenantTestCase3(TestCase):
         # bad asset path
         with self.assertRaises(ValidationError) as cm:
             self.tenant.get_asset_revisions_from_path("foobar")
-        self.assertEqual(
-            cm.exception.args[0],
-            "Invalid asset path"
-        )
+        self.assertEqual(cm.exception.message, "Invalid asset path")
 
         # bad asset path
         with self.assertRaises(ValidationError) as cm:
             self.tenant.get_asset_revisions_from_path("test-name:1.0:a:asset-other")
-        self.assertEqual(
-            cm.exception.args[0],
-            "Invalid asset path"
-        )
+        self.assertEqual(cm.exception.message, "Invalid asset path")
 
         # dataset not found
-        ret = self.tenant.get_asset_revisions_from_path("test-nameX:1.0:0:asset-other")
+        ret = self.tenant.get_asset_revisions_from_path("test-nameX:1.0:1:asset-other")
         self.assertEqual(ret, None)
 
         # dataset instance not found
-        ret = self.tenant.get_asset_revisions_from_path("test-name:1.0:0:asset-otherX")
+        ret = self.tenant.get_asset_revisions_from_path("test-name:1.0:1:asset-otherX")
         self.assertEqual(ret, None)
 
     def test_get_asset_from_path_deleted(self):
@@ -338,17 +283,17 @@ class TenantTestCase3(TestCase):
         # bad asset path
         with self.assertRaises(ValidationError) as cm:
             self.tenant.get_asset_from_path("foobar")
-        self.assertEqual(cm.exception.args[0], "Invalid asset path")
+        self.assertEqual(cm.exception.message, "Invalid asset path")
 
         # bad asset path
         with self.assertRaises(ValidationError) as cm:
             self.tenant.get_asset_from_path("test-name:1.0:a:asset-other:0")
-        self.assertEqual(cm.exception.args[0], "Invalid asset path")
+        self.assertEqual(cm.exception.message, "Invalid asset path")
 
         # bad asset path
         with self.assertRaises(ValidationError) as cm:
             self.tenant.get_asset_from_path("test-name:1.0:1:asset-other:a")
-        self.assertEqual(cm.exception.args[0], "Invalid asset path")
+        self.assertEqual(cm.exception.message, "Invalid asset path")
 
         # dataset not found
         asset = self.tenant.get_asset_from_path("test-nameX:1.0:1:asset-other:0")
@@ -367,18 +312,9 @@ class TenantTestCase4(TestCase):
     def setUp(self):
         # we have a tenant created
         # we have a pipeline created
-        self.now = datetime.utcnow().replace(tzinfo=pytz.UTC)
-        self.user = User.objects.create_user(
-            username='testuser',
-            password='12345'
-        )
-        self.tenant = Tenant.create(
-            self.user,
-            "datalake name",
-            "datalake description",
-            "{}",
-            False
-        )
+        self.now = now_utc()
+        self.user = create_test_user(name='testuser')
+        self.tenant = Tenant.create(self.user, "datalake name", "datalake description", "{}", False)
 
     def test_create_pipeline(self):
         pipeline = self.tenant.create_pipeline(
@@ -400,6 +336,17 @@ class TenantTestCase4(TestCase):
         self.assertEqual(pipeline.version, 1)
         self.assertEqual(pipeline.dag_version, 0)
 
+    def test_create_pipeline_no_permission(self):
+        # user2 is not subscribed to the tenant
+        user2 = create_test_user(name="testuser2")
+        with self.assertRaises(PermissionDenied) as cm:
+            pipeline = self.tenant.create_pipeline(
+                user2, "foo-pipeline", "foo-pipeline-description",
+                "admins", "test-category", "{}"
+            )
+        self.assertEqual(cm.exception.args[0], "User is not subscribed to the tenant")
+
+
     def test_get_active_pipelines(self):
         pipeline1 = self.tenant.create_pipeline(
             self.user, "foo-pipeline1", "foo-pipeline1-description",
@@ -415,6 +362,3 @@ class TenantTestCase4(TestCase):
         pipelines = self.tenant.get_active_pipelines()
         self.assertEqual(len(pipelines), 1)
         self.assertEqual(pipelines[0].id, pipeline2.id)
-
-
-

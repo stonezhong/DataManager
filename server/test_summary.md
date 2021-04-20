@@ -18,7 +18,7 @@ To test a given method:
 ------------------------------------------------------------------------------------------------------
 Models
     main
-        Tenant                              [ X ]
+        Tenant                              [ X ]          100%
 
         User                                [ X ]
         UserTenantSubscription              [ X ]

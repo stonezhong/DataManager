@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta
 import pytz
-import mock
-from django.contrib.auth.models import User
+
 from django.test import TestCase
 from django.db.utils import IntegrityError
 from django.core.exceptions import ValidationError, PermissionDenied
@@ -160,8 +159,12 @@ class DatasetTestCase(TestCase):
 class DatasetAssetTestCase(TestCase):
     def setUp(self):
         self.now = now_utc()
-        self.user = create_test_user("testuser")
-        self.tenant = create_tenant(self.user, "datalake name", "datalake description")
+        self.user = create_test_user(name="testuser")
+        self.tenant = create_tenant(
+            user=self.user,
+            name="datalake name",
+            description="datalake description"
+        )
 
         self.dataset = self.tenant.create_dataset(
             "test-name", "1.0", 1, self.now,
@@ -189,13 +192,17 @@ class DatasetAssetTestCase(TestCase):
         self.dataset.save()
         with self.assertRaises(ValidationError) as cm:
             self.dataset.create_asset("asset-name", 10, self.now, self.now + timedelta(hours=1), [])
-        self.assertEqual(cm.exception.args[0], "Dataset is not active")
+        self.assertEqual(cm.exception.message, "Dataset is not active")
 
 
     def test_create_asset_bad_application(self):
         # Try to create asset and claim it is created by an application not belong
         # to the dataset's tenant
-        tenant2 = create_tenant(self.user,"datalake name2", "datalake description")
+        tenant2 = create_tenant(
+            user=self.user,
+            name="datalake name2",
+            description="datalake description"
+        )
         application = tenant2.create_application(
             self.user, "fooapp", "fooapp description", "admin", "s3://bucket/name"
         )
@@ -203,14 +210,14 @@ class DatasetAssetTestCase(TestCase):
             self.dataset.create_asset(
                 "asset-name", 10, self.now, self.now, [ ], application=application
             )
-        self.assertEqual(cm.exception.args[0], "Application not in the tenant")
+        self.assertEqual(cm.exception.message, "Application not in the tenant")
 
 
     def test_create_asset_no_locations(self):
         # Try to add asset to a dataset outside it life range
         with self.assertRaises(ValidationError) as cm:
             self.dataset.create_asset("asset-name", 10, self.now, self.now, [])
-        self.assertEqual(cm.exception.args[0], "No location specified")
+        self.assertEqual(cm.exception.message, "No location specified")
 
 
     def test_create_asset_bad_repo_name(self):
@@ -235,7 +242,7 @@ class DatasetAssetTestCase(TestCase):
                     "test-name:1.0:1:/asset-other1:0"   # bad asset path
                 ]
             )
-        self.assertEqual(cm.exception.args[0], "Source asset does not exist")
+        self.assertEqual(cm.exception.message, "Source asset does not exist")
 
 
     def test_create_asset_first_revision(self):
@@ -314,7 +321,7 @@ class DatasetAssetTestCase(TestCase):
                 application_args="{}"
             )
 
-        self.assertEqual(cm.exception.args[0], "Publish time is too early")
+        self.assertEqual(cm.exception.message, "Publish time is too early")
 
     def test_create_asset_second_revision_before_first_revision2(self):
         # try to re-publish asset, while the 2nd publish time is
@@ -348,7 +355,7 @@ class DatasetAssetTestCase(TestCase):
                 application_args="{}"
             )
 
-        self.assertEqual(cm.exception.args[0], "Publish time is too early")
+        self.assertEqual(cm.exception.message, "Publish time is too early")
 
     def test_create_asset_second_revision_first_deleted(self):
         # try to re-publish asset, while latest revision is already deleted
