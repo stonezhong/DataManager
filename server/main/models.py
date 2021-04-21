@@ -24,12 +24,12 @@ VALID_INTERVAL_UNITS = [
 # adjust datetime
 def adjust_time(dt, delta_unit, delta_amount):
     if delta_unit == TIME_UNIT_YEAR:
-        year, month, day, hour, minutes, second, microsecond = dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, dt.microsecond
+        year, month, day, hour, minute, second, microsecond = dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, dt.microsecond
         year += delta_amount
         return dt.tzinfo.localize(datetime(year, month, day, hour, minute, second, microsecond))
 
     if delta_unit == TIME_UNIT_MONTH:
-        year, month, day, hour, minutes, second, microsecond = dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, dt.microsecond
+        year, month, day, hour, minute, second, microsecond = dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, dt.microsecond
         x = month - 1 + delta_amount
         if x >= 0:
             year += x // 12
@@ -315,6 +315,32 @@ class Tenant(models.Model):
         )
         pipeline_group.save()
         return pipeline_group
+
+    def create_timer(self, author, name, description, team, paused,
+                     interval_unit, interval_amount,
+                     start_from, topic, context, category="", end_at=None):
+
+        if not self.is_user_subscribed(author):
+            raise PermissionDenied("User is not subscribed to the tenant")
+
+        # TODO: validate arguments
+        timer = Timer(tenant = self,
+                      name = name,
+                      description = description,
+                      author = author,
+                      team = team,
+                      paused = paused,
+                      interval_unit = interval_unit,
+                      interval_amount = interval_amount,
+                      start_from = start_from,
+                      end_at = end_at,
+                      last_due = None,
+                      topic = topic,
+                      context = context,
+                      category = category,
+                     )
+        timer.save()
+        return timer
 
 
 class UserTenantSubscription(models.Model):
@@ -857,33 +883,6 @@ class Timer(models.Model):
             ['tenant', 'name']
         ]
 
-    # create a timer
-    @classmethod
-    def create(cls, requester, tenant_id, name, description, team, paused,
-               interval_unit, interval_amount,
-               start_from, topic, context, category="", end_at=None):
-
-        if not requester.is_authenticated:
-            raise PermissionDeniedException()
-
-        # TODO: validate arguments
-        timer = Timer(tenant_id = tenant_id,
-                      name = name,
-                      description = description,
-                      author = requester,
-                      team = team,
-                      paused = paused,
-                      interval_unit = interval_unit,
-                      interval_amount = interval_amount,
-                      start_from = start_from,
-                      last_due = None,
-                      topic = topic,
-                      context = context,
-                      category = category,
-                      end_at = end_at
-                     )
-        timer.save()
-        return timer
 
     def next_due(self, dryrun=True, event_handler=None):
         # if dryrun is True, we only return the next due, but do not
@@ -916,6 +915,9 @@ class Timer(models.Model):
 
     @classmethod
     def produce_next_due(cls, topic, event_handler=None):
+        """
+        For all timers for the selected topic, get the earlist due that passed current time.
+        """
         # For now, we assume all the timer uses UTC timezone
         now = datetime.utcnow().replace(tzinfo=pytz.UTC)
 
