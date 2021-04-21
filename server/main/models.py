@@ -974,7 +974,6 @@ class AccessToken(models.Model):
     @classmethod
     def create_token(cls, user, duration, purpose, tenant=None):
         now = datetime.utcnow().replace(tzinfo=pytz.UTC)
-
         access_token = AccessToken(
             tenant = tenant,
             user = user,
@@ -997,8 +996,7 @@ class AccessToken(models.Model):
         access_tokens = AccessToken.objects.filter(content=token, user=user, purpose=purpose.value)
         if len(access_tokens) == 0:
             return False
-        if len(access_tokens) > 1:
-            raise DataCorruptionException(f"Found duplicate auth token for {user.username}")
+        assert len(access_tokens) == 1
 
         access_token = access_tokens[0]
         now = datetime.utcnow().replace(tzinfo=pytz.UTC)
@@ -1016,8 +1014,7 @@ class AccessToken(models.Model):
             else:
                 return False
 
-        # TODO: validate for other tokens
-        raise Exception("Unrecognized purpose")
+        raise ValidationError("Invalid access token purpose")
 
 
 def do_signup_user(username, password, password1, first_name, last_name, email):

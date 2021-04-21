@@ -243,7 +243,6 @@ class TimerTestCase(TestCase):
         ctx = {}
         def test_event_handler(se):
             ctx['se'] = se
-            print(se)
 
         # now timer2 should be triggered
         mock_dt.utcnow = mock.Mock(
