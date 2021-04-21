@@ -18,7 +18,7 @@ To test a given method:
 ------------------------------------------------------------------------------------------------------
 Models
     main
-        Tenant                              [ X ]          100%, missing create_timer test
+        Tenant                              [ X ]          100%
         Dataset                             [ X ]          100%
         User                                [ X ]          N/A, no test file
         Application                         [ X ]          100%
@@ -30,8 +30,7 @@ Models
         PipelineGroup                       [ X ]          100%
         Pipeline                            [ X ]          N/A, no test file
         PipelineInstance                    [ X ]          100%
-        ScheduledEvent                      [ X ]          100%, no code
+        ScheduledEvent                      [ X ]          N/A, no code
         Timer                               [ X ]          100%
-
-        AccessToken                         [ ? ]
+        AccessToken                         [ X ]          100%
 ```

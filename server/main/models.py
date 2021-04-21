@@ -829,7 +829,10 @@ class PipelineInstance(models.Model):
     finished_time       = models.DateTimeField(null=True)
     failed_time         = models.DateTimeField(null=True)
 
-    # TODO: define unique policy
+    class Meta:
+        unique_together = [
+            ['tenant', 'pipeline', 'group']
+        ]
 
     # get the prior pipeline instance of the same pipeline
     # for the same schedule, same pipeline, we should invoke one at a time
