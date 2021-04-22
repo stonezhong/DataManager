@@ -9,6 +9,7 @@ import $ from 'jquery'
 const buildUrl = require('build-url');
 
 import {get_csrf_token, get_current_user, get_tenant_id, handle_json_response} from '/common_lib'
+import { getTimers, saveTimer } from '../../apis'
 
 class SchedulersPage extends React.Component {
     state = {
@@ -16,70 +17,18 @@ class SchedulersPage extends React.Component {
     }
 
     onSave = (mode, timer) => {
-        if (mode === "new") {
-            const to_post = {
-                tenant_id       : this.props.tenant_id,
-                name            : timer.name,
-                description     : timer.description,
-                team            : timer.team,
-                paused          : timer.paused,
-                interval_unit   : timer.interval_unit,
-                interval_amount : timer.interval_amount,
-                start_from      : timer.start_from,
-                topic           : timer.topic,
-                context         : timer.context,
-                category        : timer.category,
-                end_at          : timer.end_at,
-            }
-
-            return fetch('/api/Timers/', {
-                method: 'post',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': get_csrf_token(),
-                },
-                body: JSON.stringify(to_post)
-            }).then(handle_json_response)
-        } else if (mode === "edit") {
-            const to_patch = {
-                description     : timer.description,
-                team            : timer.team,
-                paused          : timer.paused,
-                interval_unit   : timer.interval_unit,
-                interval_amount : timer.interval_amount,
-                start_from      : timer.start_from,
-                end_at          : timer.end_at,
-                topic           : timer.topic,
-                context         : timer.context,
-                category        : timer.category,
-            }
-
-            return fetch(`/api/Timers/${timer.id}/`, {
-                method: 'post',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': get_csrf_token(),
-                    'X-Data-Manager-Use-Method': 'PATCH',
-                },
-                body: JSON.stringify(to_patch)
-            }).then(handle_json_response)
-        }
+        return saveTimer(
+            get_csrf_token(),
+            this.props.tenant_id,
+            mode,
+            timer
+        ).then(() => {
+            location.reload();
+        });
     };
 
-    get_page = (offset, limit, filter={}) => {
-        const buildArgs = {
-            path: "/api/Timers/",
-            queryParams: {
-                tenant_id: this.props.tenant_id,
-                offset: offset,
-                limit : limit,
-                topic: 'pipeline',
-            }
-        };
-        const url = buildUrl('', buildArgs);
-        return fetch(url).then(handle_json_response);
-
-    };
+    get_page = (offset, limit, filter={}) => getTimers(
+        this.props.tenant_id, offset, limit);
 
     render() {
         return (

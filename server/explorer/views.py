@@ -10,17 +10,17 @@ from django.contrib.auth import logout as do_logout, \
 from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction
 from django.urls import reverse
-from django.http import HttpResponse, HttpResponseForbidden
+from django.http import HttpResponse, HttpResponseForbidden, Http404
 from django.contrib.auth.models import User
 
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 
 from main.models import Dataset, Pipeline, PipelineGroup, PipelineInstance, \
-    Application, DatasetInstance, DataRepo, Tenant, UserTenantSubscription, \
+    Application, Asset, DataRepo, Tenant, UserTenantSubscription, \
     AccessToken, do_signup_user
 from main.serializers import PipelineSerializer, DatasetSerializer, \
     ApplicationSerializer, PipelineGroupDetailsSerializer, \
-    DatasetInstanceSerializer, DataRepoSerializer, UserTenantSubscriptionSerializer
+    AssetSerializer, DataRepoSerializer, UserTenantSubscriptionSerializer
 
 from rest_framework.renderers import JSONRenderer
 
@@ -30,13 +30,15 @@ import explorer.airflow_lib as airflow_lib
 import jinja2
 from graphviz import Digraph
 
-from email_tools import send_signup_validate_email
+from tools.email_tools import send_signup_validate_email
+from tools.view_tools import get_model_by_pk, tenant_access_check_for_ui
 
 def get_app_config():
     config = {
         'AIRFLOW_BASE_URL': settings.AIRFLOW_BASE_URL
     }
     return json.dumps(config)
+
 
 # test page is for testing UI components
 def test(request):
@@ -67,6 +69,7 @@ def index(request):
 def datasets(request, tenant_id):
     if not request.user.is_authenticated:
         return redirect(reverse('login'))
+    tenant_access_check_for_ui(request, tenant_id)
 
     return render(
         request,
@@ -89,7 +92,7 @@ def dataset(request, tenant_id):
 
     dataset_id = request.GET['id']
 
-    dataset = Dataset.objects.get(pk=dataset_id)
+    dataset = get_model_by_pk(Dataset, dataset_id, tenant_id)
     s = DatasetSerializer(dataset, context={"request": request})
 
     app_context = {
@@ -114,7 +117,7 @@ def dataset(request, tenant_id):
 
 def logout(request):
     do_logout(request)
-    return HttpResponseRedirect(f'/explorer/login')
+    return HttpResponseRedirect(reverse('login'))
 
 
 def login(request):
@@ -140,7 +143,7 @@ def login(request):
         user = do_authenticate(username=username, password=password)
         if user is not None:
             do_login(request, user)
-            return HttpResponseRedirect('/explorer/datalakes')
+            return HttpResponseRedirect(reverse('datalakes'))
         # must be wrong
         app_context = {
             'msg': "Wrong username or password!"
@@ -291,7 +294,7 @@ def pipeline(request, tenant_id):
 
     pipeline_id = request.GET['id']
 
-    pipeline = Pipeline.objects.get(pk=pipeline_id)
+    pipeline = get_model_by_pk(Pipeline, pipeline_id, tenant_id)
     s = PipelineSerializer(pipeline, context={"request": request})
 
     # Get all application referenced in this pipeline and retrun those application
@@ -333,6 +336,7 @@ def pipeline(request, tenant_id):
 def pipeline_groups(request, tenant_id):
     if not request.user.is_authenticated:
         return redirect(reverse('login'))
+    tenant_access_check_for_ui(request, tenant_id)
 
     return render(
         request,
@@ -408,10 +412,10 @@ def dataset_instance(request, tenant_id):
 
     execute_sql_app = Application.get_execute_sql_app(request.user)
 
-    dsi_list = DatasetInstance.revisions_from_dsi_path(tenant_id, dsi_path)
+    dsi_list = Asset.revisions_from_dsi_path(tenant_id, dsi_path)
     ds = dsi_list[0].dataset
 
-    dsi_list_rendered = DatasetInstanceSerializer(dsi_list, many=True, context={"request": request})
+    dsi_list_rendered = AssetSerializer(dsi_list, many=True, context={"request": request})
     ds_rendered = DatasetSerializer(ds, context={"request": request})
 
     app_context = {
@@ -462,7 +466,7 @@ def application(request, tenant_id):
 
     application_id = request.GET['id']
 
-    application = Application.objects.get(pk=application_id)
+    application = get_model_by_pk(Application, application_id, tenant_id)
     s = ApplicationSerializer(application, many=False, context={"request": request})
 
     app_context = {
@@ -510,7 +514,7 @@ def datarepo(request, tenant_id):
 
     try:
         datarepo_id = request.GET['id']
-        datarepo = DataRepo.objects.get(pk=datarepo_id)
+        datarepo = get_model_by_pk(DataRepo, datarepo_id, tenant_id)
         s = DataRepoSerializer(datarepo, many=False, context={"request": request})
 
         app_context = {

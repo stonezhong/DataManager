@@ -12,7 +12,7 @@ import {PageHeader} from '/components/generic/page_tools'
 
 import $ from 'jquery'
 const buildUrl = require('build-url');
-import {saveTenant} from '/apis'
+import {saveTenant, getUserTenantSubscriptions} from '/apis'
 
 import {get_csrf_token, get_current_user, handle_json_response} from '/common_lib'
 
@@ -27,17 +27,9 @@ class DatalakePage extends React.Component {
         ).then(this.theSubscriptionTableRef.current.refresh)
     };
 
-    get_page = (offset, limit, filter={}) => {
-        const buildArgs = {
-            path: "/api/UserTenantSubscriptions/",
-            queryParams: {
-                offset: offset,
-                limit : limit,
-            }
-        };
-        const url = buildUrl('', buildArgs);
-        return fetch(url).then(handle_json_response);
-    };
+    get_page = (offset, limit, filter={}) => getUserTenantSubscriptions(
+        offset, limit
+    );
 
 
     render() {

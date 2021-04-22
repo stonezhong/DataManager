@@ -74,7 +74,7 @@ export function get_nav_item_role() {
         return null
 }
 
-export function pipeline_to_django_model(tenant_id, pipeline) {
+export function pipeline_to_django_model(pipeline) {
     const context = {
         type        : pipeline.type,
         dag_id      : pipeline.dag_id,
@@ -85,7 +85,6 @@ export function pipeline_to_django_model(tenant_id, pipeline) {
     };
 
     const to_post = {
-        tenant_id       : tenant_id,
         name            : pipeline.name,
         description     : pipeline.description,
         team            : pipeline.team,

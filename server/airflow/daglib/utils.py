@@ -37,6 +37,7 @@ def get_mysql_connection():
 
     conn = MySQLdb.connect(
         host    = mysql_cfg['server'],
+        port    = mysql_cfg['port'],
         user    = mysql_cfg['username'],
         passwd  = mysql_cfg['password'],
         db      = mysql_cfg['db_name'],
@@ -211,38 +212,6 @@ def get_job_submitter_for_tenancy(tenant_id):
 
     raise Exception(f"{config['type']} is not supported")
 
-def get_dc_config_for_tenancy(tenant_id):
-
-    config = None
-    with get_mysql_connection() as cur:
-        cur.execute("SELECT config FROM main_tenant WHERE id='%s'" % (tenant_id))
-        for row in cur:
-            config = json.loads(row[0])
-            break
-
-    if config is None:
-        raise Exception(f"Missing configuration for tenant {tenant_id}")
-
-    # print(json.dumps(config, indent=4))
-    if config['type'] == 'aws-emr':
-        dm_username = config['aws_emr']['dm_username']
-        dm_password = config['aws_emr']['dm_password']
-
-        dc_config = load_dm_config("dc_config.json")
-        dc_config['username'] = dm_username
-        dc_config['password'] = dm_password
-        return dc_config
-
-    if config['type'] == 'on-premise':
-        dm_username = config['on_premise']['dm_username']
-        dm_password = config['on_premise']['dm_password']
-
-        dc_config = load_dm_config("dc_config.json")
-        dc_config['username'] = dm_username
-        dc_config['password'] = dm_password
-        return dc_config
-
-    raise Exception("Don't know how to get dc config")
 
 class ExecuteTask:
     def __init__(self, task_ctx, team):
@@ -260,6 +229,9 @@ class ExecuteTask:
         log_info_with_title("Runtime config", config)
         log_info_with_title("Task context", self.task_ctx)
 
+        dm_username = config['dm_username']
+        dm_token    = config['dm_token']
+
         tenant_id = config['tenant_id']
         pipeline_instance_id = config['pipeline_instance_id']
         pipeline_group_context = get_pipeline_group_context(pipeline_instance_id)
@@ -273,7 +245,10 @@ class ExecuteTask:
 
         spark_etl_cfg = load_dmapps_config("config.json")
         dm_offline = spark_etl_cfg.get("dm_offline")
-        dc_config = get_dc_config_for_tenancy(tenant_id)
+
+        dc_config = load_dm_config("dc_config.json")
+        dc_config['dm_username'] = dm_username
+        dc_config['dm_token']    = dm_token
         print(f"dm_offline = {dm_offline}")
 
         task_spark_options = None
@@ -342,7 +317,8 @@ class ExecuteTask:
         if dm_offline:
             dcc = DataCatalogClient(
                 url_base = dc_config['url_base'],
-                auth = (dc_config['username'], dc_config['password'])
+                dm_username = dm_username,
+                dm_token = dm_token
             )
             handlers = [lambda content: dc_job_handler(content, dcc)]
         else:
@@ -395,7 +371,7 @@ def create_simple_flow_dag(tenant_id, pipeline_id, dag_id):
     update_dag_version = False
     # too bad we are not importing airflow_lib, so we are computing dag_info_filename
     dag_info_filename = os.path.join(AIRFLOW_HOME, "dags", str(tenant_id), f"{uuid.UUID(pipeline_id)}.json")
-    if not os.path.exists(dag_info_filename):
+    if True or not os.path.exists(dag_info_filename):
         create_dag_info_file(dag_info_filename, tenant_id, pipeline_id, dag_id)
         update_dag_version = True
     with open(dag_info_filename, "rt") as dag_info_f:

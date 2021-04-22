@@ -19,7 +19,7 @@ import {SimpleDialogBox} from '/components/generic/dialogbox/simple.jsx';
 import {DatasetSample, has_sample_data} from '/components/business/dataset/dataset_sample.jsx';
 
 import {get_app_context, get_csrf_token, get_current_user, get_tenant_id, handle_json_response} from '/common_lib';
-import {saveDataset} from '/apis';
+import {saveDataset, getAssets, deleteAsset} from '/apis';
 
 
 class DatasetPage extends React.Component {
@@ -34,17 +34,9 @@ class DatasetPage extends React.Component {
         dataset_instances: [],
     };
 
-    get_page = (offset, limit, filter={}) => {
-        const buildArgs = {
-            path: `/api/Datasets/${this.props.dataset.id}/children/`,
-            queryParams: {
-                offset: offset,
-                limit : limit,
-            }
-        };
-        const url = buildUrl('', buildArgs);
-        return fetch(url).then(handle_json_response);
-    };
+    get_page = (offset, limit, filter={}) => getAssets(
+        this.props.tenant_id, this.props.dataset.id, offset, limit
+    );
 
     saveDatasetAndRefresh = (mode, dataset) => {
         return saveDataset(
@@ -71,17 +63,12 @@ class DatasetPage extends React.Component {
         });
     };
 
-    onDelete = dataset_instance_id => {
-        const url = `/api/DatasetInstances/${dataset_instance_id}/`;
-        return fetch(url,{
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': get_csrf_token(),
-                }
-            }
-        ).then(handle_json_response);
-    };
+    onDelete = dataset_instance_id =>
+        deleteAsset(
+            get_csrf_token(),
+            this.props.tenant_id,
+            dataset_instance_id
+        );
 
     render() {
         return (

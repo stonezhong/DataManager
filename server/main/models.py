@@ -5,7 +5,7 @@ from enum import Enum
 from django.db import models
 from django.contrib.auth.models import User
 import pytz
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, PermissionDenied
 
 from DataCatalog.settings import TOKEN_KEY
 from cryptography.fernet import Fernet
@@ -24,12 +24,12 @@ VALID_INTERVAL_UNITS = [
 # adjust datetime
 def adjust_time(dt, delta_unit, delta_amount):
     if delta_unit == TIME_UNIT_YEAR:
-        year, month, day, hour, minutes, second, microsecond = dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, dt.microsecond
+        year, month, day, hour, minute, second, microsecond = dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, dt.microsecond
         year += delta_amount
         return dt.tzinfo.localize(datetime(year, month, day, hour, minute, second, microsecond))
 
     if delta_unit == TIME_UNIT_MONTH:
-        year, month, day, hour, minutes, second, microsecond = dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, dt.microsecond
+        year, month, day, hour, minute, second, microsecond = dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, dt.microsecond
         x = month - 1 + delta_amount
         if x >= 0:
             year += x // 12
@@ -54,7 +54,8 @@ def adjust_time(dt, delta_unit, delta_amount):
 
 
 class AppException(Exception):
-    pass
+    def __init__(self, message=""):
+        self.message = message
 
 class InvalidOperationException(AppException):
     pass
@@ -75,10 +76,7 @@ class Tenant(models.Model):
 
     # create a tenant
     @classmethod
-    def create(cls, requester, name, description, config, is_public):
-        if not requester.is_authenticated:
-            raise PermissionDeniedException()
-
+    def create(cls, creator, name, description, config, is_public):
         tenant = Tenant(
             name = name,
             description = description,
@@ -88,7 +86,7 @@ class Tenant(models.Model):
         tenant.save()
 
         user_tenant_subscription = UserTenantSubscription(
-            user = requester,
+            user = creator,
             tenant = tenant,
             is_admin = True,
         )
@@ -99,7 +97,7 @@ class Tenant(models.Model):
             tenant = tenant,
             name = "Execute SQL",
             description = "System Application for Executing SQL statements",
-            author = requester,
+            author = creator,
             team = "admins",
             retired = False,
             app_location = "s3://data-manager-apps/execute_sql/1.0.0.0",
@@ -109,14 +107,251 @@ class Tenant(models.Model):
 
         return tenant
 
+    def is_user_subscribed(self, user, admin_only=False):
+        user_tenant_subscriptions = UserTenantSubscription.objects.filter(
+            tenant=self,
+            user=user,
+        ).all()
+        if len(user_tenant_subscriptions)==0:
+            return False
+        assert len(user_tenant_subscriptions)==1
+        if not admin_only:
+            return True
+
+        return user_tenant_subscriptions[0].is_admin
+
+    def subscribe_user(self, user, is_admin=False):
+        user_tenant_subscriptions = UserTenantSubscription.objects.filter(
+            tenant=self,
+            user=user,
+        ).all()
+        if len(user_tenant_subscriptions)==0:
+            user_tenant_subscription = UserTenantSubscription(
+                user=user,
+                tenant=self,
+                is_admin=is_admin
+            )
+            user_tenant_subscription.save()
+            return
+
+        assert len(user_tenant_subscriptions)==1
+        user_tenant_subscription = user_tenant_subscriptions[0]
+        if is_admin and not user_tenant_subscription.is_admin:
+            user_tenant_subscription.is_admin = True
+            user_tenant_subscription.save()
+        return
+
+
+    def create_dataset(self, name, major_version, minor_version, publish_time, description, author, team):
+        if not self.is_user_subscribed(author):
+            raise PermissionDenied("User is not subscribed to the tenant")
+
+        dataset = Dataset(tenant = self,
+                          name = name,
+                          major_version = major_version,
+                          minor_version = minor_version,
+                          publish_time = publish_time,
+                          expiration_time = None,
+                          description = description,
+                          author = author,
+                          team = team)
+        dataset.save()
+        return dataset
+
+
+    def get_dataset(self, name, major_version, minor_version):
+        ds_list = Dataset.objects.filter(
+            tenant = self,
+            name = name,
+            major_version = major_version,
+            minor_version = minor_version
+        )
+        if len(ds_list) == 0:
+            return None
+        assert len(ds_list) == 1
+        return ds_list[0]
+
+
+    def create_application(self, author, name, description, team, app_location):
+        if not self.is_user_subscribed(author):
+            raise PermissionDenied("User is not subscribed to the tenant")
+
+        application = Application(tenant = self,
+                                  name = name,
+                                  description = description,
+                                  author = author,
+                                  team = team,
+                                  retired = False,
+                                  app_location = app_location)
+        application.save()
+        return application
+
+
+    def get_application_by_sys_app_id(self, sys_app_id):
+        applications = Application.objects.filter(
+            tenant      = self,
+            sys_app_id  = sys_app_id.value,
+            retired     = False
+        ).all()
+        if len(applications) == 0:
+            return None
+        assert len(applications) == 1
+        return applications[0]
+
+    def create_data_repo(self, name, description, type, context):
+        data_repo = DataRepo(
+            tenant = self,
+            name = name,
+            description = description,
+            type = type.value,
+            context = context
+        )
+        data_repo.save()
+        return data_repo
+
+    def get_data_repo_by_name(self, data_repo_name):
+        repos = DataRepo.objects.filter(tenant=self, name=data_repo_name)
+        if len(repos) == 0:
+            return None
+        assert len(repos)==1
+        return repos[0]
+
+
+    def get_asset_revisions_from_path(self, asset_path):
+        """
+        Return all revisions of a given asset
+        """
+        # all the asset belongs to the same dataset, having the same name, all revision
+        # if return is not None, it MUST be a non-empty list
+        segs = asset_path.split(':')
+        if len(segs) < 4:
+            raise ValidationError("Invalid asset path")
+
+        dataset_name, major_version, minor_version_str, name = segs[:4]
+        try:
+            minor_version = int(minor_version_str)
+        except ValueError:
+            raise ValidationError("Invalid asset path")
+
+        dataset = self.get_dataset(dataset_name, major_version, minor_version)
+        if dataset is None:
+            return None
+
+        asset_list = Asset.objects.filter(
+            tenant = self,
+            dataset = dataset,
+            name = name,
+        ).order_by('-revision')
+
+        if len(asset_list) == 0:
+            return None
+
+        return asset_list
+
+
+    def get_asset_from_path(self, asset_path):
+        segs = asset_path.split(':')
+        if len(segs) != 5:
+            raise ValidationError("Invalid asset path")
+
+        dataset_name, major_version, minor_version_str, name, revision_str = segs
+        try:
+            minor_version = int(minor_version_str)
+            revision = int(revision_str)
+        except ValueError:
+            raise ValidationError("Invalid asset path")
+
+        dataset = self.get_dataset(dataset_name, major_version, minor_version)
+        if dataset is None:
+            return None
+
+        assets = Asset.objects.filter(
+            tenant = self,
+            dataset = dataset,
+            name = name,
+            revision = revision,
+        )
+        if len(assets) == 0:
+            return None
+        assert len(assets)==1
+        asset = assets[0]
+        if asset.deleted_time is not None:
+            return None
+        return asset
+
+
+    def create_pipeline(self, author, name, description, team, category, context):
+        if not self.is_user_subscribed(author):
+            raise PermissionDenied("User is not subscribed to the tenant")
+
+        pipeline = Pipeline(
+            tenant = self,
+            name = name,
+            description = description,
+            author = author,
+            team = team,
+            retired = False,
+            paused = True,
+            category = category,
+            context = context,
+        )
+        pipeline.save()
+        return pipeline
+
+    def get_active_pipelines(self):
+        # get all active pipelines
+        return Pipeline.objects.filter(tenant = self, retired__exact=False).all()
+
+    def create_pipeline_group(self, name, category, context, due=None):
+        pipeline_group = PipelineGroup(
+            tenant = self,
+            name = name,
+            created_time = datetime.utcnow().replace(tzinfo=pytz.UTC),
+            category = category,
+            context = context,
+            finished = False,
+            due = due
+        )
+        pipeline_group.save()
+        return pipeline_group
+
+    def create_timer(self, author, name, description, team, paused,
+                     interval_unit, interval_amount,
+                     start_from, topic, context, category="", end_at=None):
+
+        if not self.is_user_subscribed(author):
+            raise PermissionDenied("User is not subscribed to the tenant")
+
+        # TODO: validate arguments
+        timer = Timer(tenant = self,
+                      name = name,
+                      description = description,
+                      author = author,
+                      team = team,
+                      paused = paused,
+                      interval_unit = interval_unit,
+                      interval_amount = interval_amount,
+                      start_from = start_from,
+                      end_at = end_at,
+                      last_due = None,
+                      topic = topic,
+                      context = context,
+                      category = category,
+                     )
+        timer.save()
+        return timer
+
+
 class UserTenantSubscription(models.Model):
     id                  = models.AutoField(primary_key=True)
     user                = models.ForeignKey(User,
                             on_delete = models.PROTECT,
-                            null=False)
+                            null=False,
+                            related_name='subscription')
     tenant              = models.ForeignKey(Tenant,
                             on_delete = models.PROTECT,
-                            null=False)
+                            null=False,
+                            related_name='subscription')
     is_admin            = models.BooleanField(null=False)
 
     class Meta:
@@ -126,12 +361,9 @@ class UserTenantSubscription(models.Model):
 
     # list all my subscriptions
     @classmethod
-    def list_subscribed(cls, requester):
-        if not requester.is_authenticated:
-            raise PermissionDeniedException()
-
+    def get_subscriptions_for_user(cls, user):
         subscriptions = UserTenantSubscription.objects.filter(
-            user=requester
+            user=user
         ).select_related('tenant').order_by('id')
         return subscriptions
 
@@ -162,33 +394,10 @@ class Application(models.Model):
 
     class Meta:
         unique_together = [
-            ['tenant', 'name']
+            ['tenant', 'name'],
+            ['tenant', 'sys_app_id'],
         ]
 
-    # create an application
-    @classmethod
-    def create(cls, requester, tenant_id, name, description, team, app_location):
-        if not requester.is_authenticated:
-            raise PermissionDeniedException()
-
-        application = Application(
-            tenant_id = tenant_id,
-            name = name,
-            description = description,
-            author = requester,
-            team = team,
-            retired = False,
-            app_location = app_location,
-        )
-        application.save()
-        return application
-
-    @classmethod
-    def get_execute_sql_app(cls, request):
-        apps = cls.objects.filter(sys_app_id=cls.SysAppID.EXECUTE_SQL.value)
-        if len(apps) == 0:
-            raise DataCorruptionException("Execute SQL Application is not configured")
-        return apps[0]
 
 
 
@@ -222,74 +431,38 @@ class Dataset(models.Model):
     def is_active_at(self, dt):
         return self.expiration_time is None or self.expiration_time > dt
 
-    @classmethod
-    def from_name_and_version(cls, tenant_id, name, major_version, minor_version):
-        ds_list = Dataset.objects.filter(
-            tenant_id = tenant_id,
-            name = name,
-            major_version = major_version,
-            minor_version = minor_version
-        )
-        if len(ds_list) == 0:
-            return None
-        if len(ds_list) != 1:
-            raise DataCorruptionException("Something went wrong")
-        return ds_list[0]
 
-
-    # create a dataset
-    @classmethod
-    def create(cls, requester, tenant_id, name, major_version, minor_version, publish_time,
-               description, team):
-
-        if not requester.is_authenticated:
-            raise PermissionDeniedException()
-
-        ds = Dataset(tenant_id = tenant_id,
-                     name = name,
-                     major_version = major_version,
-                     minor_version = minor_version,
-                     publish_time = publish_time,
-                     expiration_time = None,
-                     description = description,
-                     author = requester,
-                     team = team)
-        ds.save()
-        return ds
-
-    def get_children(self, requester):
+    def get_assets(self):
         """
         Return all direct child dataset instances
         Deleted dataset instance is ignored.
         """
-        return DatasetInstance.objects.filter(
+        return Asset.objects.filter(
+            tenant=self.tenant,
             dataset = self,
-            parent_instance = None,        # top level instance
             deleted_time = None            # still active
-        ).order_by('-data_time', "path").all()
+        ).order_by('-data_time', "name").all()
 
-    def get_child(self, requester, name):
+    def get_asset_by_name(self, name):
         """
         Return direct child dataset instance that match the name
         Deleted dataset instance is ignored.
         """
-        dataset_instances = DatasetInstance.objects.filter(
+        dataset_instances = Asset.objects.filter(
+            tenant=self.tenant,
             dataset = self,
-            parent_instance = None,                     # top level instance
             name = name,                                # the instance name
             deleted_time = None                         # still active
         ).order_by('-revision').all()[:1]
         if len(dataset_instances) == 0:
             return None
+        assert len(dataset_instances) == 1
         return dataset_instances[0]
 
-    def set_schema_and_sample_data(self, requester, schema, sample_data=""):
-        if not requester.is_authenticated:
-            raise PermissionDeniedException()
-
+    def set_schema_and_sample_data(self, schema, sample_data=""):
         if not schema:
             # you cannot specify blank schema
-            raise ValidationError("Wrong schema")
+            raise ValidationError("schema missing")
 
         if not self.schema:
             self.schema = schema
@@ -298,27 +471,126 @@ class Dataset(models.Model):
             return
 
         if self.schema != schema:
-            raise ValidationError("Inconsistent schema")
+            raise ValidationError("cannot change schema")
 
         if sample_data:
             self.sample_data = sample_data
         self.save()
 
 
-# We call it asset in UI
-class DatasetInstance(models.Model):
+    def create_asset(self, name, row_count, publish_time, data_time, locations,
+                     loader=None, src_dsi_paths=[], application=None,
+                     application_args=None):
+
+        if not self.is_active_at(data_time):
+            raise ValidationError("Dataset is not active")
+
+        if application is not None and application.tenant.id != self.tenant.id:
+            raise ValidationError("Application not in the tenant")
+
+        if len(locations)==0:
+            raise ValidationError("No location specified")
+
+        tenant = self.tenant
+
+        assets = Asset.objects.filter(
+            tenant=tenant,
+            dataset=self,
+            name=name,
+        ).order_by('-revision')[:1]
+        old_asset = None
+        if len(assets)>0:
+            # we are re-publishing an asset
+            assert len(assets) == 1
+
+            # You need to expire the old onw, the new one should have a bumped revision
+            old_asset = assets[0]
+
+            if len(old_asset.dst_assets) > 0:
+                raise ValidationError(message="Cannot delete an asset while there are other asset depend on it")
+
+            # re-publish should happen after the previous revision
+            if old_asset.publish_time > publish_time:
+                raise ValidationError(message="Publish time is too early")
+
+            if old_asset.deleted_time is None:
+                # still active
+                old_asset.deleted_time=publish_time
+                old_asset.save(update_fields=['deleted_time'])
+            else:
+                # old one is already deleted, re-publish should happen after that
+                if old_asset.deleted_time > publish_time:
+                    raise ValidationError(message="Publish time is too early")
+            revision = old_asset.revision + 1
+        else:
+            revision = 0
+
+        # save asset
+        asset = Asset(
+            tenant = tenant,
+            dataset = self,
+            name = name,
+            row_count = row_count,
+            loader = loader,
+            publish_time = publish_time,
+            data_time = data_time,
+            deleted_time = None,
+            application = application,
+            application_args = application_args,
+            revision = revision
+        )
+        asset.save()
+
+        repo_dict = {} # key is repo name
+        # save locations
+        for offset, location in enumerate(locations):
+            repo_name = location.repo_name
+            if repo_name is None:
+                repo = None
+            else:
+                if repo_name not in repo_dict:
+                    repo = tenant.get_data_repo_by_name(repo_name)
+                    if repo is None:
+                        raise ValidationError("Invalid repo name")
+                    repo_dict[repo_name] = repo
+                repo = repo_dict[repo_name]
+            dl = DataLocation(
+                tenant = tenant,
+                asset = asset,
+                type = location.type,
+                repo = repo,
+                location = location.location,
+                offset = offset,
+                size = location.size,
+            )
+            dl.save()
+
+        # save dependencies
+        for src_dsi_path in src_dsi_paths:
+            src_dsi = tenant.get_asset_from_path(src_dsi_path)
+            if src_dsi is None:
+                raise ValidationError(f"Source asset does not exist")
+            dsi_dep = AssetDep(
+                tenant = tenant,
+                src_dsi = src_dsi,
+                dst_dsi = asset
+            )
+            dsi_dep.save()
+
+        return asset
+
+
+class Asset(models.Model):
     id                  = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     tenant              = models.ForeignKey(Tenant, on_delete=models.PROTECT, null=False)
     dataset             = models.ForeignKey(Dataset, on_delete = models.PROTECT, null=False)       # non NULL field
-    parent_instance     = models.ForeignKey('self', on_delete = models.PROTECT, null=True)         # NULLable, if NULL, then it is a top-level instance
     name                = models.CharField(max_length=255, blank=False)                            # required
-    path                = models.CharField(max_length=255, blank=False)                            # required
     publish_time        = models.DateTimeField(blank=False, null=False)                            # non NULL field
     data_time           = models.DateTimeField(blank=False, null=False)                            # non NULL field
     deleted_time        = models.DateTimeField(null=True)                                          # NULLable, when not NULL, mean it is deleted
     revision            = models.IntegerField()
     row_count           = models.BigIntegerField(null=True)
-    # Ff loader is true, then this instance is virtual, the loeader will need to load this table
+    # If loader is true, then this asset is virtual, the loeader will need to load this table
     # loader field is a JSON object that contains loader name and loader args
     loader              = models.TextField(null=True)
 
@@ -340,22 +612,21 @@ class DatasetInstance(models.Model):
 
     class Meta:
         unique_together = [
-            ['tenant', 'dataset', 'parent_instance', 'name', 'revision'],
-            ['tenant', 'dataset', 'path', 'revision']
+            ['tenant', 'dataset', 'name', 'revision'],
         ]
 
-    # return all dataset instance path this dataset depend on (aka lead to this dataset)
+    # return all asset path this dataset depend on (aka lead to this dataset)
     @property
-    def src_dataset_instances(self):
+    def src_assets(self):
         dsi_path = []
         for dep in self.dst_dsideps.all():
             if dep.src_dsi.deleted_time is None:
                 dsi_path.append(dep.src_dsi.dsi_path)
         return dsi_path
 
-    # return all dataset instance path depend on this dataset (aka this dataset leads to)
+    # return all asset path depend on this dataset (aka this dataset leads to)
     @property
-    def dst_dataset_instances(self):
+    def dst_assets(self):
         dsi_path = []
         for dep in self.src_dsideps.all():
             if dep.dst_dsi.deleted_time is None:
@@ -364,218 +635,34 @@ class DatasetInstance(models.Model):
 
     @property
     def dsi_path(self):
-        return f"{self.dataset.name}:{self.dataset.major_version}:{self.dataset.minor_version}:{self.path}:{self.revision}"
+        return f"{self.dataset.name}:{self.dataset.major_version}:{self.dataset.minor_version}:{self.name}:{self.revision}"
 
-    @classmethod
-    def revisions_from_dsi_path(cls, tenant_id, dsi_path):
-        # all the dataset_instance belongs to the same dataset
-        # if return is not None, it MUST be a non-empty list
-        dataset_name, major_version, minor_version, path = dsi_path.split(':')[:4]
-        ds = Dataset.from_name_and_version(tenant_id, dataset_name, major_version, int(minor_version))
-        if ds is None:
-            return None
 
-        dsi_list = DatasetInstance.objects.filter(
-            tenant_id = tenant_id,
-            dataset = ds,
-            path = path,
-        ).order_by('-revision')
-
-        if len(dsi_list) == 0:
-            return None
-
-        return dsi_list
-
-    @classmethod
-    def from_dsi_path(cls, tenant_id, dsi_path):
-        dataset_name, major_version, minor_version, path, revision = dsi_path.split(':')
-        ds = Dataset.from_name_and_version(tenant_id, dataset_name, major_version, int(minor_version))
-
-        dsi_list = DatasetInstance.objects.filter(
-            tenant_id = tenant_id,
-            dataset = ds,
-            path = path,
-            revision = revision,
-        )
-        if len(dsi_list) == 0:
-            return None
-        if len(dsi_list) != 1:
-            raise DataCorruptionException("Something went wrong")
-        dsi = dsi_list[0]
-        if dsi.deleted_time is not None:
-            return None
-
-        return dsi
-
-    @classmethod
-    def create(cls, requester, dataset, parent_instance, name, row_count, publish_time,
-               data_time, locations, loader=None, src_dsi_paths=[],
-               application_id=None, application_args=None
-    ):
-        if not requester.is_authenticated:
-            raise PermissionDeniedException()
-
-        # TODO: Need finer control on who can create dataset instance for a given dataset
-
-        if not dataset.is_active_at(data_time):
-            raise InvalidOperationException("Invalid data_time")
-
-        instance_path = parent_instance.path if parent_instance is not None else ""
-
-        tenant_id = dataset.tenant.id
-
-        dis = DatasetInstance.objects.filter(
-            tenant_id = tenant_id,
-            dataset=dataset,
-            name=name,
-            parent_instance=parent_instance
-        ).order_by('-revision')[:1]
-        old_di = None
-        if len(dis)>0:
-            # we are re-publishing a dataset instance
-            assert len(dis) == 1
-
-            # You need to expire the old onw, the new one should have a bumped revision
-            old_di = dis[0]
-
-            if len(old_di.dst_dataset_instances) > 0:
-                raise InvalidOperationException("Cannot create new revision")
-
-            # re-publish should happen after the previous revision
-            if old_di.publish_time > publish_time:
-                raise InvalidOperationException("Invalid publish_time")
-
-            if old_di.deleted_time is None:
-                # still active
-                old_di.deleted_time=publish_time
-                old_di.save(update_fields=['deleted_time'])
-            else:
-                # old one is already deleted, re-publish should happen after that
-                if old_di.deleted_time > publish_time:
-                    raise InvalidOperationException("Invalid publish_time")
-            revision = old_di.revision + 1
-        else:
-            revision = 0
-
-        if application_id is None:
-            application = None
-        else:
-            application = Application.objects.get(pk=application_id)
-
-        # save data instance
-        di = DatasetInstance(
-            tenant_id = tenant_id,
-            dataset = dataset,
-            parent_instance = parent_instance,
-            name = name,
-            row_count = row_count,
-            loader = loader,
-            path = instance_path + "/" + name,
-            publish_time = publish_time,
-            data_time = data_time,
-            deleted_time = None,
-            application = application,
-            application_args = application_args,
-            revision = revision
-        )
-        di.save()
-
-        repo_dict = {} # key is repo name
-        # save locations
-        for offset, location in enumerate(locations):
-            repo_name = location.repo_name
-            if repo_name is None:
-                repo = None
-            else:
-                if repo_name not in repo_dict:
-                    repo = DataRepo.get_by_name(tenant_id, repo_name)
-                    if repo is None:
-                        raise InvalidOperationException("Invalid repo name: {}".format(repo_name))
-                    repo_dict[repo_name] = repo
-                repo = repo_dict[repo_name]
-            dl = DataLocation(
-                tenant_id = tenant_id,
-                dataset_instance = di,
-                type = location.type,
-                repo = repo,
-                location = location.location,
-                offset = offset,
-                size = location.size,
-            )
-            dl.save()
-
-        # move children belong to the old revision to the new revision
-        if old_di is not None:
-            for child in old_di.get_children(requester):
-                child.parent_instance = di
-                child.save()
-
-        # save dependencies
-        for src_dsi_path in src_dsi_paths:
-            src_dsi = DatasetInstance.from_dsi_path(tenant_id, src_dsi_path)
-            if src_dsi is None:
-                raise InvalidOperationException(f"dataset {src_dsi_path} does not exist")
-            dsi_dep = DatasetInstanceDep(
-                tenant_id = dataset.tenant_id,
-                src_dsi = src_dsi,
-                dst_dsi = di
-            )
-            dsi_dep.save()
-
-        return di
-
-    def soft_delete(self, requester):
-        if not requester.is_authenticated:
-            raise PermissionDeniedException()
-
+    def soft_delete(self):
         if self.deleted_time is not None:
-            raise InvalidOperationException("Already deleted")
+            # easy, already deleted
+            return
 
-        if len(self.dst_dataset_instances) > 0:
-            raise InvalidOperationException("Cannot delete")
+        if len(self.dst_assets) > 0:
+            # There are other dataset depend on this one
+            raise ValidationError(message="Cannot delete an asset while there are other asset depend on it")
 
         now = datetime.utcnow().replace(tzinfo=pytz.UTC)
         self.deleted_time = now
         self.save(update_fields=['deleted_time'])
 
 
-    def get_children(self, requester):
-        """
-        Return all direct child dataset instances
-        Deleted dataset instance is ignored.
-        """
-        return DatasetInstance.objects.filter(
-            dataset = self.dataset,
-            parent_instance = self,                 # self's children
-            deleted_time = None                     # still active
-        ).order_by('-data_time', 'path').all()
-
-    def get_child(self, requester, name):
-        """
-        Return direct child dataset instance that match the name
-        Deleted dataset instance is ignored.
-        """
-        dataset_instances = DatasetInstance.objects.filter(
-            dataset = self.dataset,
-            parent_instance = self,                     # self's children
-            name = name,                       # the instance name
-            deleted_time = None                         # still active
-        ).order_by('-revision').all()[:1]
-        if len(dataset_instances) == 0:
-            return None
-        return dataset_instances[0]
 
 
-
-class DatasetInstanceDep(models.Model):
+class AssetDep(models.Model):
     # each row represent src dsi generates dst dsi. (aka dst depened on src)
     id                  = models.AutoField(primary_key=True)
     tenant              = models.ForeignKey(Tenant, on_delete=models.PROTECT, null=False)
-    src_dsi             = models.ForeignKey(DatasetInstance,
+    src_dsi             = models.ForeignKey(Asset,
                                             on_delete = models.PROTECT,
                                             related_name = 'src_dsideps',
                                             null=False)       # non NULL field
-    dst_dsi             = models.ForeignKey(DatasetInstance,
+    dst_dsi             = models.ForeignKey(Asset,
                                             on_delete = models.PROTECT,
                                             related_name = 'dst_dsideps',
                                             null=False)       # non NULL field
@@ -605,35 +692,13 @@ class DataRepo(models.Model):
             ['tenant', 'name']
         ]
 
-    @classmethod
-    def get_by_name(cls, tenant_id, name):
-        repos = DataRepo.objects.filter(tenant__id=tenant_id,name=name)
-        if len(repos) == 0:
-            return None
-        return repos[0]
-
-    # create a data repo
-    @classmethod
-    def create(cls, requester, tenant_id, name, description, type, context):
-        if not requester.is_authenticated:
-            raise PermissionDeniedException()
-
-        data_repo = DataRepo(
-            tenant_id = tenant_id,
-            name = name,
-            description = description,
-            type = type,
-            context = context
-        )
-        data_repo.save()
-        return data_repo
 
 
 class DataLocation(models.Model):
     id                  = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     tenant              = models.ForeignKey(Tenant, on_delete=models.PROTECT, null=False)
-    dataset_instance    = models.ForeignKey(
-        DatasetInstance,
+    asset               = models.ForeignKey(
+        Asset,
         on_delete = models.PROTECT,
         null=False,
         related_name = 'locations'
@@ -651,6 +716,11 @@ class DataLocation(models.Model):
     # Storage size of the location, in bytes
     size                = models.BigIntegerField(null=True)
 
+    class Meta:
+        unique_together = [
+            ['tenant', 'asset', 'offset'],
+        ]
+
 class PipelineGroup(models.Model):
     # A pipeline group stores shared context for multiple interested pipelines
     # category describe the category, e.g., "daily" or "pulse-daily"
@@ -664,10 +734,8 @@ class PipelineGroup(models.Model):
     category            = models.CharField(max_length=255, blank=False)                            # required
     context             = models.TextField(blank=False)
     finished            = models.BooleanField(null=False)
-    manual              = models.BooleanField(null=False)  # is this manually created?
 
-    # only non-manual pipeline group has due, it is the due for the timer
-    due                 = models.DateTimeField(null=True)                                         # required
+    due                 = models.DateTimeField(null=False)                                         # required
 
     class Meta:
         unique_together = [
@@ -675,18 +743,21 @@ class PipelineGroup(models.Model):
         ]
 
     # attach bunch of pipelines to this pipeline group
-    def attach(self, pipeline_ids):
-        now = datetime.utcnow().replace(tzinfo=pytz.UTC)
+    def attach(self, pipeline):
+        if pipeline.tenant.id != self.tenant.id:
+            raise ValidationError("Invalid tenant")
 
-        for pipeline_id in pipeline_ids:
-            pi = PipelineInstance(
-                pipeline_id = pipeline_id,
-                group_id = self.id,
-                context = "{}",
-                status = PipelineInstance.CREATED_STATUS,
-                created_time = now
-            )
-            pi.save()
+        now = datetime.utcnow().replace(tzinfo=pytz.UTC)
+        pi = PipelineInstance(
+            tenant=self.tenant,
+            pipeline = pipeline,
+            group = self,
+            context = "{}",
+            status = PipelineInstance.CREATED_STATUS,
+            created_time = now
+        )
+        pi.save()
+        return pi
 
 class Pipeline(models.Model):
     id                  = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -715,30 +786,6 @@ class Pipeline(models.Model):
     dag_version         = models.IntegerField(null=False, default=0)
 
 
-    @classmethod
-    def get_active_pipelines(cls, requester):
-        # get all active datasets
-        return cls.objects.filter(retired__exact=False).all()
-
-    # create a pipeline
-    @classmethod
-    def create(cls, requester, tenant_id, name, description, team, category, context):
-        if not requester.is_authenticated:
-            raise PermissionDeniedException()
-
-        pipeline = Pipeline(
-            tenant_id = tenant_id,
-            name = name,
-            description = description,
-            author = requester,
-            team = team,
-            retired = False,
-            paused = True,
-            category = category,
-            context = context,
-        )
-        pipeline.save()
-        return pipeline
 
 class PipelineInstance(models.Model):
     # status
@@ -778,6 +825,11 @@ class PipelineInstance(models.Model):
     started_time        = models.DateTimeField(null=True)
     finished_time       = models.DateTimeField(null=True)
     failed_time         = models.DateTimeField(null=True)
+
+    class Meta:
+        unique_together = [
+            ['tenant', 'pipeline', 'group']
+        ]
 
     # get the prior pipeline instance of the same pipeline
     # for the same schedule, same pipeline, we should invoke one at a time
@@ -831,33 +883,6 @@ class Timer(models.Model):
             ['tenant', 'name']
         ]
 
-    # create a timer
-    @classmethod
-    def create(cls, requester, tenant_id, name, description, team, paused,
-               interval_unit, interval_amount,
-               start_from, topic, context, category="", end_at=None):
-
-        if not requester.is_authenticated:
-            raise PermissionDeniedException()
-
-        # TODO: validate arguments
-        timer = Timer(tenant_id = tenant_id,
-                      name = name,
-                      description = description,
-                      author = requester,
-                      team = team,
-                      paused = paused,
-                      interval_unit = interval_unit,
-                      interval_amount = interval_amount,
-                      start_from = start_from,
-                      last_due = None,
-                      topic = topic,
-                      context = context,
-                      category = category,
-                      end_at = end_at
-                     )
-        timer.save()
-        return timer
 
     def next_due(self, dryrun=True, event_handler=None):
         # if dryrun is True, we only return the next due, but do not
@@ -890,6 +915,9 @@ class Timer(models.Model):
 
     @classmethod
     def produce_next_due(cls, topic, event_handler=None):
+        """
+        For all timers for the selected topic, get the earlist due that passed current time.
+        """
         # For now, we assume all the timer uses UTC timezone
         now = datetime.utcnow().replace(tzinfo=pytz.UTC)
 
@@ -946,7 +974,6 @@ class AccessToken(models.Model):
     @classmethod
     def create_token(cls, user, duration, purpose, tenant=None):
         now = datetime.utcnow().replace(tzinfo=pytz.UTC)
-
         access_token = AccessToken(
             tenant = tenant,
             user = user,
@@ -969,8 +996,7 @@ class AccessToken(models.Model):
         access_tokens = AccessToken.objects.filter(content=token, user=user, purpose=purpose.value)
         if len(access_tokens) == 0:
             return False
-        if len(access_tokens) > 1:
-            raise DataCorruptionException(f"Found duplicate auth token for {user.username}")
+        assert len(access_tokens) == 1
 
         access_token = access_tokens[0]
         now = datetime.utcnow().replace(tzinfo=pytz.UTC)
@@ -982,8 +1008,13 @@ class AccessToken(models.Model):
         if purpose == AccessToken.Purpose.SIGNUP_VALIDATE:
             return True
 
-        # TODO: validate for other tokens
-        raise Exception("Unrecognized purpose")
+        if purpose == AccessToken.Purpose.API_TOKEN:
+            if access_token.tenant.id == tenant.id:
+                return True
+            else:
+                return False
+
+        raise ValidationError("Invalid access token purpose")
 
 
 def do_signup_user(username, password, password1, first_name, last_name, email):

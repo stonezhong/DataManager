@@ -15,7 +15,7 @@ import $ from 'jquery'
 const buildUrl = require('build-url');
 
 import {get_csrf_token, get_current_user, get_tenant_id, handle_json_response} from '/common_lib'
-import {saveApplication} from '/apis'
+import {saveApplication, getApplications} from '/apis'
 
 class ApplicationsPage extends React.Component {
     theTopMessageRef        = React.createRef();
@@ -31,18 +31,9 @@ class ApplicationsPage extends React.Component {
         ).then(this.theApplicationTableRef.current.refresh);
     };
 
-    get_page = (offset, limit, filter={}) => {
-        const buildArgs = {
-            path: "/api/Applications/",
-            queryParams: {
-                tenant_id: this.props.tenant_id,
-                offset: offset,
-                limit : limit,
-            }
-        };
-        const url = buildUrl('', buildArgs);
-        return fetch(url).then(handle_json_response);
-    };
+    get_page = (offset, limit, filter={}) => getApplications(
+        this.props.tenant_id, offset, limit
+    );
 
 
     render() {
