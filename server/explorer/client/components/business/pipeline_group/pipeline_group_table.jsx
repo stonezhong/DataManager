@@ -3,7 +3,6 @@ import React from 'react'
 import Button from 'react-bootstrap/Button'
 import Col from 'react-bootstrap/Col'
 import Row from 'react-bootstrap/Row'
-import Table from 'react-bootstrap/Table'
 import * as Icon from 'react-bootstrap-icons'
 
 import {PipelineGroupEditor} from '/components/business/pipeline_group/pipeline_group_editor.jsx'
@@ -20,9 +19,6 @@ import './pipeline_group.scss'
  *     get_page         : A function to get the page
  *     allowEdit        : if True, user is allowed to edit pipeline group.
  *     allowNew         : if True, user is allowed to create new pipeline group
- *     onSave           : a callback, called with user want to save or edit
- *                        a pipeline group. onSave(mode, pipeline_group) is called,
- *                        mode is either "new" or "edit"
  *
  */
 export class PipelineGroupTable extends React.Component {
@@ -60,20 +56,10 @@ export class PipelineGroupTable extends React.Component {
         name:               {display: "Name", render_data: this.render_name},
         created_time:       {display: "Created Time"},
         category:           {display: "Category"},
-        manual:             {
-            display: "Manual",
-            render_data: pipeline_group => pipeline_group.manual?"manual":"auto"
-        },
         finished:           {
             display: "Finished",
             render_data: pipeline_group => <AppIcon type={pipeline_group.finished?"checkmark":"dismiss"} className="icon24"/>
         },
-    };
-
-    onSave = (mode, pipeline_group) => {
-        return this.props.onSave(
-            mode, pipeline_group
-        ).then(this.theDataTableRef.current.refresh);
     };
 
     render() {
@@ -82,17 +68,6 @@ export class PipelineGroupTable extends React.Component {
                 <Row>
                     <Col>
                         <h1 className="c-ib">Executions</h1>
-                        {
-                            this.props.allowNew && <Button
-                                size="sm"
-                                className="c-vc ml-2"
-                                onClick={() => {
-                                    this.thePipelineGroupEditorRef.current.openDialog("new");
-                                }}
-                            >
-                                Create
-                            </Button>
-                        }
                     </Col>
                 </Row>
 
@@ -107,11 +82,6 @@ export class PipelineGroupTable extends React.Component {
                     page_size={this.props.page_size}
                     fast_step_count={10}
                     get_page={this.get_page}
-                />
-
-                <PipelineGroupEditor
-                    ref={this.thePipelineGroupEditorRef}
-                    onSave={this.onSave}
                 />
             </div>
         )

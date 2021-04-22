@@ -1,13 +1,19 @@
 const buildUrl = require('build-url');
 
-import {handle_json_response, dt_2_utc_string, pipeline_to_django_model} from '/common_lib'
+import {
+    handle_json_response,
+    dt_2_utc_string,
+    pipeline_to_django_model
+} from '/common_lib';
 
 /************************************************
  * Functions
  *     saveTenant
+ *     getUserTenantSubscriptions
  *     saveDataset
  *     getDatasets
  *     getAssets
+ *     deleteAsset
  *     getDataRepos
  *     saveDataRepo
  *     getApplications
@@ -16,6 +22,9 @@ import {handle_json_response, dt_2_utc_string, pipeline_to_django_model} from '/
  *     saveTimer
  *     getPipelines
  *     savePipeline
+ *     getPipelineGroups
+ *     savePipelineGroup
+ *     getPipelineGroup
  *
  */
 
@@ -102,6 +111,19 @@ export function saveTenant(csrf_token, mode, tenant) {
     }
 }
 
+export function getUserTenantSubscriptions(offset, limit) {
+    const buildArgs = {
+        path: `/api/UserTenantSubscriptions/`,
+        queryParams: {
+            offset: offset,
+            limit : limit,
+        }
+    };
+    const url = buildUrl('', buildArgs);
+    return fetch(url).then(handle_json_response);
+
+}
+
 export function getDatasets(tenant_id, offset, limit, {showExpired:showExpired}) {
     const buildArgs = {
         path: `/api/${tenant_id}/Datasets/`,
@@ -175,6 +197,19 @@ export function getAssets(tenant_id, dataset_id, offset, limit) {
     };
     const url = buildUrl('', buildArgs);
     return fetch(url).then(handle_json_response);
+}
+
+export function deleteAsset(csrf_token, tenant_id, asset_id) {
+    return fetch(
+        `/api/${tenant_id}/Assets/${asset_id}/`,
+        {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrf_token,
+            }
+        }
+    ).then(handle_json_response);
 }
 
 export function getDataRepos(tenant_id, offset, limit) {
@@ -398,4 +433,58 @@ export function savePipeline(csrf_token, tenant_id, mode, pipeline) {
             body: JSON.stringify(to_post)
         }).then(handle_json_response);
     }
+}
+
+export function getPipelineGroups(tenant_id, offset, limit) {
+    const buildArgs = {
+        path: `/api/${tenant_id}/PipelineGroups/`,
+        queryParams: {
+            offset: offset,
+            limit : limit,
+            retired: "False",
+            ordering: "-created_time"
+        }
+    };
+    const url = buildUrl('', buildArgs);
+    return fetch(url).then(handle_json_response);
+}
+
+export function savePipelineGroup(csrf_token, tenant_id, mode, pipeline_group) {
+    if (mode === "new") {
+        const now = dt_2_utc_string(new Date());
+        const to_post = {
+            name        : pipeline_group.name,
+            category    : pipeline_group.category,
+            context     : pipeline_group.context,
+            due         : pipeline_group.due,
+        };
+        return fetch(`/api/${tenant_id}/PipelineGroups/`, {
+            method: 'post',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrf_token,
+            },
+            body: JSON.stringify(to_post)
+        }).then(handle_json_response);
+    } else if (mode === "edit") {
+        const to_patch = {
+            context     : pipeline_group.context,
+            finished    : pipeline_group.finished,
+        }
+        return fetch(`/api/${tenant_id}/PipelineGroups/${pipeline_group.id}/`, {
+            method: 'post',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrf_token,
+                'X-Data-Manager-Use-Method': 'PATCH',
+            },
+            body: JSON.stringify(to_patch)
+        }).then(handle_json_response);
+    }
+}
+
+export function getPipelineGroup(tenant_id, pipeline_group_id) {
+    return fetch(
+        `/api/${tenant_id}/PipelineGroups/${pipeline_group_id}/`
+    ).then(handle_json_response);
 }

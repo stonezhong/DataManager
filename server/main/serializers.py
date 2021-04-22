@@ -166,7 +166,7 @@ class PipelineGroupSerializer(serializers.ModelSerializer):
     class Meta:
         model = PipelineGroup
         fields = [
-            'id', 'tenant_id', 'name', 'created_time', 'category', 'context', 'finished', 'manual', 'due'
+            'id', 'tenant_id', 'name', 'created_time', 'category', 'context', 'finished', 'due'
         ]
 
 class PipelineGroupDetailsSerializer(serializers.ModelSerializer):
@@ -180,7 +180,7 @@ class PipelineGroupDetailsSerializer(serializers.ModelSerializer):
     class Meta:
         model = PipelineGroup
         fields = [
-            'id', 'tenant_id', 'name', 'created_time', 'category', 'context', 'finished', 'manual',
+            'id', 'tenant_id', 'name', 'created_time', 'category', 'context', 'finished',
             'pis'
         ]
 

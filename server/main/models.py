@@ -302,7 +302,7 @@ class Tenant(models.Model):
         # get all active pipelines
         return Pipeline.objects.filter(tenant = self, retired__exact=False).all()
 
-    def create_pipeline_group(self, name, category, context, manual=False, due=None):
+    def create_pipeline_group(self, name, category, context, due=None):
         pipeline_group = PipelineGroup(
             tenant = self,
             name = name,
@@ -310,7 +310,6 @@ class Tenant(models.Model):
             category = category,
             context = context,
             finished = False,
-            manual = manual,
             due = due
         )
         pipeline_group.save()
@@ -735,10 +734,8 @@ class PipelineGroup(models.Model):
     category            = models.CharField(max_length=255, blank=False)                            # required
     context             = models.TextField(blank=False)
     finished            = models.BooleanField(null=False)
-    manual              = models.BooleanField(null=False)  # is this manually created?
 
-    # only non-manual pipeline group has due, it is the due for the timer
-    due                 = models.DateTimeField(null=True)                                         # required
+    due                 = models.DateTimeField(null=False)                                         # required
 
     class Meta:
         unique_together = [

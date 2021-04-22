@@ -336,6 +336,7 @@ def pipeline(request, tenant_id):
 def pipeline_groups(request, tenant_id):
     if not request.user.is_authenticated:
         return redirect(reverse('login'))
+    tenant_access_check_for_ui(request, tenant_id)
 
     return render(
         request,

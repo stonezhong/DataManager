@@ -31,7 +31,7 @@ django.setup()
 
 # from django.db.models import Q
 from django.db import transaction
-from main.models import PipelineInstance, Dataset, DatasetInstance, \
+from main.models import PipelineInstance, Dataset, Asset, \
     Pipeline, PipelineInstance, PipelineGroup, Timer
 import explorer.airflow_lib as airflow_lib
 
@@ -70,7 +70,7 @@ def is_dataset_instance_ready(tenant, di_path):
     ds = dss[0]
 
     # ignore the deleted instance
-    diss = DatasetInstance.objects.filter(
+    diss = Asset.objects.filter(
         path=path, dataset=ds, deleted_time=None,
         tenant=tenant
     )
@@ -181,7 +181,6 @@ def event_handler(scheduled_event):
         category=scheduled_event.category,
         context=scheduled_event.context,
         finished=False,
-        manual=False,
         due = scheduled_event.due,
     )
     pg.save()
@@ -277,7 +276,7 @@ def update_pending_pipeline_group(pg):
     logger.info(f"update_pending_pipeline_group: exit")
 
 def update_pending_pipeline_groups():
-    for pg in PipelineGroup.objects.filter(finished=False).filter(manual=False):
+    for pg in PipelineGroup.objects.filter(finished=False):
         update_pending_pipeline_group(pg)
 
 ########################################################################################

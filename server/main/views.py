@@ -15,7 +15,7 @@ from django.conf import settings
 import os
 from django.http import JsonResponse
 from rest_framework import permissions
-from rest_framework.exceptions import PermissionDenied, APIException
+from rest_framework.exceptions import PermissionDenied, APIException, ValidationError
 
 import jinja2
 import json
@@ -291,11 +291,6 @@ class AssetViewSet(APIBaseView):
             raise PermissionDenied({"message": e.message})
 
 
-class DataLocationViewSet(viewsets.ModelViewSet):
-    queryset = DataLocation.objects.all()
-    serializer_class = DataLocationSerializer
-
-
 class PipelineViewSet(APIBaseView):
     permission_classes = []
 
@@ -402,9 +397,18 @@ class PipelineViewSet(APIBaseView):
         self.do_create_dag(pipeline)
         return Response({})
 
-class PipelineGroupViewSet(viewsets.ModelViewSet):
+class PipelineGroupViewSet(APIBaseView):
+    # Support
+    #   retrieve -- default behavior
+    #   list     -- default behavior
+    #   destroy  -- not supported
+    #   update   -- not supported
+    #   create   -- not supported
+
+    permission_classes = []
+
     queryset = PipelineGroup.objects.all()
-    serializer_class = PipelineGroupSerializer
+    serializer_class = PipelineGroupDetailsSerializer
 
     filter_backends = [DjangoFilterBackend, OrderingFilter]
     filterset_fields = {
@@ -412,27 +416,16 @@ class PipelineGroupViewSet(viewsets.ModelViewSet):
     }
     ordering_fields = ['created_time']
 
-    @action(detail=True, methods=['post'])
-    def attach(self, request, pk=None):
-        pg = PipelineGroup.objects.get(pk=pk)
-        pipeline_ids = request.data['pipeline_ids']
-        pg.attach(pipeline_ids)
-        return Response({})
 
-    @action(detail=True, methods=['get'])
-    def details(self, request, pk=None):
-        pg = PipelineGroup.objects.get(pk=pk)
-        response = PipelineGroupDetailsSerializer(pg, context={"request": request}).data
-        return Response(response)
+    def destroy(self, request, tenant_id_str=None, *args, **kwargs):
+        raise ValidationError("destroy is not supported for PipelineGroup")
 
+    def update(self, request, tenant_id_str=None, *args, **kwargs):
+        raise ValidationError("update is not supported for PipelineGroup")
 
-class PipelineInstanceViewSet(viewsets.ModelViewSet):
-    queryset = PipelineInstance.objects.all()
-    serializer_class = PipelineInstanceSerializer
+    def create(self, request, tenant_id_str=None, *args, **kwargs):
+        raise ValidationError("create is not supported for PipelineGroup")
 
-    filter_backends = [DjangoFilterBackend, OrderingFilter]
-    filterset_fields = ['group']
-    ordering_fields = ['created_time']
 
 
 class ApplicationViewSet(APIBaseView):
@@ -509,14 +502,6 @@ class TimerViewSet(APIBaseView):
         )
         response = TimerSerializer(instance=timer, context={'request': request}).data
         return Response(response)
-
-class ScheduledEventViewSet(viewsets.ModelViewSet):
-    queryset = ScheduledEvent.objects.all()
-    serializer_class = ScheduledEventSerializer
-
-    filter_backends = [DjangoFilterBackend, OrderingFilter]
-    filterset_fields = ['acked']
-    ordering_fields = ['due']
 
 class DataRepoViewSet(APIBaseView):
     permission_classes = []
