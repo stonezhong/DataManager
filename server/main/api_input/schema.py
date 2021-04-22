@@ -222,9 +222,6 @@ models = {
     "create_datarepo_input":{
         "type": "object",
         "properties": {
-            "tenant_id": {
-                "type": "integer"
-            },
             "name": {
                 "type": "string"
             },
@@ -239,7 +236,7 @@ models = {
             },
         },
         "additionalProperties": False,
-        "required": ["tenant_id", "name", "description", "context", "type"]
+        "required": ["name", "description", "context", "type"]
     },
     "set_schema_and_sample_data_input": {
         "type": "object",

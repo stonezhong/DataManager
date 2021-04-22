@@ -507,6 +507,8 @@ class ScheduledEventViewSet(viewsets.ModelViewSet):
     ordering_fields = ['due']
 
 class DataRepoViewSet(viewsets.ModelViewSet):
+    permission_classes = []
+
     queryset = DataRepo.objects.all()
     serializer_class = DataRepoSerializer
 
@@ -517,17 +519,17 @@ class DataRepoViewSet(viewsets.ModelViewSet):
     }
 
     @transaction.atomic
-    def create(self, request):
+    def create(self, request, tenant_id_str=None):
         """
         Create a DataRepo
         """
+        tenant_id = int(tenant_id_str)
+        user, tenant = check_api_permission(request, tenant_id)
 
         data = request.data
-        create_datarepo_input = CreateDataRepoInput.from_json(data)
+        create_datarepo_input = CreateDataRepoInput.from_json(data, tenant_id)
 
-        data_repo = DataRepo.create(
-            request.user,
-            create_datarepo_input.tenant_id,
+        data_repo = tenant.create_data_repo(
             create_datarepo_input.name,
             create_datarepo_input.description,
             create_datarepo_input.type,

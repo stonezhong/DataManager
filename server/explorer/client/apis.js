@@ -7,6 +7,8 @@ import {handle_json_response, dt_2_utc_string, pipeline_to_django_model} from '/
  *     saveDataset
  *     getDatasets
  *     getAssets
+ *     getDataRepos
+ *     saveDataRepo
  */
 
 export function saveApplication(csrf_token, tenant_id, mode, application) {
@@ -131,46 +133,6 @@ export function retirePipeline(csrf_token, pipeline_id) {
     }).then(handle_json_response)
 }
 
-export function saveDataRepo(csrf_token, tenant_id, mode, datarepo) {
-    // csrf_token: as name indicates
-    // if mode is "new", we want to create a new data repo
-    // if mode is "edit", we want patch an existing data repo
-    if (mode === "new") {
-        // for new application, you do not need to pass "retired" -- it is false
-        const to_post = {
-            tenant_id       : tenant_id,
-            name            : datarepo.name,
-            description     : datarepo.description,
-            type            : datarepo.type,
-            context         : datarepo.context,
-        }
-
-        return fetch('/api/DataRepos/', {
-            method: 'post',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': csrf_token,
-            },
-            body: JSON.stringify(to_post)
-        }).then(handle_json_response)
-    } else if (mode === "edit") {
-        // change repo name is not allowed
-        const to_patch = {
-            description     : datarepo.description,
-            type            : datarepo.type,
-            context         : datarepo.context,
-        }
-        return fetch(`/api/DataRepos/${datarepo.id}/`, {
-            method: 'post',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': csrf_token,
-                'X-Data-Manager-Use-Method': 'PATCH',
-            },
-            body: JSON.stringify(to_patch)
-        }).then(handle_json_response)
-    }
-}
 
 export function saveTenant(csrf_token, mode, tenant) {
     // csrf_token: as name indicates
@@ -286,4 +248,56 @@ export function getAssets(tenant_id, dataset_id, offset, limit) {
     };
     const url = buildUrl('', buildArgs);
     return fetch(url).then(handle_json_response);
+}
+
+export function getDataRepos(tenant_id, offset, limit) {
+    const buildArgs = {
+        path: `/api/${tenant_id}/DataRepos/`,
+        queryParams: {
+            offset: offset,
+            limit : limit,
+        }
+    };
+    const url = buildUrl('', buildArgs);
+    return fetch(url).then(handle_json_response);
+}
+
+export function saveDataRepo(csrf_token, tenant_id, mode, datarepo) {
+    // csrf_token: as name indicates
+    // if mode is "new", we want to create a new data repo
+    // if mode is "edit", we want patch an existing data repo
+    if (mode === "new") {
+        // for new application, you do not need to pass "retired" -- it is false
+        const to_post = {
+            name            : datarepo.name,
+            description     : datarepo.description,
+            type            : datarepo.type,
+            context         : datarepo.context,
+        }
+
+        return fetch(`/api/${tenant_id}/DataRepos/`, {
+            method: 'post',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrf_token,
+            },
+            body: JSON.stringify(to_post)
+        }).then(handle_json_response)
+    } else if (mode === "edit") {
+        // change repo name is not allowed
+        const to_patch = {
+            description     : datarepo.description,
+            type            : datarepo.type,
+            context         : datarepo.context,
+        }
+        return fetch(`/api/${tenant_id}/DataRepos/${datarepo.id}/`, {
+            method: 'post',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrf_token,
+                'X-Data-Manager-Use-Method': 'PATCH',
+            },
+            body: JSON.stringify(to_patch)
+        }).then(handle_json_response)
+    }
 }

@@ -43,6 +43,8 @@ UI测试
     [ X ]   Data Lake Page
     [ X ]   Datasets Page
     [ X ]   Dataset Page
+    [ ? ]   DataRepo Page
+    [ ? ]   Application Page
 ```
 
 API测试
@@ -51,4 +53,7 @@ API测试
     [ X ]   /api/Tenants
     [ X ]   /api/<?>/Datasets
     [ X ]   /api/<?>/Assets
+    [ X ]   /api/<?>/Applications
+    [ X ]   /api/<?>/DataRepos
+
 ```
