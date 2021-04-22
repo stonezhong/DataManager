@@ -8,7 +8,6 @@ urlpatterns = [
     path('signup', views.signup, name='signup'),
     path('signup-validate', views.signup_validate, name='signup-validate'),
     path('datalakes', views.datalakes, name='datalakes'),
-
     path('<int:tenant_id>/datasets', views.datasets, name='datasets'),
     path('<int:tenant_id>/dataset', views.dataset, name='dataset'),
     path('<int:tenant_id>/pipelines', views.pipelines, name='pipelines'),

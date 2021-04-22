@@ -430,6 +430,8 @@ class PipelineInstanceViewSet(viewsets.ModelViewSet):
     ordering_fields = ['created_time']
 
 class ApplicationViewSet(viewsets.ModelViewSet):
+    permission_classes = []
+
     queryset = Application.objects.all()
     serializer_class = ApplicationSerializer
     filter_backends = [DjangoFilterBackend, OrderingFilter]
@@ -441,17 +443,18 @@ class ApplicationViewSet(viewsets.ModelViewSet):
     ordering_fields = ['name']
 
     @transaction.atomic
-    def create(self, request):
+    def create(self, request, tenant_id_str=None):
         """
         Create an Application
         """
+        tenant_id = int(tenant_id_str)
+        user, tenant = check_api_permission(request, tenant_id)
 
         data = request.data
         create_application_input = CreateApplicationInput.from_json(data)
 
-        app = Application.create(
-            request.user,
-            create_application_input.tenant_id,
+        app = tenant.create_application(
+            user,
             create_application_input.name,
             create_application_input.description,
             create_application_input.team,

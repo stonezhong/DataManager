@@ -152,9 +152,6 @@ models = {
     "create_application_input":{
         "type": "object",
         "properties": {
-            "tenant_id": {
-                "type": "integer"
-            },
             "name": {
                 "type": "string"
             },
@@ -169,7 +166,7 @@ models = {
             },
         },
         "additionalProperties": False,
-        "required": ["tenant_id", "name", "description", "team", "app_location"]
+        "required": ["name", "description", "team", "app_location"]
     },
     "create_timer_input": {
         "type": "object",
