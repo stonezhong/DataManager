@@ -98,9 +98,9 @@ class AssetSerializer(serializers.ModelSerializer):
     class Meta:
         model = Asset
         fields = [
-            'id', 'tenant_id', 'dataset', 'parent_instance', 'name', 'path',
+            'id', 'tenant_id', 'dataset', 'name',
             'publish_time', 'deleted_time', 'data_time', 'revision', 'row_count', 'loader',
-            'locations', 'src_dataset_instances', 'dst_dataset_instances',
+            'locations', 'src_assets', 'dst_assets',
             'application', 'application_args'
         ]
 

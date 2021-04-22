@@ -34,3 +34,21 @@ Models
         Timer                               [ X ]          100%
         AccessToken                         [ X ]          100%
 ```
+
+UI测试
+```
+    [ X ]   Login Page
+    [ X ]   Sign Up Page
+    [ X ]   Logoff Page
+    [ X ]   Data Lake Page
+    [ X ]   Datasets Page
+    [ X ]   Dataset Page
+```
+
+API测试
+```
+    [ X ]   /api/UserTenantSubscriptions
+    [ X ]   /api/Tenants
+    [ X ]   /api/<?>/Datasets
+    [ X ]   /api/<?>/Assets
+```

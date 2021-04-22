@@ -77,12 +77,19 @@ def get_model_page_response(request, model_list, serlaizer_class):
 def check_api_permission(request, tenant_id):
     can_access = False
 
+    tenant = None
+    user = None
     if request.user.is_authenticated:
         subscriptions = UserTenantSubscription.objects.filter(
             user=request.user,
             tenant__id=tenant_id
         )
         can_access = (len(subscriptions) > 0)
+        if can_access:
+            assert len(subscriptions)==1
+            subscription = subscriptions[0]
+            tenant = subscription.tenant
+            user = request.user
     else:
         if request.method in ["GET", "DELETE"]:
             dm_username = request.GET.get('dm_username', None)
@@ -102,14 +109,21 @@ def check_api_permission(request, tenant_id):
             )
             if len(subscriptions) > 0:
                 subscription = subscriptions[0]
+                assert len(subscriptions)==1
                 can_access = AccessToken.authenticate(
                     subscription.user, dm_token,
                     AccessToken.Purpose.API_TOKEN,
                     tenant=subscription.tenant
                 )
+                if can_access:
+                    tenant = subscription.tenant
+                    user = subscription.user
 
     if not can_access:
         raise PermissionDenied({"message": f"You are not subscribed to this datalake: {tenant_id}"})
+
+    return user, tenant
+
 
 class APIBaseView(viewsets.ModelViewSet):
     # override a method from ListModeMixin
@@ -173,41 +187,6 @@ class DatasetViewSet(APIBaseView):
     }
     ordering_fields = ['name', 'major_version', 'minor_version', 'publish_time']
 
-    @action(detail=True, methods=['get'])
-    def children(self, request, pk=None, tenant_id_str=None):
-        """
-        Return all direct child dataset instances
-        Deleted dataset instance is ignored.
-        """
-        tenant_id = int(tenant_id_str)
-        check_api_permission(request, tenant_id)
-        dataset = get_model_by_pk(Dataset, pk, tenant_id)
-
-        dataset_instances = dataset.get_children()
-
-        return get_model_page_response(
-            request, dataset_instances, AssetSerializer
-        )
-
-    @action(detail=True, methods=['get'])
-    def child(self, request, pk=None, tenant_id_str=None):
-        """
-        Return direct child dataset instance that match the name
-        Deleted dataset instance is ignored.
-        """
-        tenant_id = int(tenant_id_str)
-        check_api_permission(request, tenant_id)
-        dataset = get_model_by_pk(Dataset, pk, tenant_id)
-
-        instance_name = request.GET['name']
-        dataset_instance = dataset.get_child(instance_name)
-        if dataset_instance is None:
-            raise Http404
-
-        serializer = AssetSerializer(
-            dataset_instance, many=False
-        )
-        return Response(serializer.data)
 
     @transaction.atomic
     def create(self, request, tenant_id_str=None):
@@ -219,17 +198,17 @@ class DatasetViewSet(APIBaseView):
         # TODO: Need to make sure minor version is the largest for
         #       the same dataset name and major version
         tenant_id = int(tenant_id_str)
-        check_api_permission(request, tenant_id)
+        user, tenant = check_api_permission(request, tenant_id)
 
         data = request.data
         create_dataset_input = CreateDatasetInput.from_json(data, tenant_id)
 
-        ds = Dataset.create(
-            tenant_id,
+        ds = tenant.create_dataset(
             create_dataset_input.name,
             create_dataset_input.major_version, create_dataset_input.minor_version,
             create_dataset_input.publish_time,
             create_dataset_input.description,
+            user,
             create_dataset_input.team
         )
         response = DatasetSerializer(instance=ds).data
@@ -254,73 +233,22 @@ class DatasetViewSet(APIBaseView):
         response = DatasetSerializer(instance=ds).data
         return Response(response)
 
-
-class AssetViewSet(APIBaseView):
-    permission_classes = []
-
-    queryset = Asset.objects.all()
-    serializer_class = AssetSerializer
-    filter_backends = [DjangoFilterBackend, OrderingFilter]
-    filterset_fields = {
-        'tenant_id'         : ['exact'],
-        'dataset'           : ['exact'],
-        'path'              : ['exact'],
-        'name'              : ['exact'],
-        'revision'          : ['exact'],
-    }
-
-    @action(detail=True, methods=['get'])
-    def children(self, request, pk=None, tenant_id_str=None):
-        """
-        Return all direct child dataset instances
-        Deleted dataset instance is ignored.
-        """
-        tenant_id = int(tenant_id_str)
-        check_api_permission(request, tenant_id)
-        this_instance = get_model_by_pk(Asset, pk, tenant_id)
-        dataset_instances = this_instance.get_children(request.user)
-
-        return get_model_page_response(
-            request, dataset_instances, AssetSerializer
-        )
-
-
-    @action(detail=True, methods=['get'])
-    def child(self, request, pk=None, tenant_id_str=None):
-        """
-        Return direct child dataset instance that match the name
-        Deleted dataset instance is ignored.
-        """
-        tenant_id = int(tenant_id_str)
-        check_api_permission(request, tenant_id)
-
-        this_instance = get_model_by_pk(Asset, pk, tenant_id)
-
-        instance_name = request.GET['name']
-        dataset_instance = this_instance.get_child(instance_name)
-        if dataset_instance is None:
-            raise Http404
-
-        serializer = self.get_serializer(
-            dataset_instance, many=False
-        )
-        return Response(serializer.data)
-
     @transaction.atomic
-    def create(self, request, tenant_id_str=None):
+    def create_asset(self, request, tenant_id_str=None):
         """
-        Create a dataset instance
+        Create a dataset
+        Deleted dataset instance is ignored.
         """
+
+        # TODO: Need to make sure minor version is the largest for
+        #       the same dataset name and major version
         tenant_id = int(tenant_id_str)
-        check_api_permission(request, tenant_id)
+        user, tenant = check_api_permission(request, tenant_id)
 
         data = request.data
-        # cdii stands for create_dataset_instance_input
         cdii = CreateAssetInput.from_json(data, tenant_id)
 
-        di = Asset.create(
-            cdii.dataset,
-            cdii.parent_instance,
+        asset = cdii.dataset.create_asset(
             cdii.name,
             cdii.row_count,
             cdii.publish_time,
@@ -332,14 +260,28 @@ class AssetViewSet(APIBaseView):
             application_args = cdii.application_args,
         )
 
-        response = AssetSerializer(instance=di).data
+        response = AssetSerializer(instance=asset).data
         return Response(response)
+
+class AssetViewSet(APIBaseView):
+    permission_classes = []
+
+    queryset = Asset.objects.all()
+    serializer_class = AssetSerializer
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    filterset_fields = {
+        'tenant_id'         : ['exact'],
+        'dataset'           : ['exact'],
+        'name'              : ['exact'],
+        'revision'          : ['exact'],
+    }
+
 
     @transaction.atomic
     def destroy(self, request, pk=None, tenant_id_str=None):
         try:
             tenant_id = int(tenant_id_str)
-            check_api_permission(request, tenant_id)
+            user, tenant = check_api_permission(request, tenant_id)
             this_instance = get_model_by_pk(Asset, pk, tenant_id)
             this_instance.soft_delete()
 

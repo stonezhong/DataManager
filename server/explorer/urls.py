@@ -3,7 +3,12 @@ from . import views
 
 urlpatterns = [
     path('', views.index, name='index'),
+    path('login', views.login, name='login'),
+    path('logout', views.logout, name='logout'),
+    path('signup', views.signup, name='signup'),
+    path('signup-validate', views.signup_validate, name='signup-validate'),
     path('datalakes', views.datalakes, name='datalakes'),
+
     path('<int:tenant_id>/datasets', views.datasets, name='datasets'),
     path('<int:tenant_id>/dataset', views.dataset, name='dataset'),
     path('<int:tenant_id>/pipelines', views.pipelines, name='pipelines'),
@@ -16,9 +21,5 @@ urlpatterns = [
     path('<int:tenant_id>/schedulers', views.schedulers, name='schedulers'),
     path('<int:tenant_id>/datarepos', views.datarepos, name='datarepos'),
     path('<int:tenant_id>/datarepo', views.datarepo, name='datarepo'),
-    path('logout', views.logout, name='logout'),
-    path('login', views.login, name='login'),
-    path('signup', views.signup, name='signup'),
-    path('signup-validate', views.signup_validate, name='signup-validate'),
     path('test', views.test, name='test'), # for testing UI components
 ]

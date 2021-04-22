@@ -19,6 +19,4 @@ def get_mordor_config_json_template(name, context={}):
     return json.loads(rendered_content)
 
 def get_log_path():
-    if os.environ.get('DM_DJANGO_TEST') == '1':
-        return os.path.expanduser("~/.dmtest/server/logs")
     return os.path.join(ENV_HOME, "logs", APP_NAME)

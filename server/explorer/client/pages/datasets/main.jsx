@@ -9,10 +9,9 @@ import Form from 'react-bootstrap/Form'
 import {PageHeader} from '/components/generic/page_tools'
 
 import $ from 'jquery'
-const buildUrl = require('build-url');
 
 import {get_csrf_token, get_current_user, get_tenant_id, handle_json_response} from '/common_lib'
-import {saveDataset} from '/apis'
+import {getDatasets, saveDataset} from '/apis'
 import {DatasetTable} from '/components/business/dataset/dataset_table.jsx'
 import {DatasetEditor} from '/components/business/dataset/dataset_editor.jsx'
 
@@ -34,22 +33,9 @@ class DatasetsPage extends React.Component {
         ).then(this.theDatasetTableRef.current.refresh);
     };
 
-    get_page = (offset, limit, filter={}) => {
-        const buildArgs = {
-            path: "/api/Datasets/",
-            queryParams: {
-                tenant_id: this.props.tenant_id,
-                offset: offset,
-                limit : limit,
-                ordering: "-publish_time",
-            }
-        };
-        if (!filter.showExpired) {
-            buildArgs.queryParams.expiration_time__isnull="True"
-        }
-        const url = buildUrl('', buildArgs);
-        return fetch(url).then(handle_json_response);
-    };
+    get_page = (offset, limit, filter={}) => getDatasets(
+        this.props.tenant_id, offset, limit, {showExpired: filter.showExpired}
+    );
 
     render() {
         return (

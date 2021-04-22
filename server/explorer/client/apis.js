@@ -1,50 +1,13 @@
+const buildUrl = require('build-url');
+
 import {handle_json_response, dt_2_utc_string, pipeline_to_django_model} from '/common_lib'
 
-export function saveDataset(csrf_token, tenant_id, mode, dataset) {
-    // csrf_token: as name indicates
-    // if mode is "new", we want to create a new dataset
-    // if mode is "edit", we want patch an existing dataset
-    if (mode == "new") {
-        // TODO: shuold not trust client side time
-        const now = dt_2_utc_string(new Date());
-        const to_post = {
-            tenant_id       : tenant_id,
-            name            : dataset.name,
-            major_version   : dataset.major_version,
-            minor_version   : parseInt(dataset.minor_version),
-            description     : dataset.description,
-            team            : dataset.team,
-            publish_time    : now,
-        }
-
-        return fetch('/api/Datasets/', {
-            method: 'post',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': csrf_token,
-            },
-            body: JSON.stringify(to_post)
-        }).then(handle_json_response)
-    } else if (mode == 'edit') {
-        // You can only change description and team
-        const to_patch = {
-            description     : dataset.description,
-            team            : dataset.team,
-            expiration_time : (dataset.expiration_time==='')?null:dataset.expiration_time,
-            schema_ext      : dataset.schema_ext,
-        }
-
-        return fetch(`/api/Datasets/${dataset.id}/`, {
-            method: 'post',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': csrf_token,
-                'X-Data-Manager-Use-Method': 'PATCH',
-            },
-            body: JSON.stringify(to_patch)
-        }).then(handle_json_response);
-    }
-}
+/************************************************
+ * Functions
+ *     saveDataset
+ *     getDatasets
+ *     getAssets
+ */
 
 export function saveApplication(csrf_token, tenant_id, mode, application) {
     // csrf_token: as name indicates
@@ -247,4 +210,80 @@ export function saveTenant(csrf_token, mode, tenant) {
             body: JSON.stringify(to_patch)
         }).then(handle_json_response)
     }
+}
+
+// === for dataset
+export function getDatasets(tenant_id, offset, limit, {showExpired:showExpired}) {
+    const buildArgs = {
+        path: `/api/${tenant_id}/Datasets/`,
+        queryParams: {
+            offset: offset,
+            limit : limit,
+            ordering: "-publish_time",
+        }
+    };
+    if (!showExpired) {
+        buildArgs.queryParams.expiration_time__isnull="True"
+    }
+    const url = buildUrl('', buildArgs);
+    return fetch(url).then(handle_json_response);
+
+}
+
+export function saveDataset(csrf_token, tenant_id, mode, dataset) {
+    // csrf_token: as name indicates
+    // if mode is "new", we want to create a new dataset
+    // if mode is "edit", we want patch an existing dataset
+    if (mode == "new") {
+        // TODO: shuold not trust client side time
+        const now = dt_2_utc_string(new Date());
+        const to_post = {
+            name            : dataset.name,
+            major_version   : dataset.major_version,
+            minor_version   : parseInt(dataset.minor_version),
+            description     : dataset.description,
+            team            : dataset.team,
+            publish_time    : now,
+        }
+
+        return fetch(`/api/${tenant_id}/Datasets/`, {
+            method: 'post',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrf_token,
+            },
+            body: JSON.stringify(to_post)
+        }).then(handle_json_response)
+    } else if (mode == 'edit') {
+        // You can only change description and team
+        const to_patch = {
+            description     : dataset.description,
+            team            : dataset.team,
+            expiration_time : (dataset.expiration_time==='')?null:dataset.expiration_time,
+            schema_ext      : dataset.schema_ext,
+        }
+
+        return fetch(`/api/${tenant_id}/Datasets/${dataset.id}/`, {
+            method: 'post',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrf_token,
+                'X-Data-Manager-Use-Method': 'PATCH',
+            },
+            body: JSON.stringify(to_patch)
+        }).then(handle_json_response);
+    }
+}
+
+export function getAssets(tenant_id, dataset_id, offset, limit) {
+    const buildArgs = {
+        path: `/api/${tenant_id}/Assets/`,
+        queryParams: {
+            offset: offset,
+            limit : limit,
+            dataset_id: dataset_id
+        }
+    };
+    const url = buildUrl('', buildArgs);
+    return fetch(url).then(handle_json_response);
 }

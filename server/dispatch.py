@@ -137,11 +137,12 @@ def config_airflow_venv():
     db_username = mysql_cfg['username']
     db_password = mysql_cfg['password']
     db_name     = mysql_cfg['db_name']
+    db_port     = mysql_cfg['port']
 
     def handle_airflow_line(section, line):
         if section == "[core]":
             if line.startswith("sql_alchemy_conn = "):
-                l = f"sql_alchemy_conn = mysql://{db_username}:{db_password}@{db_server}:3306/{db_name}?charset=utf8mb4&binary_prefix=true"
+                l = f"sql_alchemy_conn = mysql://{db_username}:{db_password}@{db_server}:{db_port}/{db_name}?charset=utf8mb4&binary_prefix=true"
                 return l
             if line.startswith("executor = "):
                 return "executor = LocalExecutor"
