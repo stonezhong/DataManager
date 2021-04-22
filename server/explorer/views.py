@@ -30,7 +30,7 @@ import explorer.airflow_lib as airflow_lib
 import jinja2
 from graphviz import Digraph
 
-from email_tools import send_signup_validate_email
+from tools.email_tools import send_signup_validate_email
 from tools.view_tools import get_model_by_pk, tenant_access_check_for_ui
 
 def get_app_config():
