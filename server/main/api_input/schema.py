@@ -127,9 +127,6 @@ models = {
     "create_pipeline_input": {
         "type": "object",
         "properties": {
-            "tenant_id": {
-                "type": "integer"
-            },
             "name": {
                 "type": "string"
             },
@@ -147,7 +144,7 @@ models = {
             },
         },
         "additionalProperties": False,
-        "required": ["tenant_id", "name", "description", "team", "category", "context"]
+        "required": ["name", "description", "team", "category", "context"]
     },
     "create_application_input":{
         "type": "object",

@@ -43,8 +43,13 @@ UI测试
     [ X ]   Data Lake Page
     [ X ]   Datasets Page
     [ X ]   Dataset Page
+    [ X ]   DataRepos Page
     [ X ]   DataRepo Page
+    [ X ]   Applications Page
     [ X ]   Application Page
+    [ X ]   Schedulers Page
+    [ X ]   Pipelines Page
+    [ X ]   Pipeline Page
 ```
 
 API测试
@@ -55,5 +60,6 @@ API测试
     [ X ]   /api/<?>/Assets
     [ X ]   /api/<?>/Applications
     [ X ]   /api/<?>/DataRepos
-
+    [ X ]   /api/<?>/Timers
+    [ X ]   /api/<?>/Pipelines
 ```

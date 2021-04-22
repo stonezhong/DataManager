@@ -10,7 +10,7 @@ from django.contrib.auth import logout as do_logout, \
 from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction
 from django.urls import reverse
-from django.http import HttpResponse, HttpResponseForbidden
+from django.http import HttpResponse, HttpResponseForbidden, Http404
 from django.contrib.auth.models import User
 
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
@@ -31,12 +31,14 @@ import jinja2
 from graphviz import Digraph
 
 from email_tools import send_signup_validate_email
+from tools.view_tools import get_model_by_pk
 
 def get_app_config():
     config = {
         'AIRFLOW_BASE_URL': settings.AIRFLOW_BASE_URL
     }
     return json.dumps(config)
+
 
 # test page is for testing UI components
 def test(request):
@@ -89,7 +91,7 @@ def dataset(request, tenant_id):
 
     dataset_id = request.GET['id']
 
-    dataset = Dataset.objects.get(pk=dataset_id)
+    dataset = get_model_by_pk(Dataset, dataset_id, tenant_id)
     s = DatasetSerializer(dataset, context={"request": request})
 
     app_context = {
@@ -291,7 +293,7 @@ def pipeline(request, tenant_id):
 
     pipeline_id = request.GET['id']
 
-    pipeline = Pipeline.objects.get(pk=pipeline_id)
+    pipeline = get_model_by_pk(Pipeline, pipeline_id, tenant_id)
     s = PipelineSerializer(pipeline, context={"request": request})
 
     # Get all application referenced in this pipeline and retrun those application
@@ -462,7 +464,7 @@ def application(request, tenant_id):
 
     application_id = request.GET['id']
 
-    application = Application.objects.get(pk=application_id)
+    application = get_model_by_pk(Application, application_id, tenant_id)
     s = ApplicationSerializer(application, many=False, context={"request": request})
 
     app_context = {
@@ -510,7 +512,7 @@ def datarepo(request, tenant_id):
 
     try:
         datarepo_id = request.GET['id']
-        datarepo = DataRepo.objects.get(pk=datarepo_id)
+        datarepo = get_model_by_pk(DataRepo, datarepo_id, tenant_id)
         s = DataRepoSerializer(datarepo, many=False, context={"request": request})
 
         app_context = {

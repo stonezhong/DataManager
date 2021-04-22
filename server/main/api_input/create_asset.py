@@ -4,7 +4,7 @@ from django.core.exceptions import SuspiciousOperation
 from main.models import Dataset, Asset, DataLocation, Application
 import pytz
 
-from main.view_tools import get_model_by_pk
+from tools.view_tools import get_model_by_pk
 from common_tool import none_or, q
 
 class CreateAssetInput:

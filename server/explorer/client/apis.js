@@ -14,51 +14,12 @@ import {handle_json_response, dt_2_utc_string, pipeline_to_django_model} from '/
  *     saveApplication
  *     getTimers
  *     saveTimer
+ *     getPipelines
+ *     savePipeline
  *
  */
 
 
-export function savePipeline(csrf_token, tenant_id, mode, pipeline) {
-    const to_post = pipeline_to_django_model(tenant_id, pipeline);
-    if (mode == "new") {
-        return fetch('/api/Pipelines/', {
-            method: 'post',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': csrf_token,
-            },
-            body: JSON.stringify(to_post)
-        })
-            .then(handle_json_response)
-            .then(
-                pipeline_created => {
-                    if (pipeline.type == 'external') {
-                        return ;
-                    } else {
-                        // this is sequential
-                        // we will create DAG
-                        return fetch(`/api/Pipelines/${pipeline_created.id}/create_dag/`, {
-                            method: 'post',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRFToken': csrf_token,
-                            },
-                        }).then(handle_json_response);
-                    }
-                }
-            )
-    } else {
-        // we are editing an existing pipeline
-        return fetch(`/api/Pipelines/${pipeline.id}/`, {
-            method: 'put',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': csrf_token,
-            },
-            body: JSON.stringify(to_post)
-        }).then(handle_json_response);
-    }
-}
 
 export function pausePipeline(csrf_token, pipeline_id) {
     // called when user want to pause a pipeline
@@ -379,6 +340,62 @@ export function saveTimer(csrf_token, tenant_id, mode, timer) {
                 'X-Data-Manager-Use-Method': 'PATCH',
             },
             body: JSON.stringify(to_patch)
+        }).then(handle_json_response);
+    }
+}
+
+export function getPipelines(tenant_id, offset, limit) {
+    const buildArgs = {
+        path: `/api/${tenant_id}/Pipelines/`,
+        queryParams: {
+            offset: offset,
+            limit : limit,
+            retired: "False"
+        }
+    };
+    const url = buildUrl('', buildArgs);
+    return fetch(url).then(handle_json_response);
+}
+
+export function savePipeline(csrf_token, tenant_id, mode, pipeline) {
+    const to_post = pipeline_to_django_model(pipeline);
+    if (mode == "new") {
+        return fetch(`/api/${tenant_id}/Pipelines/`, {
+            method: 'post',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrf_token,
+            },
+            body: JSON.stringify(to_post)
+        })
+            .then(handle_json_response)
+            .then(
+                pipeline_created => {
+                    if (pipeline.type == 'external') {
+                        return ;
+                    } else {
+                        // this is sequential
+                        // we will create DAG
+                        return fetch(`/api/${tenant_id}/Pipelines/${pipeline_created.id}/create_dag/`, {
+                            method: 'post',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': csrf_token,
+                            },
+                        }).then(handle_json_response);
+                    }
+                }
+            )
+    } else {
+        // we are editing an existing pipeline
+        return fetch(`/api/${tenant_id}/Pipelines/${pipeline.id}/`, {
+            method: 'post',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrf_token,
+                'X-Data-Manager-Use-Method': 'PATCH',
+            },
+            body: JSON.stringify(to_post)
         }).then(handle_json_response);
     }
 }

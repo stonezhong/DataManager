@@ -17,6 +17,7 @@ import {
 } from '/common_lib'
 
 import {savePipeline} from '/apis'
+import { getPipelines } from '../../apis';
 
 const buildUrl = require('build-url');
 
@@ -35,17 +36,7 @@ class PipelinesPage extends React.Component {
     };
 
     get_page = (offset, limit, filter={}) => {
-        const buildArgs = {
-            path: "/api/Pipelines/",
-            queryParams: {
-                tenant_id: this.props.tenant_id,
-                offset: offset,
-                limit : limit,
-                retired: "False"
-            }
-        };
-        const url = buildUrl('', buildArgs);
-        return fetch(url).then(handle_json_response);
+        return getPipelines(this.props.tenant_id, offset, limit);
     };
 
     render() {

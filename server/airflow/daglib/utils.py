@@ -37,6 +37,7 @@ def get_mysql_connection():
 
     conn = MySQLdb.connect(
         host    = mysql_cfg['server'],
+        port    = mysql_cfg['port'],
         user    = mysql_cfg['username'],
         passwd  = mysql_cfg['password'],
         db      = mysql_cfg['db_name'],
@@ -370,7 +371,7 @@ def create_simple_flow_dag(tenant_id, pipeline_id, dag_id):
     update_dag_version = False
     # too bad we are not importing airflow_lib, so we are computing dag_info_filename
     dag_info_filename = os.path.join(AIRFLOW_HOME, "dags", str(tenant_id), f"{uuid.UUID(pipeline_id)}.json")
-    if not os.path.exists(dag_info_filename):
+    if True or not os.path.exists(dag_info_filename):
         create_dag_info_file(dag_info_filename, tenant_id, pipeline_id, dag_id)
         update_dag_version = True
     with open(dag_info_filename, "rt") as dag_info_f:

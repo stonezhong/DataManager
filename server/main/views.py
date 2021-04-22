@@ -34,7 +34,7 @@ from .api_input import CreateDatasetInput, CreateAssetInput, \
 
 import explorer.airflow_lib as airflow_lib
 
-from .view_tools import get_model_by_pk
+from tools.view_tools import get_model_by_pk
 
 def get_offset(request):
     try:
@@ -296,7 +296,9 @@ class DataLocationViewSet(viewsets.ModelViewSet):
     serializer_class = DataLocationSerializer
 
 
-class PipelineViewSet(viewsets.ModelViewSet):
+class PipelineViewSet(APIBaseView):
+    permission_classes = []
+
     queryset = Pipeline.objects.all()
     serializer_class = PipelineSerializer
     filter_backends = [DjangoFilterBackend]
@@ -306,17 +308,18 @@ class PipelineViewSet(viewsets.ModelViewSet):
     }
 
     @transaction.atomic
-    def create(self, request):
+    def create(self, request, tenant_id_str=None):
         """
         Create a pipeline
         """
+        tenant_id = int(tenant_id_str)
+        user, tenant = check_api_permission(request, tenant_id)
 
         data = request.data
         create_pipeline_input = CreatePipelineInput.from_json(data)
 
-        pipeline = Pipeline.create(
+        pipeline = tenant.create_pipeline(
             request.user,
-            create_pipeline_input.tenant_id,
             create_pipeline_input.name,
             create_pipeline_input.description,
             create_pipeline_input.team,
@@ -392,8 +395,10 @@ class PipelineViewSet(viewsets.ModelViewSet):
 
     # Create the airflow DAG
     @action(detail=True, methods=['post'])
-    def create_dag(self, request, pk=None):
-        pipeline = Pipeline.objects.get(pk=pk)
+    def create_dag(self, request, tenant_id_str=None, pk=None):
+        tenant_id = int(tenant_id_str)
+        user, tenant = check_api_permission(request, tenant_id)
+        pipeline = get_model_by_pk(Pipeline, pk, tenant_id)
         self.do_create_dag(pipeline)
         return Response({})
 

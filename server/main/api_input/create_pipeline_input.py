@@ -7,7 +7,6 @@ class CreatePipelineInput:
     def from_json(cls, data):
         validate_model("create_pipeline_input", data)
         self = cls()
-        self.tenant_id = data["tenant_id"]
         self.name = data["name"]
         self.description = data["description"]
         self.team = data["team"]
