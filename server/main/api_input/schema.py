@@ -171,9 +171,6 @@ models = {
     "create_timer_input": {
         "type": "object",
         "properties": {
-            "tenant_id": {
-                "type": "integer"
-            },
             "name": {
                 "type": "string"
             },
@@ -212,7 +209,7 @@ models = {
         },
         "additionalProperties": False,
         "required": [
-            "tenant_id", "name", "description", "team", "paused", "interval_unit", "interval_amount", "start_from",
+            "name", "description", "team", "paused", "interval_unit", "interval_amount", "start_from",
             "topic", "context", "category", "end_at"
         ]
     },

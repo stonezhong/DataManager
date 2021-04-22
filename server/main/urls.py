@@ -11,13 +11,12 @@ router.register(r'(?P<tenant_id_str>\d{1,5})/Datasets',     views.DatasetViewSet
 router.register(r'(?P<tenant_id_str>\d{1,5})/Assets',       views.AssetViewSet)
 router.register(r'(?P<tenant_id_str>\d{1,5})/DataRepos',    views.DataRepoViewSet)
 router.register(r'(?P<tenant_id_str>\d{1,5})/Applications', views.ApplicationViewSet)
+router.register(r'(?P<tenant_id_str>\d{1,5})/Timers',       views.TimerViewSet)
 
 router.register('DataLocation',             views.DataLocationViewSet)
 router.register('Pipelines',                views.PipelineViewSet)
 router.register('PipelineGroups',           views.PipelineGroupViewSet)
 router.register('PipelineInstances',        views.PipelineInstanceViewSet)
-
-router.register('Timers',                   views.TimerViewSet)
 router.register('ScheduledEvents',          views.ScheduledEventViewSet)
 
 

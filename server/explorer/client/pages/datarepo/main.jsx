@@ -42,7 +42,7 @@ class DataRepoPage extends React.Component {
                 <Row>
                     <Col>
                         <PageHeader title="Data Repository">
-                            {!!this.props.current_user && this.props.current_user.is_superuser &&
+                            {!!this.props.current_user &&
                                 <Button
                                     className="ml-2"
                                     variant="secondary"

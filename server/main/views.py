@@ -429,7 +429,8 @@ class PipelineInstanceViewSet(viewsets.ModelViewSet):
     filterset_fields = ['group']
     ordering_fields = ['created_time']
 
-class ApplicationViewSet(viewsets.ModelViewSet):
+
+class ApplicationViewSet(APIBaseView):
     permission_classes = []
 
     queryset = Application.objects.all()
@@ -463,7 +464,9 @@ class ApplicationViewSet(viewsets.ModelViewSet):
         response = ApplicationSerializer(instance=app, context={'request': request}).data
         return Response(response)
 
-class TimerViewSet(viewsets.ModelViewSet):
+class TimerViewSet(APIBaseView):
+    permission_classes = []
+
     queryset = Timer.objects.all()
     serializer_class = TimerSerializer
 
@@ -475,17 +478,18 @@ class TimerViewSet(viewsets.ModelViewSet):
     ordering_fields = ['name']
 
     @transaction.atomic
-    def create(self, request):
+    def create(self, request, tenant_id_str=None):
         """
         Create a Timer
         """
+        tenant_id = int(tenant_id_str)
+        user, tenant = check_api_permission(request, tenant_id)
 
         data = request.data
         create_timer_input = CreateTimerInput.from_json(data)
 
-        timer = Timer.create(
+        timer = tenant.create_timer(
             request.user,
-            create_timer_input.tenant_id,
             create_timer_input.name,
             create_timer_input.description,
             create_timer_input.team,
@@ -509,7 +513,7 @@ class ScheduledEventViewSet(viewsets.ModelViewSet):
     filterset_fields = ['acked']
     ordering_fields = ['due']
 
-class DataRepoViewSet(viewsets.ModelViewSet):
+class DataRepoViewSet(APIBaseView):
     permission_classes = []
 
     queryset = DataRepo.objects.all()

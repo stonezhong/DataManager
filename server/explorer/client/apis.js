@@ -4,6 +4,7 @@ import {handle_json_response, dt_2_utc_string, pipeline_to_django_model} from '/
 
 /************************************************
  * Functions
+ *     saveTenant
  *     saveDataset
  *     getDatasets
  *     getAssets
@@ -11,6 +12,8 @@ import {handle_json_response, dt_2_utc_string, pipeline_to_django_model} from '/
  *     saveDataRepo
  *     getApplications
  *     saveApplication
+ *     getTimers
+ *     saveTimer
  *
  */
 
@@ -97,6 +100,7 @@ export function retirePipeline(csrf_token, pipeline_id) {
 }
 
 
+// === verified ===
 export function saveTenant(csrf_token, mode, tenant) {
     // csrf_token: as name indicates
     // if mode is "new", we want to create a new application
@@ -137,7 +141,6 @@ export function saveTenant(csrf_token, mode, tenant) {
     }
 }
 
-// === for dataset
 export function getDatasets(tenant_id, offset, limit, {showExpired:showExpired}) {
     const buildArgs = {
         path: `/api/${tenant_id}/Datasets/`,
@@ -314,5 +317,68 @@ export function saveApplication(csrf_token, tenant_id, mode, application) {
             },
             body: JSON.stringify(to_patch)
         }).then(handle_json_response)
+    }
+}
+
+export function getTimers(tenant_id, offset, limit) {
+    const buildArgs = {
+        path: `/api/${tenant_id}/Timers/`,
+        queryParams: {
+            offset: offset,
+            limit : limit,
+            topic: 'pipeline'
+        }
+    };
+    const url = buildUrl('', buildArgs);
+    return fetch(url).then(handle_json_response);
+}
+
+export function saveTimer(csrf_token, tenant_id, mode, timer) {
+    if (mode === "new") {
+        const to_post = {
+            name            : timer.name,
+            description     : timer.description,
+            team            : timer.team,
+            paused          : timer.paused,
+            interval_unit   : timer.interval_unit,
+            interval_amount : timer.interval_amount,
+            start_from      : timer.start_from,
+            topic           : timer.topic,
+            context         : timer.context,
+            category        : timer.category,
+            end_at          : timer.end_at,
+        }
+
+        return fetch(`/api/${tenant_id}/Timers/`, {
+            method: 'post',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrf_token,
+            },
+            body: JSON.stringify(to_post)
+        }).then(handle_json_response)
+    } else if (mode === "edit") {
+        const to_patch = {
+            description     : timer.description,
+            team            : timer.team,
+            paused          : timer.paused,
+            interval_unit   : timer.interval_unit,
+            interval_amount : timer.interval_amount,
+            start_from      : timer.start_from,
+            end_at          : timer.end_at,
+            topic           : timer.topic,
+            context         : timer.context,
+            category        : timer.category,
+        }
+
+        return fetch(`/api/${tenant_id}/Timers/${timer.id}/`, {
+            method: 'post',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrf_token,
+                'X-Data-Manager-Use-Method': 'PATCH',
+            },
+            body: JSON.stringify(to_patch)
+        }).then(handle_json_response);
     }
 }
