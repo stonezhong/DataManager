@@ -587,12 +587,8 @@ class UserTenantSubscriptionViewSet(viewsets.ModelViewSet):
 
     @transaction.atomic
     def list(self, request):
-        # non-superuser only can query
-        # (1) all users for tenant owned by the requester
-        # (2) all tenants requester subscribed
         queryset = self.filter_queryset(self.get_queryset())
-        if not request.user.is_superuser:
-            queryset = queryset.filter(user=request.user)
+        queryset = queryset.filter(user=request.user)
 
         page = self.paginate_queryset(queryset)
         if page is not None:

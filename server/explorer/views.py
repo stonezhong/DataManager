@@ -31,7 +31,7 @@ import jinja2
 from graphviz import Digraph
 
 from email_tools import send_signup_validate_email
-from tools.view_tools import get_model_by_pk
+from tools.view_tools import get_model_by_pk, tenant_access_check_for_ui
 
 def get_app_config():
     config = {
@@ -69,6 +69,7 @@ def index(request):
 def datasets(request, tenant_id):
     if not request.user.is_authenticated:
         return redirect(reverse('login'))
+    tenant_access_check_for_ui(request, tenant_id)
 
     return render(
         request,
@@ -116,7 +117,7 @@ def dataset(request, tenant_id):
 
 def logout(request):
     do_logout(request)
-    return HttpResponseRedirect(f'/explorer/login')
+    return HttpResponseRedirect(reverse('login'))
 
 
 def login(request):
@@ -142,7 +143,7 @@ def login(request):
         user = do_authenticate(username=username, password=password)
         if user is not None:
             do_login(request, user)
-            return HttpResponseRedirect('/explorer/datalakes')
+            return HttpResponseRedirect(reverse('datalakes'))
         # must be wrong
         app_context = {
             'msg': "Wrong username or password!"

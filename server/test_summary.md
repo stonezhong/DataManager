@@ -37,11 +37,13 @@ Models
 
 UI测试
 ```
-    [ X ]   Login Page
+    [ X ]   Index Page                IndexTestCase
+    [ X ]   Login Page                LoginTestCase
+    [ X ]   Logout Page               LogoutTestCase
+    [ X ]   Datasets Page             DatasetsTestCase
+
     [ X ]   Sign Up Page
-    [ X ]   Logoff Page
     [ X ]   Data Lake Page
-    [ X ]   Datasets Page
     [ X ]   Dataset Page
     [ X ]   DataRepos Page
     [ X ]   DataRepo Page
