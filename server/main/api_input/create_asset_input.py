@@ -19,23 +19,13 @@ class CreateAssetInput:
 
     @classmethod
     def from_json(cls, data, tenant_id):
-        validate_model("create_dataset_instance", data)
+        validate_model("create_asset_input", data)
         self = cls()
 
-        self.dataset = get_model_by_pk(Dataset, data['dataset_id'], tenant_id)
-        self.parent_instance = none_or(
-            data.get('parent_instance_id'),
-            lambda parent_instance_id: get_model_by_pk(Asset, parent_instance_id, tenant_id)
-        )
         self.name = data["name"]
         self.row_count = data.get("row_count")
         self.loader = data.get("loader")
 
-        self.publish_time = q(
-            "publish_time" in data,
-            lambda : datetime.strptime(data["publish_time"], "%Y-%m-%d %H:%M:%S"),
-            lambda : datetime.utcnow()
-        ).replace(tzinfo=pytz.UTC)
         self.data_time = datetime.strptime(data["data_time"], "%Y-%m-%d %H:%M:%S")
 
         locations = []
@@ -45,11 +35,11 @@ class CreateAssetInput:
             ))
         self.locations = locations
 
-        self.src_dsi_paths = data.get("src_dsi_paths", [])
+        self.src_asset_paths = data.get("src_asset_paths", [])
 
         self.application = none_or(
-            data['application_id'],
-            lambda application_id: get_model_by_pk(Application, data['application_id'], tenant_id)
+            data.get('application_id'),
+            lambda application_id: get_model_by_pk(Application, data.get('application_id'), tenant_id)
         )
         self.application_args = data.get("application_args")
         return self

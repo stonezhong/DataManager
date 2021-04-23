@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 import pytz
+import mock
 
 from django.test import TestCase
 from django.db.utils import IntegrityError
@@ -23,13 +24,13 @@ class DatasetTestCase(TestCase):
     def test_uniqueness(self):
         # tenant + name + major_version + minor_version should be unique
         self.tenant.create_dataset(
-            "test-name", "1.0", 1, self.now,
+            "test-name", "1.0", 1,
             "test-description1", self.user, "test-team1"
         )
 
         with self.assertRaises(IntegrityError) as cm:
             self.tenant.create_dataset(
-                "test-name", "1.0", 1, self.now + timedelta(hours=1),
+                "test-name", "1.0", 1,
                 "test-description2", self.user2, "test-team2"
             )
         self.assertRegex(cm.exception.args[1], r"^Duplicate entry.*$")
@@ -37,7 +38,7 @@ class DatasetTestCase(TestCase):
 
     def test_is_active_at(self):
         dataset = self.tenant.create_dataset(
-            "test-name", "1.0", 1, self.now,
+            "test-name", "1.0", 1,
             "test-description", self.user, "test-team"
         )
         self.assertTrue(dataset.is_active_at(self.now - timedelta(hours=1)))
@@ -54,22 +55,22 @@ class DatasetTestCase(TestCase):
 
     def test_get_assets(self):
         dataset = self.tenant.create_dataset(
-            "test-name", "1.0", 1, self.now,
+            "test-name", "1.0", 1,
             "test-description", self.user, "test-team"
         )
 
         asset1 = dataset.create_asset(
-            "asset1", 10, self.now, self.now,
+            "asset1", 10, self.now,
             [ LOC("parquet", "/data/foo1.parquet", 100, None) ],
         )
         asset2 = dataset.create_asset(
-            "asset2", 10, self.now, self.now + timedelta(hours=1),
+            "asset2", 10, self.now + timedelta(hours=1),
             [ LOC("parquet", "/data/foo2.parquet", 100, None) ],
         )
         asset2.soft_delete()
 
         asset3 = dataset.create_asset(
-            "asset3", 10, self.now, self.now + timedelta(hours=2),
+            "asset3", 10, self.now + timedelta(hours=2),
             [ LOC("parquet", "/data/foo3.parquet", 100, None) ],
         )
 
@@ -81,26 +82,26 @@ class DatasetTestCase(TestCase):
 
     def test_get_asset_by_name(self):
         dataset = self.tenant.create_dataset(
-            "test-name", "1.0", 1, self.now,
+            "test-name", "1.0", 1,
             "test-description", self.user, "test-team"
         )
         asset = dataset.create_asset(
-            "asset", 10, self.now, self.now,
+            "asset", 10, self.now,
             [ LOC("parquet", "/data/foo1.parquet", 100, None) ],
         )
         self.assertEqual(dataset.get_asset_by_name("asset").id, asset.id)
 
     def test_get_asset_by_name_deleted1(self):
         dataset = self.tenant.create_dataset(
-            "test-name", "1.0", 1, self.now,
+            "test-name", "1.0", 1,
             "test-description", self.user, "test-team"
         )
         asset1 = dataset.create_asset(
-            "asset", 10, self.now, self.now,
+            "asset", 10, self.now,
             [ LOC("parquet", "/data/foo1.parquet", 100, None) ],
         )
         asset2 = dataset.create_asset(
-            "asset", 10, self.now, self.now,
+            "asset", 10, self.now,
             [ LOC("parquet", "/data/foo1.parquet", 100, None) ],
         )
         # asset2 is a re-publish of asset1
@@ -108,11 +109,11 @@ class DatasetTestCase(TestCase):
 
     def test_get_asset_by_name_deleted2(self):
         dataset = self.tenant.create_dataset(
-            "test-name", "1.0", 1, self.now,
+            "test-name", "1.0", 1,
             "test-description", self.user, "test-team"
         )
         asset1 = dataset.create_asset(
-            "asset", 10, self.now, self.now,
+            "asset", 10, self.now,
             [ LOC("parquet", "/data/foo1.parquet", 100, None) ],
         )
         asset1.soft_delete()
@@ -120,7 +121,7 @@ class DatasetTestCase(TestCase):
 
     def test_set_schema_and_sample_data(self):
         dataset = self.tenant.create_dataset(
-            "test-name", "1.0", 1, self.now,
+            "test-name", "1.0", 1,
             "test-description", self.user, "test-team"
         )
 
@@ -144,7 +145,7 @@ class DatasetTestCase(TestCase):
 
     def test_set_schema_and_sample_data_no_schema(self):
         dataset = self.tenant.create_dataset(
-            "test-name", "1.0", 1, self.now,
+            "test-name", "1.0", 1,
             "test-description", self.user, "test-team"
         )
 
@@ -161,7 +162,7 @@ class DatasetAssetTestCase(TestCase):
         self.tenant = create_test_tenant(user=self.user)
 
         self.dataset = self.tenant.create_dataset(
-            "test-name", "1.0", 1, self.now,
+            "test-name", "1.0", 1,
             "test-description", self.user, "test-team"
         )
         self.data_repo = self.tenant.create_data_repo(
@@ -171,7 +172,7 @@ class DatasetAssetTestCase(TestCase):
             "demoapp", "demoapp description", "admin", "s3://bucket/demoapp"
         )
         self.other_asset = self.dataset.create_asset(
-            "asset-other", 10, self.now, self.now,
+            "asset-other", 10, self.now,
             [
                 LOC("parquet", "/data/foo1.parquet", 100, "main-repo"),
                 LOC("json", "/data/foo2.json", 150, "main-repo")
@@ -185,7 +186,7 @@ class DatasetAssetTestCase(TestCase):
         self.dataset.expiration_time = self.now + timedelta(hours=1)
         self.dataset.save()
         with self.assertRaises(ValidationError) as cm:
-            self.dataset.create_asset("asset-name", 10, self.now, self.now + timedelta(hours=1), [])
+            self.dataset.create_asset("asset-name", 10, self.now + timedelta(hours=1), [])
         self.assertEqual(cm.exception.message, "Dataset is not active")
 
 
@@ -198,7 +199,7 @@ class DatasetAssetTestCase(TestCase):
         )
         with self.assertRaises(ValidationError) as cm:
             self.dataset.create_asset(
-                "asset-name", 10, self.now, self.now, [ ], application=application
+                "asset-name", 10, self.now, [ ], application=application
             )
         self.assertEqual(cm.exception.message, "Application not in the tenant")
 
@@ -206,7 +207,7 @@ class DatasetAssetTestCase(TestCase):
     def test_create_asset_no_locations(self):
         # Try to add asset to a dataset outside it life range
         with self.assertRaises(ValidationError) as cm:
-            self.dataset.create_asset("asset-name", 10, self.now, self.now, [])
+            self.dataset.create_asset("asset-name", 10, self.now, [])
         self.assertEqual(cm.exception.message, "No location specified")
 
 
@@ -214,7 +215,7 @@ class DatasetAssetTestCase(TestCase):
         # Try to create asset which points to location in non-exist repo name
         with self.assertRaises(ValidationError) as cm:
             self.dataset.create_asset(
-                "asset-name", 10, self.now, self.now,
+                "asset-name", 10, self.now,
                 [
                     LOC("parquet", "hdfs://data/x", 100, "main-repo2")
                 ],
@@ -226,24 +227,26 @@ class DatasetAssetTestCase(TestCase):
         # Try to create asset which we tell it depend on asset whose path does not exist
         with self.assertRaises(ValidationError) as cm:
             self.dataset.create_asset(
-                "asset-name", 10, self.now, self.now,
+                "asset-name", 10, self.now,
                 [ LOC("parquet", "hdfs://data/x.parquet", 100, "main-repo") ],
-                src_dsi_paths=[
+                src_asset_paths=[
                     "test-name:1.0:1:/asset-other1:0"   # bad asset path
                 ]
             )
         self.assertEqual(cm.exception.message, "Source asset does not exist")
 
 
-    def test_create_asset_first_revision(self):
+    @mock.patch('main.models.datetime')
+    def test_create_asset_first_revision(self, mock_dt):
+        mock_dt.utcnow = mock.Mock(return_value=self.now)
         asset = self.dataset.create_asset(
-            "asset-name", 10, self.now, self.now,
+            "asset-name", 10, self.now,
             [
                 LOC("parquet", "/x.parquet", 100, "main-repo"),
                 LOC("json", "/y.json", 150, "main-repo"),
             ],
             loader='{"type": "union"}',
-            src_dsi_paths=[ "test-name:1.0:1:asset-other:0"],
+            src_asset_paths=[ "test-name:1.0:1:asset-other:0"],
             application=self.application, application_args="{}"
         )
 
@@ -283,94 +286,101 @@ class DatasetAssetTestCase(TestCase):
         self.assertEqual(location1.offset, 1)
         self.assertEqual(location1.size, 150)
 
-    def test_create_asset_second_revision_before_first_revision(self):
+    @mock.patch('main.models.datetime')
+    def test_create_asset_second_revision_before_first_revision(self, mock_dt):
         # try to re-publish asset, while the 2nd publish's publish time is
         # before 1st publish time, the operation should fail
+        mock_dt.utcnow = mock.Mock(return_value=self.now)
         self.dataset.create_asset(
-            "asset-name", 10, self.now, self.now,
+            "asset-name", 10, self.now,
             [
                 CreateAssetInput._BriefLocation("parquet", "/x.parquet", 100, "main-repo"),
                 CreateAssetInput._BriefLocation("json", "/y.json", 150, "main-repo"),
             ],
             loader='{"type": "union"}',
-            src_dsi_paths=[ "test-name:1.0:1:asset-other:0" ],
+            src_asset_paths=[ "test-name:1.0:1:asset-other:0" ],
             application=self.application,
             application_args="{}"
         )
 
+        mock_dt.utcnow = mock.Mock(return_value=self.now-timedelta(hours=1))
         with self.assertRaises(ValidationError) as cm:
             self.dataset.create_asset(
-                "asset-name", 10, self.now - timedelta(minutes=1), self.now,
+                "asset-name", 10, self.now,
                 [
                     CreateAssetInput._BriefLocation("parquet", "/x.parquet", 100, "main-repo"),
                     CreateAssetInput._BriefLocation("json", "/y.json", 150, "main-repo"),
                 ],
                 loader='{"type": "union"}',
-                src_dsi_paths=[ "test-name:1.0:1:asset-other:0" ],
+                src_asset_paths=[ "test-name:1.0:1:asset-other:0" ],
                 application=self.application,
                 application_args="{}"
             )
 
         self.assertEqual(cm.exception.message, "Publish time is too early")
 
-    def test_create_asset_second_revision_before_first_revision2(self):
+    @mock.patch('main.models.datetime')
+    def test_create_asset_second_revision_before_first_revision2(self, mock_dt):
         # try to re-publish asset, while the 2nd publish time is
         # before 1st deleted time, the operation should fail
+        mock_dt.utcnow = mock.Mock(return_value=self.now)
         asset = self.dataset.create_asset(
-            "asset-name", 10, self.now, self.now,
+            "asset-name", 10, self.now,
             [
                 CreateAssetInput._BriefLocation("parquet", "/x.parquet", 100, "main-repo"),
                 CreateAssetInput._BriefLocation("json", "/y.json", 150, "main-repo"),
             ],
             loader='{"type": "union"}',
-            src_dsi_paths=["test-name:1.0:1:asset-other:0"],
+            src_asset_paths=["test-name:1.0:1:asset-other:0"],
             application=self.application,
             application_args="{}"
         )
-        asset.deleted_time = self.now + timedelta(hours=1)
-        asset.save()
+        mock_dt.utcnow = mock.Mock(return_value=self.now + timedelta(hours=1))
+        asset.soft_delete()
 
+        mock_dt.utcnow = mock.Mock(return_value=self.now + timedelta(minutes=30))
         with self.assertRaises(ValidationError) as cm:
             self.dataset.create_asset(
                 "asset-name", 10,
-                self.now + timedelta(minutes=30),
                 self.now,
                 [
                     CreateAssetInput._BriefLocation("parquet", "/x.parquet", 100, "main-repo"),
                     CreateAssetInput._BriefLocation("json", "/y.json", 150, "main-repo"),
                 ],
                 loader='{"type": "union"}',
-                src_dsi_paths=[ "test-name:1.0:1:asset-other:0" ],
+                src_asset_paths=[ "test-name:1.0:1:asset-other:0" ],
                 application=self.application,
                 application_args="{}"
             )
 
         self.assertEqual(cm.exception.message, "Publish time is too early")
 
-    def test_create_asset_second_revision_first_deleted(self):
+    @mock.patch('main.models.datetime')
+    def test_create_asset_second_revision_first_deleted(self, mock_dt):
         # try to re-publish asset, while latest revision is already deleted
+        mock_dt.utcnow = mock.Mock(return_value=self.now)
         asset = self.dataset.create_asset(
-            "asset-name", 10, self.now, self.now,
+            "asset-name", 10, self.now,
             [
                 CreateAssetInput._BriefLocation("parquet", "/x.parquet", 100, "main-repo"),
                 CreateAssetInput._BriefLocation("json", "/y.json", 150, "main-repo"),
             ],
             loader='{"type": "union"}',
-            src_dsi_paths=[ "test-name:1.0:1:asset-other:0" ],
+            src_asset_paths=[ "test-name:1.0:1:asset-other:0" ],
             application=self.application,
             application_args="{}"
         )
-        asset.deleted_time = self.now + timedelta(hours=1)
-        asset.save()
+        asset.soft_delete()
 
+        mock_dt.utcnow = mock.Mock(return_value=self.now + timedelta(hours=2))
         asset2 = self.dataset.create_asset(
-            "asset-name", 10, self.now + timedelta(hours=2), self.now,
+            "asset-name", 10, self.now,
             [
                 CreateAssetInput._BriefLocation("parquet", "/x.parquet", 100, "main-repo"),
                 CreateAssetInput._BriefLocation("json", "/y.json", 150, "main-repo"),
             ],
             loader='{"type": "union"}',
-            src_dsi_paths=[ "test-name:1.0:1:asset-other:0" ],
+            src_asset_paths=[ "test-name:1.0:1:asset-other:0" ],
             application=self.application,
             application_args="{}"
         )
@@ -391,28 +401,31 @@ class DatasetAssetTestCase(TestCase):
         self.assertEqual(asset2.application_args, "{}")
 
 
-    def test_create_asset_second_revision_first_alive(self):
+    @mock.patch('main.models.datetime')
+    def test_create_asset_second_revision_first_alive(self, mock_dt):
         # try to re-publish asset, while latest revision is alive
+        mock_dt.utcnow = mock.Mock(return_value=self.now)
         asset = self.dataset.create_asset(
-            "asset-name", 10, self.now, self.now,
+            "asset-name", 10, self.now,
             [
                 LOC("parquet", "/x.parquet", 100, "main-repo"),
                 LOC("json", "/y.json", 150, "main-repo"),
             ],
             loader='{"type": "union"}',
-            src_dsi_paths=[ "test-name:1.0:1:asset-other:0" ],
+            src_asset_paths=[ "test-name:1.0:1:asset-other:0" ],
             application=self.application,
             application_args="{}"
         )
 
+        mock_dt.utcnow = mock.Mock(return_value=self.now + timedelta(hours=2))
         asset2 = self.dataset.create_asset(
-            "asset-name", 10, self.now + timedelta(hours=2), self.now,
+            "asset-name", 10, self.now,
             [
                 LOC("parquet", "/x.parquet", 100, "main-repo"),
                 LOC("json", "/y.json", 150, "main-repo"),
             ],
             loader='{"type": "union"}',
-            src_dsi_paths=[ "test-name:1.0:1:asset-other:0"],
+            src_asset_paths=[ "test-name:1.0:1:asset-other:0"],
             application=self.application,
             application_args="{}"
         )
@@ -441,13 +454,13 @@ class DatasetAssetTestCase(TestCase):
         # now we try to re-publish it, it should fail since it will put the
         # derived asset in a stale state
         asset = self.dataset.create_asset(
-            "asset-name", 10, self.now, self.now,
+            "asset-name", 10, self.now,
             [
                 LOC("parquet", "/x.parquet", 100, "main-repo"),
                 LOC("json", "/y.json", 150, "main-repo"),
             ],
             loader='{"type": "union"}',
-            src_dsi_paths=[ "test-name:1.0:1:asset-other:0" ],
+            src_asset_paths=[ "test-name:1.0:1:asset-other:0" ],
             application=self.application,
             application_args="{}"
         )
@@ -456,7 +469,7 @@ class DatasetAssetTestCase(TestCase):
         # we will try to re-publish self.other_asset, it should fail
         with self.assertRaises(ValidationError) as cm:
             self.dataset.create_asset(
-                "asset-other", 10, self.now, self.now,
+                "asset-other", 10, self.now,
                 [
                     LOC("parquet", "/data/foo2.parquet", 100, "main-repo"),
                     LOC("json", "/data/foo2.json", 150, "main-repo")

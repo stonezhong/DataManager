@@ -1,5 +1,5 @@
 from .create_dataset_input import CreateDatasetInput
-from .create_asset import CreateAssetInput
+from .create_asset_input import CreateAssetInput
 from .create_pipeline_input import CreatePipelineInput
 from .create_application_input import CreateApplicationInput
 from .create_timer_input import CreateTimerInput

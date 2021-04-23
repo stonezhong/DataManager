@@ -25,7 +25,7 @@ export class DatasetLink extends React.Component {
  */
 export class AssetLink extends React.Component {
     render() {
-        return <a href={`/explorer/${this.props.tenant_id}/asset?dsi_path=${this.props.ds.name}:${this.props.ds.major_version}:${this.props.ds.minor_version}:${this.props.dsi.path}`}>{this.props.dsi.path}</a>;
+        return <a href={`/explorer/${this.props.tenant_id}/asset?path=${this.props.dataset.name}:${this.props.dataset.major_version}:${this.props.dataset.minor_version}:${this.props.asset.name}`}>{this.props.asset.name}</a>;
     }
 }
 
@@ -33,21 +33,21 @@ export class AssetLink extends React.Component {
  * Purpose: Link to a asset
  *
  * Props
- *     dsi_path : A full dsi path, may or may not have revision. E.g.: trading:1.0:1:/foo:0
- *                or trading:1.0:1:/foo
+ *     path : A full asset path, may or may not have revision. E.g.: trading:1.0:1:foo:0
+ *            or trading:1.0:1:foo
  *
  */
-export class AssetLinkFromDSIPath extends React.Component {
+export class AssetLinkFromPath extends React.Component {
     render() {
-        const segs = this.props.dsi_path.split(":");
+        const segs = this.props.asset_path.split(":");
         if (segs.length == 4) {
-            return <a href={`/explorer/${this.props.tenant_id}/asset?dsi_path=${this.props.dsi_path}`}>{this.props.dsi_path}</a>;
+            return <a href={`/explorer/${this.props.tenant_id}/asset?path=${this.props.path}`}>{this.props.path}</a>;
         }
         if (segs.length == 5) {
-            const dsi_path2 = segs.slice(0, 4).join(':');
+            const path2 = segs.slice(0, 4).join(':');
             const revision = segs[4];
-            return <a href={`/explorer/${this.props.tenant_id}/asset?dsi_path=${dsi_path2}#revision-${segs[4]}`}>{this.props.dsi_path}</a>;
+            return <a href={`/explorer/${this.props.tenant_id}/asset?path=${path2}#revision-${segs[4]}`}>{this.props.path}</a>;
         }
-        throw Exception(`${this.props.dsi_path} is not a valid asset path`);
+        throw Exception(`${this.props.path} is not a valid asset path`);
     }
 }

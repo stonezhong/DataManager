@@ -53,19 +53,6 @@ def adjust_time(dt, delta_unit, delta_amount):
         return dt + timedelta(seconds=delta_amount)
 
 
-class AppException(Exception):
-    def __init__(self, message=""):
-        self.message = message
-
-class InvalidOperationException(AppException):
-    pass
-
-class PermissionDeniedException(AppException):
-    pass
-
-class DataCorruptionException(AppException):
-    pass
-
 class Tenant(models.Model):
     # public tenant: allow every to read
     id                  = models.AutoField(primary_key=True)
@@ -142,7 +129,7 @@ class Tenant(models.Model):
         return
 
 
-    def create_dataset(self, name, major_version, minor_version, publish_time, description, author, team):
+    def create_dataset(self, name, major_version, minor_version, description, author, team):
         if not self.is_user_subscribed(author):
             raise PermissionDenied("User is not subscribed to the tenant")
 
@@ -150,7 +137,7 @@ class Tenant(models.Model):
                           name = name,
                           major_version = major_version,
                           minor_version = minor_version,
-                          publish_time = publish_time,
+                          publish_time = datetime.utcnow().replace(tzinfo=pytz.UTC),
                           expiration_time = None,
                           description = description,
                           author = author,
@@ -434,8 +421,8 @@ class Dataset(models.Model):
 
     def get_assets(self):
         """
-        Return all direct child dataset instances
-        Deleted dataset instance is ignored.
+        Return all assets belongs to this dataset
+        Deleted asset is ignored.
         """
         return Asset.objects.filter(
             tenant=self.tenant,
@@ -445,19 +432,19 @@ class Dataset(models.Model):
 
     def get_asset_by_name(self, name):
         """
-        Return direct child dataset instance that match the name
-        Deleted dataset instance is ignored.
+        Return asset belongs to this dataset with given name
+        Deleted asset is ignored.
         """
-        dataset_instances = Asset.objects.filter(
+        assets = Asset.objects.filter(
             tenant=self.tenant,
             dataset = self,
             name = name,                                # the instance name
             deleted_time = None                         # still active
         ).order_by('-revision').all()[:1]
-        if len(dataset_instances) == 0:
+        if len(assets) == 0:
             return None
-        assert len(dataset_instances) == 1
-        return dataset_instances[0]
+        assert len(assets) == 1
+        return assets[0]
 
     def set_schema_and_sample_data(self, schema, sample_data=""):
         if not schema:
@@ -478,8 +465,8 @@ class Dataset(models.Model):
         self.save()
 
 
-    def create_asset(self, name, row_count, publish_time, data_time, locations,
-                     loader=None, src_dsi_paths=[], application=None,
+    def create_asset(self, name, row_count, data_time, locations,
+                     loader=None, src_asset_paths=[], application=None,
                      application_args=None):
 
         if not self.is_active_at(data_time):
@@ -492,6 +479,7 @@ class Dataset(models.Model):
             raise ValidationError("No location specified")
 
         tenant = self.tenant
+        publish_time = datetime.utcnow().replace(tzinfo=pytz.UTC)
 
         assets = Asset.objects.filter(
             tenant=tenant,
@@ -566,16 +554,16 @@ class Dataset(models.Model):
             dl.save()
 
         # save dependencies
-        for src_dsi_path in src_dsi_paths:
-            src_dsi = tenant.get_asset_from_path(src_dsi_path)
-            if src_dsi is None:
+        for src_asset_path in src_asset_paths:
+            src_asset = tenant.get_asset_from_path(src_asset_path)
+            if src_asset is None:
                 raise ValidationError(f"Source asset does not exist")
-            dsi_dep = AssetDep(
+            asset_dep = AssetDep(
                 tenant = tenant,
-                src_dsi = src_dsi,
-                dst_dsi = asset
+                src_asset = src_asset,
+                dst_asset = asset
             )
-            dsi_dep.save()
+            asset_dep.save()
 
         return asset
 
@@ -603,7 +591,7 @@ class Asset(models.Model):
         Application,
         on_delete=models.PROTECT,
         null=True,
-        related_name='dsis'
+        related_name='assets'
     )
     application_args    = models.TextField(null=True)
 
@@ -618,23 +606,23 @@ class Asset(models.Model):
     # return all asset path this dataset depend on (aka lead to this dataset)
     @property
     def src_assets(self):
-        dsi_path = []
-        for dep in self.dst_dsideps.all():
-            if dep.src_dsi.deleted_time is None:
-                dsi_path.append(dep.src_dsi.dsi_path)
-        return dsi_path
+        asset_paths = []
+        for dep in self.dst_asset_deps.all():
+            if dep.src_asset.deleted_time is None:
+                asset_paths.append(dep.src_asset.full_path)
+        return asset_paths
 
     # return all asset path depend on this dataset (aka this dataset leads to)
     @property
     def dst_assets(self):
-        dsi_path = []
-        for dep in self.src_dsideps.all():
-            if dep.dst_dsi.deleted_time is None:
-                dsi_path.append(dep.dst_dsi.dsi_path)
-        return dsi_path
+        asset_paths = []
+        for dep in self.src_asset_deps.all():
+            if dep.dst_asset.deleted_time is None:
+                asset_paths.append(dep.dst_asset.full_path)
+        return asset_paths
 
     @property
-    def dsi_path(self):
+    def full_path(self):
         return f"{self.dataset.name}:{self.dataset.major_version}:{self.dataset.minor_version}:{self.name}:{self.revision}"
 
 
@@ -655,21 +643,21 @@ class Asset(models.Model):
 
 
 class AssetDep(models.Model):
-    # each row represent src dsi generates dst dsi. (aka dst depened on src)
+    # each row represent src asset generates dst asset. (aka dst depened on src)
     id                  = models.AutoField(primary_key=True)
     tenant              = models.ForeignKey(Tenant, on_delete=models.PROTECT, null=False)
-    src_dsi             = models.ForeignKey(Asset,
+    src_asset           = models.ForeignKey(Asset,
                                             on_delete = models.PROTECT,
-                                            related_name = 'src_dsideps',
+                                            related_name = 'src_asset_deps',
                                             null=False)       # non NULL field
-    dst_dsi             = models.ForeignKey(Asset,
+    dst_asset           = models.ForeignKey(Asset,
                                             on_delete = models.PROTECT,
-                                            related_name = 'dst_dsideps',
+                                            related_name = 'dst_asset_deps',
                                             null=False)       # non NULL field
 
     class Meta:
         unique_together = [
-            ['tenant', 'src_dsi', 'dst_dsi']
+            ['tenant', 'src_asset', 'dst_asset']
         ]
 
 
@@ -1015,96 +1003,3 @@ class AccessToken(models.Model):
                 return False
 
         raise ValidationError("Invalid access token purpose")
-
-
-def do_signup_user(username, password, password1, first_name, last_name, email):
-    msg = None
-    while True:
-        if len(username)==0:
-            msg = "Username cannot be empty"
-            break
-        if len(password)==0:
-            msg = "Password cannot be empty"
-            break
-        if len(password1)==0:
-            msg = "Password cannot be empty"
-            break
-        if len(first_name)==0:
-            msg = "First name cannot be empty"
-            break
-        if len(last_name)==0:
-            msg = "Last name cannot be empty"
-            break
-        if len(email)==0:
-            msg = "Email name cannot be empty"
-            break
-        if password != password1:
-            msg = "Password does not match"
-            break
-        break
-    if msg is not None:
-        return {
-            "success": False,
-            "msg": msg
-        }
-
-    users = User.objects.filter(username=username)
-    found_user = None
-    if len(users) > 1:
-        raise DataCorruptionException(f"More than 1 user has name {username}")
-    if len(users) == 1:
-        found_user = users[0]
-    if found_user is not None:
-        if found_user.is_active:
-            return {
-                "success": False,
-                "msg": "Invalid username or email!"
-            }
-        if found_user.email != email:
-            return {
-                "success": False,
-                "msg": "Invalid username or email!"
-            }
-
-        token = AccessToken.create_token(
-            found_user, timedelta(days=1), AccessToken.Purpose.SIGNUP_VALIDATE,
-        )
-
-        return {
-            "success": True,
-            "msg": f"An account validation email has been sent to {email}, please click the link in the email to validate your account",
-            "send_email": True,
-            "token": token,
-            "user": found_user
-        }
-
-    users = User.objects.filter(email=email)
-    if len(users) > 0:
-        return {
-            "success": False,
-            "msg": "Use a different email!"
-        }
-
-
-    user = User.objects.create_user(
-        username,
-        email=email,
-        password=password,
-        first_name=first_name,
-        last_name=last_name,
-        is_active=False
-    )
-    user.save()
-
-    token = AccessToken.create_token(
-        user, timedelta(days=1), AccessToken.Purpose.SIGNUP_VALIDATE,
-    )
-
-    return {
-        "success": True,
-        "msg": f"An account validation email has been sent to {email}, please click the link in the email to validate your account",
-        "send_email": True,
-        "token": token,
-        "user": user
-    }
-

@@ -19,7 +19,7 @@ class AssetTestCase(TestCase):
         self.user = create_test_user(name='testuser')
         self.tenant = create_test_tenant(user=self.user, name="DL")
         self.dataset = self.tenant.create_dataset(
-            "test-name", "1.0", 1, self.now, "test-description", self.user, "test-team"
+            "test-name", "1.0", 1, "test-description", self.user, "test-team"
         )
         self.data_repo = self.tenant.create_data_repo(
             "main-repo", "data-repo-description", DataRepo.RepoType.HDFS, "{}"
@@ -28,7 +28,7 @@ class AssetTestCase(TestCase):
             self.user, "demoapp", "demoapp description", "admin", "s3://bucket/demoapp"
         )
         self.other_asset = self.dataset.create_asset(
-            "asset-other", 10, self.now, self.now,
+            "asset-other", 10, self.now,
             [
                 LOC("parquet", "/data/foo1.parquet", 100, "main-repo"),
                 LOC("json", "/data/foo2.json", 150, "main-repo"),
@@ -42,14 +42,15 @@ class AssetTestCase(TestCase):
     @mock.patch('main.models.datetime')
     def test_soft_delete_alive(self, mock_dt):
         # try to soft-delete an asset, while the asset is alive
+        mock_dt.utcnow = mock.Mock(return_value=self.now)
         asset = self.dataset.create_asset(
-            "asset-name", 10, self.now, self.now,
+            "asset-name", 10, self.now,
             [
                 LOC("parquet", "/data/foo1.parquet", 100, "main-repo"),
                 LOC("json", "/data/foo2.json", 150, "main-repo"),
             ],
             loader='{"type": "union"}',
-            src_dsi_paths=["test-name:1.0:1:asset-other:0"],
+            src_asset_paths=["test-name:1.0:1:asset-other:0"],
             application=self.application,
             application_args="{}"
         )
@@ -70,13 +71,13 @@ class AssetTestCase(TestCase):
         # try to soft-delete an asset, while the asset is alive and has dependency
         # it should fail
         asset = self.dataset.create_asset(
-            "asset-name", 10, self.now, self.now,
+            "asset-name", 10, self.now,
             [
                 LOC("parquet", "/data/foo1.parquet", 100, "main-repo"),
                 LOC("json", "/data/foo2.json", 150, "main-repo"),
             ],
             loader='{"type": "union"}',
-            src_dsi_paths=["test-name:1.0:1:asset-other:0"],
+            src_asset_paths=["test-name:1.0:1:asset-other:0"],
             application=self.application,
             application_args="{}"
         )
@@ -91,13 +92,13 @@ class AssetTestCase(TestCase):
 
     def test_asset_dependency(self):
         asset = self.dataset.create_asset(
-            "asset-name", 10, self.now, self.now,
+            "asset-name", 10, self.now,
             [
                 LOC("parquet", "/data/foo1.parquet", 100, "main-repo"),
                 LOC("json", "/data/foo2.json", 150, "main-repo"),
             ],
             loader='{"type": "union"}',
-            src_dsi_paths=["test-name:1.0:1:asset-other:0"],
+            src_asset_paths=["test-name:1.0:1:asset-other:0"],
             application=self.application,
             application_args="{}"
         )

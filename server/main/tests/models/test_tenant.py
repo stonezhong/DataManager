@@ -6,7 +6,7 @@ from django.test import TestCase
 from django.core.exceptions import ValidationError, PermissionDenied
 
 from main.models import Tenant, Application, UserTenantSubscription, Dataset, \
-    DataRepo, Asset, Pipeline, PipelineGroup
+    DataRepo, Asset, Pipeline, PipelineGroup, TIME_UNIT_YEAR
 from main.api_input import CreateAssetInput
 from main.tests.models.tools import create_test_user, create_test_tenant, now_utc
 
@@ -53,7 +53,6 @@ class TenantTestCase1(TestCase):
         self.assertFalse(app.retired)
         self.assertEqual(app.app_location, "s3://data-manager-apps/execute_sql/1.0.0.0")
         self.assertEqual(app.sys_app_id, Application.SysAppID.EXECUTE_SQL.value)
-
 
 class TenantTestCase2(TestCase):
     def setUp(self):
@@ -114,9 +113,11 @@ class TenantTestCase2(TestCase):
             ).all()[0].is_admin
         )
 
-    def test_create_dataset(self):
+    @mock.patch('main.models.datetime')
+    def test_create_dataset(self, mock_dt):
+        mock_dt.utcnow = mock.Mock(return_value=self.now)
         dataset = self.tenant.create_dataset(
-            "test-name", "1.0", 1, self.now, "test-description", self.user, "test-team"
+            "test-name", "1.0", 1, "test-description", self.user, "test-team"
         )
 
         # make sure dataset is created with the right attributes
@@ -136,13 +137,13 @@ class TenantTestCase2(TestCase):
     def test_create_dataset_no_permission(self):
         with self.assertRaises(PermissionDenied) as cm:
             self.tenant.create_dataset(
-                "test-name", "1.0", 1, self.now, "test-description", self.user2, "test-team"
+                "test-name", "1.0", 1, "test-description", self.user2, "test-team"
             )
         self.assertEqual(cm.exception.args[0], "User is not subscribed to the tenant")
 
     def test_get_dataset(self):
         dataset = self.tenant.create_dataset(
-            "test-name", "1.0", 1, self.now, "test-description", self.user, "test-team"
+            "test-name", "1.0", 1, "test-description", self.user, "test-team"
         )
 
         dataset_found = self.tenant.get_dataset("test-name", "1.0", 1)
@@ -206,6 +207,14 @@ class TenantTestCase2(TestCase):
         self.assertEqual(data_repo.type, DataRepo.RepoType.HDFS.value)
         self.assertEqual(data_repo.context, "{}")
 
+    def test_create_timer_without_subscription(self):
+        with self.assertRaises(PermissionDenied) as cm:
+            self.tenant.create_timer(
+                self.user2, "foo", "foo-desc", "admins", True, TIME_UNIT_YEAR, 1,
+                self.now, "pipeline", "{}", category="test"
+            )
+        self.assertEqual(cm.exception.args[0], "User is not subscribed to the tenant")
+
 
 class TenantTestCase3(TestCase):
     def setUp(self):
@@ -222,10 +231,10 @@ class TenantTestCase3(TestCase):
             self.user, "test-app", "test-app-description", "admins", "s3://data-manager-apps/test/1.0.0.0"
         )
         self.dataset = self.tenant.create_dataset(
-            "test-name", "1.0", 1, self.now, "test-description", self.user, "test-team"
+            "test-name", "1.0", 1, "test-description", self.user, "test-team"
         )
         self.other_asset = self.dataset.create_asset(
-            "asset-other", 10, self.now, self.now,
+            "asset-other", 10, self.now,
             [
                 LOC("parquet", "/data/foo1.parquet", 100, "main-repo"),
                 LOC("json", "/data/foo2.json", 150, "main-repo"),
@@ -382,6 +391,5 @@ class TenantTestCase4(TestCase):
         self.assertEqual(pg.category, "category")
         self.assertEqual(pg.context, '{"x": 1}')
         self.assertFalse(pg.finished)
-        self.assertFalse(pg.manual)
         self.assertEqual(pg.due, due)
 

@@ -16,14 +16,14 @@ class ApplicationSerializer(serializers.ModelSerializer):
         ]
 
 class NestAssetDepSerializer(serializers.ModelSerializer):
-    src_dsi_path = serializers.ReadOnlyField(source='src_dsi.dsi_path')
-    dst_dsi_path = serializers.ReadOnlyField(source='dst_dsi.dsi_path')
+    src_asset_path = serializers.ReadOnlyField(source='src_asset.full_path')
+    dst_asset_path = serializers.ReadOnlyField(source='dst_asset.full_path')
 
     class Meta:
         model = AssetDep
         fields = [
-            'src_dsi_path',
-            'dst_dsi_path',
+            'src_asset_path',
+            'dst_asset_path',
         ]
 
 class DatasetSerializer(serializers.ModelSerializer):

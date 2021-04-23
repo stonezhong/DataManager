@@ -28,10 +28,15 @@ def get_tenant(tenant_id):
 
 
 def tenant_access_check_for_ui(request, tenant_id):
-    # For Web UI, check if user can access the tenant
+    """
+    Check if user is authenticated and have access to the tenant
+    For Web UI only
+    """
     if not request.user.is_authenticated:
         raise PermissionDenied()
 
     tenant = get_tenant(tenant_id)
     if not tenant.is_user_subscribed(request.user):
         raise PermissionDenied()
+
+    return tenant

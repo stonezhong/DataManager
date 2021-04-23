@@ -22,7 +22,7 @@ import json
 
 from .models import Dataset, Asset, DataLocation, Pipeline, \
     PipelineGroup, PipelineInstance, Application, Timer, ScheduledEvent, \
-    DataRepo, Tenant, UserTenantSubscription, AccessToken, PermissionDeniedException
+    DataRepo, Tenant, UserTenantSubscription, AccessToken
 from .serializers import DatasetSerializer, AssetSerializer, \
     DataLocationSerializer, PipelineSerializer, PipelineGroupSerializer, \
     PipelineInstanceSerializer, ApplicationSerializer, PipelineGroupDetailsSerializer, \
@@ -173,6 +173,16 @@ class APIBaseView(viewsets.ModelViewSet):
 
 
 class DatasetViewSet(APIBaseView):
+    # Support
+    #   retrieve                    -- default behavior
+    #   list                        -- default behavior
+    #   destroy                     -- not supported
+    #   update                      -- not supported
+    #   create                      -- custom
+    #   set_schema_and_sample_data  -- custom
+    #   create_asset                -- custom
+    #   list_assets                 -- custom
+
     permission_classes = []
 
     queryset = Dataset.objects.all()
@@ -206,13 +216,18 @@ class DatasetViewSet(APIBaseView):
         ds = tenant.create_dataset(
             create_dataset_input.name,
             create_dataset_input.major_version, create_dataset_input.minor_version,
-            create_dataset_input.publish_time,
             create_dataset_input.description,
             user,
             create_dataset_input.team
         )
         response = DatasetSerializer(instance=ds).data
         return Response(response)
+
+    def destroy(self, request, tenant_id_str=None, *args, **kwargs):
+        raise ValidationError("destroy is not supported for Dataset")
+
+    def update(self, request, tenant_id_str=None, *args, **kwargs):
+        raise ValidationError("update is not supported for Dataset")
 
     @action(detail=True, methods=['post'])
     @transaction.atomic
@@ -234,7 +249,8 @@ class DatasetViewSet(APIBaseView):
         return Response(response)
 
     @transaction.atomic
-    def create_asset(self, request, tenant_id_str=None):
+    @action(detail=True, methods=['post'])
+    def create_asset(self, request, tenant_id_str=None, pk=None):
         """
         Create a dataset
         Deleted dataset instance is ignored.
@@ -245,23 +261,25 @@ class DatasetViewSet(APIBaseView):
         tenant_id = int(tenant_id_str)
         user, tenant = check_api_permission(request, tenant_id)
 
-        data = request.data
-        cdii = CreateAssetInput.from_json(data, tenant_id)
+        dataset = get_model_by_pk(Dataset, pk, tenant_id)
 
-        asset = cdii.dataset.create_asset(
-            cdii.name,
-            cdii.row_count,
-            cdii.publish_time,
-            cdii.data_time,
-            cdii.locations,
-            loader = cdii.loader,
-            src_dsi_paths = cdii.src_dsi_paths,
-            application = cdii.application,
-            application_args = cdii.application_args,
+        data = request.data
+        cai = CreateAssetInput.from_json(data, tenant_id)
+
+        asset = dataset.create_asset(
+            cai.name,
+            cai.row_count,
+            cai.data_time,
+            cai.locations,
+            loader = cai.loader,
+            src_asset_paths = cai.src_asset_paths,
+            application = cai.application,
+            application_args = cai.application_args,
         )
 
         response = AssetSerializer(instance=asset).data
         return Response(response)
+
 
 class AssetViewSet(APIBaseView):
     permission_classes = []
@@ -274,22 +292,25 @@ class AssetViewSet(APIBaseView):
         'dataset'           : ['exact'],
         'name'              : ['exact'],
         'revision'          : ['exact'],
+        'deleted_time'      : ['exact', 'isnull'],
     }
 
+    def create(self, request, tenant_id_str=None, *args, **kwargs):
+        raise ValidationError("create is not supported for PipelineGroup")
 
     @transaction.atomic
     def destroy(self, request, pk=None, tenant_id_str=None):
-        try:
-            tenant_id = int(tenant_id_str)
-            user, tenant = check_api_permission(request, tenant_id)
-            this_instance = get_model_by_pk(Asset, pk, tenant_id)
-            this_instance.soft_delete()
+        tenant_id = int(tenant_id_str)
+        user, tenant = check_api_permission(request, tenant_id)
+        this_instance = get_model_by_pk(Asset, pk, tenant_id)
+        this_instance.soft_delete()
 
-            response = AssetSerializer(instance=this_instance, context={'request': request}).data
-            return Response(response)
-        except PermissionDeniedException as e:
-            raise PermissionDenied({"message": e.message})
+        response = AssetSerializer(instance=this_instance, context={'request': request}).data
+        return Response(response)
 
+
+    def update(self, request, tenant_id_str=None, *args, **kwargs):
+        raise ValidationError("update is not supported for Asset")
 
 class PipelineViewSet(APIBaseView):
     permission_classes = []
@@ -582,3 +603,5 @@ class UserTenantSubscriptionViewSet(viewsets.ModelViewSet):
 
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+
+

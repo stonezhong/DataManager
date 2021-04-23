@@ -5,7 +5,7 @@ import Card from 'react-bootstrap/Card'
 import Col from 'react-bootstrap/Col'
 import Row from 'react-bootstrap/Row'
 
-import {AssetLinkFromDSIPath} from '/components/business/dataset/utils.jsx'
+import {AssetLinkFromPath} from '/components/business/dataset/utils.jsx'
 import {AppIcon} from '/components/generic/icons/main.jsx'
 import {ApplicationLink} from '/components/business/application'
 import {DataRepoLink} from '/components/business/datarepo'
@@ -16,38 +16,39 @@ import './dataset.scss'
  * Purpose: Show a single asset revision
  *
  * Props
- *     dataset              : A dataset object
- *     dataset_instance     : A dataset instance object
+ *     tenant_id            : the tenant id
+ *     asset                : the asset to view
+ *     dataset              : the dataset asset belongs to
  *     execute_sql_app_id   : application_id for Execute SQL statement
  *
  */
 export class DatasetInstanceView extends React.Component {
-    app_args = () => JSON.parse(this.props.dsi.application_args);
+    app_args = () => JSON.parse(this.props.asset.application_args);
 
     render_imp = imp => {
-        if (imp.dsi_name) {
-            return <span>import asset <code>{imp.dsi_name}</code> as view <code>{imp.alias}</code></span>;
+        if (imp.asset_name) {
+            return <span>import asset <code>{imp.asset_name}</code> as view <code>{imp.alias}</code></span>;
         }
         return <span>import view <code>${imp.alias}</code></span>;
     };
 
     render_lineage_info() {
-        if (!this.props.dsi.application) {
+        if (!this.props.asset.application) {
             return null;
         }
 
-        if (this.props.dsi.application.id === this.props.execute_sql_app_id)
+        if (this.props.asset.application.id === this.props.execute_sql_app_id)
             return this.render_lineage_info_execute_sql();
         else
             return this.render_lineage_info_application();
     }
 
     render_producer_type() {
-        if (!this.props.dsi.application) {
+        if (!this.props.asset.application) {
             return null;
         }
 
-        if (this.props.dsi.application.id === this.props.execute_sql_app_id)
+        if (this.props.asset.application.id === this.props.execute_sql_app_id)
             return "Spark-SQL";
         else
             return "Application";
@@ -60,14 +61,14 @@ export class DatasetInstanceView extends React.Component {
                     <tr>
                         <td>Application</td>
                         <td>
-                            <ApplicationLink tenant_id={this.props.tenant_id} application={this.props.dsi.application} />
+                            <ApplicationLink tenant_id={this.props.tenant_id} application={this.props.asset.application} />
                         </td>
                     </tr>
                     <tr>
                         <td>Arguments</td>
                         <td>
                             <pre>
-                                { JSON.stringify(JSON.parse(this.props.dsi.application_args),null,2) }
+                                { JSON.stringify(JSON.parse(this.props.asset.application_args),null,2) }
                             </pre>
                         </td>
                     </tr>
@@ -84,7 +85,7 @@ export class DatasetInstanceView extends React.Component {
                     {
                         step.imports.map(imp => <tr>
                             <td>
-                                Load view "{imp.alias}" from <AssetLinkFromDSIPath dsi_path={imp.dsi_name} />
+                                Load view "{imp.alias}" from <AssetLinkFromPath path={imp.asset_name} />
                             </td>
                         </tr>)
                     }
@@ -99,8 +100,8 @@ export class DatasetInstanceView extends React.Component {
                         <div>
                             Save to {step.output.location} as {step.output.type} in {step.output.write_mode} mode.
                         </div>
-                        { step.output.register_dataset_instance && <div>
-                            Publish as <AssetLinkFromDSIPath dsi_path={step.output.register_dataset_instance} />
+                        { step.output.register_asset && <div>
+                            Publish as <AssetLinkFromPath path={step.output.register_asset} />
                         </div>}
                     </td></tr>}
                 </tbody>
@@ -111,16 +112,16 @@ export class DatasetInstanceView extends React.Component {
     render_lineage_info_execute_sql() {
         return <div>
             {
-                JSON.parse(this.props.dsi.application_args).steps.map(step => this.render_lineage_info_execute_sql_step(step))
+                JSON.parse(this.props.asset.application_args).steps.map(step => this.render_lineage_info_execute_sql_step(step))
             }
         </div>;
     }
 
-    render_dsi_status(dsi) {
-        if (dsi.deleted_time)
+    render_asset_status(asset) {
+        if (asset.deleted_time)
             return <div>
                 <AppIcon type="dismiss" className="icon24 mr-2"/>
-                <span className="asset-label-inactive">Deleted at {dsi.deleted_time}</span>
+                <span className="asset-label-inactive">Deleted at {asset.deleted_time}</span>
             </div>;
         else
             return <div>
@@ -132,10 +133,10 @@ export class DatasetInstanceView extends React.Component {
     render() {
         return (
             <div>
-                <h2>Revision {this.props.dsi.revision}</h2>
+                <h2>Revision {this.props.asset.revision}</h2>
                 <Row>
                     <Col>
-                        <Card border={this.props.dsi.deleted_time?"danger":"success"}>
+                        <Card border={this.props.asset.deleted_time?"danger":"success"}>
                             <Card.Body>
                                 <Row>
                                     <Col>
@@ -143,33 +144,33 @@ export class DatasetInstanceView extends React.Component {
                                             <tbody>
                                                 <tr>
                                                     <td>Status</td>
-                                                    <td>{this.render_dsi_status(this.props.dsi)}</td>
+                                                    <td>{this.render_asset_status(this.props.asset)}</td>
                                                 </tr>
                                                 <tr>
                                                     <td>Revision</td>
-                                                    <td>{this.props.dsi.revision}</td>
+                                                    <td>{this.props.asset.revision}</td>
                                                 </tr>
                                                 <tr>
                                                     <td>Path</td>
-                                                    <td>{this.props.dsi.path}</td>
+                                                    <td>{this.props.asset.path}</td>
                                                 </tr>
                                                 <tr>
                                                     <td>Publish Time</td>
-                                                    <td>{this.props.dsi.publish_time}</td>
+                                                    <td>{this.props.asset.publish_time}</td>
                                                 </tr>
                                                 <tr>
                                                     <td>Data Time</td>
-                                                    <td>{this.props.dsi.data_time}</td>
+                                                    <td>{this.props.asset.data_time}</td>
                                                 </tr>
                                                 <tr>
                                                     <td>Row Count</td>
-                                                    <td>{this.props.dsi.row_count}</td>
+                                                    <td>{this.props.asset.row_count}</td>
                                                 </tr>
-                                                {(this.props.dsi.locations.length > 0) && <tr>
+                                                {(this.props.asset.locations.length > 0) && <tr>
                                                     <td>Locations</td>
                                                     <td>
                                                     {
-                                                        this.props.dsi.locations.map(location => <div key={location.position}>
+                                                        this.props.asset.locations.map(location => <div key={location.offset}>
                                                             {
                                                                 location.repo && <span className="card-asset-type">
                                                                     <DataRepoLink tenant_id={this.props.tenant_id} datarepo={location.repo} />
@@ -182,13 +183,13 @@ export class DatasetInstanceView extends React.Component {
                                                     </td>
                                                 </tr>}
 
-                                                {this.props.dsi.loader && <tr>
+                                                {Boolean(this.props.asset.loader) && <tr>
                                                     <td>Loader name</td>
-                                                    <td>{JSON.parse(this.props.dsi.loader).name}</td>
+                                                    <td>{JSON.parse(this.props.asset.loader).name}</td>
                                                 </tr>}
-                                                {this.props.dsi.loader && <tr>
+                                                {Boolean(this.props.asset.loader) && <tr>
                                                     <td>Loader args</td>
-                                                    <td>{<pre>{JSON.stringify(JSON.parse(this.props.dsi.loader).args, null, 2)}</pre>}</td>
+                                                    <td>{<pre>{JSON.stringify(JSON.parse(this.props.asset.loader).args, null, 2)}</pre>}</td>
                                                 </tr>}
                                                 <tr>
                                                     <td>Producer type</td>
@@ -197,16 +198,16 @@ export class DatasetInstanceView extends React.Component {
                                                 <tr>
                                                     <td>Upstream</td>
                                                     <td>
-                                                        {this.props.dsi.src_dataset_instances.map(src_dsi => <div key={src_dsi}>
-                                                            <AssetLinkFromDSIPath tenant_id={this.props.tenant_id} dsi_path={src_dsi} />
+                                                        {this.props.asset.src_assets.map(src_asset => <div key={src_asset}>
+                                                            <AssetLinkFromPath tenant_id={this.props.tenant_id} path={src_asset} />
                                                         </div>)}
                                                     </td>
                                                 </tr>
                                                 <tr>
                                                     <td>Downstream</td>
                                                     <td>
-                                                        {this.props.dsi.dst_dataset_instances.map(dst_dsi => <div key={dst_dsi}>
-                                                            <AssetLinkFromDSIPath tenant_id={this.props.tenant_id} dsi_path={dst_dsi} />
+                                                        {this.props.asset.dst_assets.map(dst_asset => <div key={dst_asset}>
+                                                            <AssetLinkFromPath tenant_id={this.props.tenant_id} path={dst_asset} />
                                                         </div>)}
                                                     </td>
                                                 </tr>

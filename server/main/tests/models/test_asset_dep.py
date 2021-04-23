@@ -28,10 +28,10 @@ class AssetDepTestCase(TestCase):
             self.user, "test-app", "test-app-description", "admins", "s3://data-manager-apps/test/1.0.0.0",
         )
         self.dataset = self.tenant.create_dataset(
-            "test-name", "1.0", 1, self.now, "test-description", self.user, "test-team"
+            "test-name", "1.0", 1, "test-description", self.user, "test-team"
         )
         self.other_asset = self.dataset.create_asset(
-            "asset-other", 10, self.now, self.now,
+            "asset-other", 10, self.now,
             [
                 LOC("parquet", "/data/foo1.parquet", 100, "main-repo"),
                 LOC("json", "/data/foo2.json", 150, "main-repo"),
@@ -41,13 +41,13 @@ class AssetDepTestCase(TestCase):
             application_args="{}"
         )
         self.asset = self.dataset.create_asset(
-            "asset-name", 10, self.now, self.now,
+            "asset-name", 10, self.now,
             [
                 LOC("parquet", "/data/foo1.parquet", 100, "main-repo"),
                 LOC("json", "/data/foo2.json", 150, "main-repo"),
             ],
             loader='{"type": "union"}',
-            src_dsi_paths=[ "test-name:1.0:1:asset-other:0" ],
+            src_asset_paths=[ "test-name:1.0:1:asset-other:0" ],
             application=self.application,
             application_args="{}"
         )
@@ -59,8 +59,8 @@ class AssetDepTestCase(TestCase):
             # adding new one should cause dup row
             asset_dep1 = AssetDep(
                 tenant=self.tenant,
-                src_dsi=self.other_asset,
-                dst_dsi=self.asset,
+                src_asset=self.other_asset,
+                dst_asset=self.asset,
             )
             asset_dep1.save()
         self.assertRegex(cm.exception.args[1], r"^Duplicate entry.*$")
