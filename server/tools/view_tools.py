@@ -40,3 +40,17 @@ def tenant_access_check_for_ui(request, tenant_id):
         raise PermissionDenied()
 
     return tenant
+
+def get_model_by_unique_query(model_class, **filter):
+    """
+    The query should result in 0 or 1 result
+    """
+    try:
+        models = model_class.objects.filter(**filter)
+        if len(models) == 0:
+            return None
+        assert len(models) == 1
+        return models[0]
+    except ValidationError:
+        raise Http404
+    return model

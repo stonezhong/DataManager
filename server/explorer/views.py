@@ -31,7 +31,7 @@ import jinja2
 from graphviz import Digraph
 
 from tools.email_tools import send_signup_validate_email
-from tools.view_tools import get_model_by_pk, tenant_access_check_for_ui
+from tools.view_tools import get_model_by_pk, tenant_access_check_for_ui, get_model_by_unique_query
 
 def get_app_config():
     config = {
@@ -599,11 +599,7 @@ def do_signup_user(username, password, password1, first_name, last_name, email):
             "msg": msg
         }
 
-    users = User.objects.filter(username=username)
-    found_user = None
-    assert len(users) == 1
-    if len(users) == 1:
-        found_user = users[0]
+    found_user = get_model_by_unique_query(User, username=username)
     if found_user is not None:
         if found_user.is_active:
             return {
