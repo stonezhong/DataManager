@@ -19,7 +19,6 @@ urlpatterns = [
     path('<int:tenant_id>/pipeline', views.pipeline, name='pipeline'),
     path('<int:tenant_id>/executions', views.pipeline_groups, name='executions'),
     path('<int:tenant_id>/execution', views.pipeline_group, name='execution'),
-
-    path('<int:tenant_id>/asset', views.dataset_instance, name='asset'),
+    path('<int:tenant_id>/asset', views.asset, name='asset'),
     path('test', views.test, name='test'), # for testing UI components
 ]

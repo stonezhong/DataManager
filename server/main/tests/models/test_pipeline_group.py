@@ -25,7 +25,7 @@ class PipelineGroupTestCase(TestCase):
             category="test-category",
             context="{}",
             finished=True,
-            manual=False
+            due=datetime(2021,1, 1).replace(tzinfo=pytz.UTC)
         )
         pipeline_group.save()
 
@@ -53,7 +53,7 @@ class PipelineGroupTestCase(TestCase):
             category="test-category",
             context="{}",
             finished=True,
-            manual=False
+            due=datetime(2021,1, 1).replace(tzinfo=pytz.UTC)
         )
         pipeline_group.save()
 
@@ -75,7 +75,7 @@ class PipelineGroupTestCase(TestCase):
             category="test-category",
             context="{}",
             finished=True,
-            manual=False
+            due=datetime(2021,1, 1).replace(tzinfo=pytz.UTC)
         )
         pipeline_group1.save()
 
@@ -87,7 +87,7 @@ class PipelineGroupTestCase(TestCase):
                 category="test-category!!!",
                 context='{"x": 1}',
                 finished=False,
-                manual=True
+                due=datetime(2021,1, 2).replace(tzinfo=pytz.UTC)
             )
             pipeline_group2.save()
 

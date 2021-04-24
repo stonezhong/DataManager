@@ -28,10 +28,29 @@ def get_tenant(tenant_id):
 
 
 def tenant_access_check_for_ui(request, tenant_id):
-    # For Web UI, check if user can access the tenant
+    """
+    Check if user is authenticated and have access to the tenant
+    For Web UI only
+    """
     if not request.user.is_authenticated:
         raise PermissionDenied()
 
     tenant = get_tenant(tenant_id)
     if not tenant.is_user_subscribed(request.user):
         raise PermissionDenied()
+
+    return tenant
+
+def get_model_by_unique_query(model_class, **filter):
+    """
+    The query should result in 0 or 1 result
+    """
+    try:
+        models = model_class.objects.filter(**filter)
+        if len(models) == 0:
+            return None
+        assert len(models) == 1
+        return models[0]
+    except ValidationError:
+        raise Http404
+    return model

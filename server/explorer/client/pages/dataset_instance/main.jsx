@@ -45,7 +45,7 @@ class DatasetInstancePage extends React.Component {
                                 <tr>
                                     <td>Full Path</td>
                                     <td>
-                                        {this.props.dsi_path}
+                                        {this.props.asset_path}
                                     </td>
                                 </tr>
                             </tbody>
@@ -55,11 +55,10 @@ class DatasetInstancePage extends React.Component {
                 <Row className="mt-2">
                     <Col>
                     {
-                        this.props.dsi_list.map(dsi => <div id={`revision-${dsi.revision}`}  className="mb-4">
+                        this.props.assets.map(asset => <div id={`revision-${asset.revision}`}  key={asset.id} className="mb-4">
                             <DatasetInstanceView
                                 tenant_id={this.props.tenant_id}
-                                key={dsi.id}
-                                dsi={dsi}
+                                asset={asset}
                                 dataset={this.props.dataset}
                                 execute_sql_app_id={this.props.execute_sql_app_id}
                             />
@@ -81,9 +80,9 @@ $(function() {
         <DatasetInstancePage
             tenant_id={tenant_id}
             current_user={current_user}
-            dataset={app_context.ds}
-            dsi_list={app_context.dsi_list}
-            dsi_path={app_context.dsi_path}
+            dataset={app_context.dataset}
+            assets={app_context.assets}
+            asset_path={app_context.asset_path}
             execute_sql_app_id={app_context.execute_sql_app_id}
         />,
         document.getElementById('app')

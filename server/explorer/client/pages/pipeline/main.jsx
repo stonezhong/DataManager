@@ -32,7 +32,7 @@ class PipelinePage extends React.Component {
 
     savePipelineAndRefresh = (mode, pipeline) => {
         return savePipeline(
-            get_csrf_token(),
+            this.props.csrf_token,
             this.props.tenant_id,
             mode,
             pipeline
@@ -42,19 +42,19 @@ class PipelinePage extends React.Component {
     };
 
     pausePipelineAndRefresh = (pipeline_id) => {
-        return pausePipeline(get_csrf_token(), pipeline_id).then(() => {
+        return pausePipeline(this.props.csrf_token, this.props.tenant_id, pipeline_id).then(() => {
             location.reload();
         });
     };
 
     unpausePipelineAndRefresh = (pipeline_id) => {
-        return unpausePipeline(get_csrf_token(), pipeline_id).then(() => {
+        return unpausePipeline(this.props.csrf_token, this.props.tenant_id, pipeline_id).then(() => {
             location.reload();
         });
     };
 
     retirePipelineAndRefresh = (pipeline_id) => {
-        return retirePipeline(get_csrf_token(), pipeline_id).then(() => {
+        return retirePipeline(this.props.csrf_token, this.props.tenant_id, pipeline_id).then(() => {
             location.reload();
         });
     };
@@ -141,6 +141,7 @@ $(function() {
     const dag_svg = app_context.dag_svg;
     const app_config = get_app_config();
     const tenant_id = get_tenant_id();
+    const csrf_token = get_csrf_token()
 
     ReactDOM.render(
         <PipelinePage
@@ -151,6 +152,7 @@ $(function() {
             active_applications={app_context.active_applications}
             dag_svg = {dag_svg}
             airflow_base_url = {app_config.AIRFLOW_BASE_URL}
+            csrf_token = {get_csrf_token()}
         />,
         document.getElementById('app')
     );

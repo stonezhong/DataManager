@@ -22,53 +22,14 @@ import {
  *     saveTimer
  *     getPipelines
  *     savePipeline
+ *     pausePipeline
+ *     unpausePipeline
+ *     retirePipeline
  *     getPipelineGroups
  *     savePipelineGroup
  *     getPipelineGroup
  *
  */
-
-
-
-export function pausePipeline(csrf_token, pipeline_id) {
-    // called when user want to pause a pipeline
-    return fetch(`/api/Pipelines/${pipeline_id}/`, {
-        method: 'post',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': csrf_token,
-            'X-Data-Manager-Use-Method': 'PATCH',
-        },
-        body: JSON.stringify({paused: true})
-    }).then(handle_json_response)
-}
-
-export function unpausePipeline(csrf_token, pipeline_id) {
-    // called when user want to unpause a pipeline
-    return fetch(`/api/Pipelines/${pipeline_id}/`, {
-        method: 'post',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': csrf_token,
-            'X-Data-Manager-Use-Method': 'PATCH',
-        },
-        body: JSON.stringify({paused: false})
-    }).then(handle_json_response)
-}
-
-export function retirePipeline(csrf_token, pipeline_id) {
-    // called when user want to retire a pipeline
-    return fetch(`/api/Pipelines/${pipeline_id}/`, {
-        method: 'post',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': csrf_token,
-            'X-Data-Manager-Use-Method': 'PATCH',
-        },
-        body: JSON.stringify({retired: true})
-    }).then(handle_json_response)
-}
-
 
 // === verified ===
 export function saveTenant(csrf_token, mode, tenant) {
@@ -147,14 +108,12 @@ export function saveDataset(csrf_token, tenant_id, mode, dataset) {
     // if mode is "edit", we want patch an existing dataset
     if (mode == "new") {
         // TODO: shuold not trust client side time
-        const now = dt_2_utc_string(new Date());
         const to_post = {
             name            : dataset.name,
             major_version   : dataset.major_version,
             minor_version   : parseInt(dataset.minor_version),
             description     : dataset.description,
             team            : dataset.team,
-            publish_time    : now,
         }
 
         return fetch(`/api/${tenant_id}/Datasets/`, {
@@ -186,7 +145,9 @@ export function saveDataset(csrf_token, tenant_id, mode, dataset) {
     }
 }
 
-export function getAssets(tenant_id, dataset_id, offset, limit) {
+export function getAssets(tenant_id, dataset_id, offset, limit, active) {
+    // if active is false, we return all assets
+    // if active is true, we return non-deleted assets
     const buildArgs = {
         path: `/api/${tenant_id}/Assets/`,
         queryParams: {
@@ -195,6 +156,9 @@ export function getAssets(tenant_id, dataset_id, offset, limit) {
             dataset_id: dataset_id
         }
     };
+    if (active) {
+        buildArgs.queryParams.deleted_time__isnull = 'True';
+    }
     const url = buildUrl('', buildArgs);
     return fetch(url).then(handle_json_response);
 }
@@ -434,6 +398,47 @@ export function savePipeline(csrf_token, tenant_id, mode, pipeline) {
         }).then(handle_json_response);
     }
 }
+
+export function pausePipeline(csrf_token, tenant_id, pipeline_id) {
+    // called when user want to pause a pipeline
+    return fetch(`/api/${tenant_id}/Pipelines/${pipeline_id}/`, {
+        method: 'post',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrf_token,
+            'X-Data-Manager-Use-Method': 'PATCH',
+        },
+        body: JSON.stringify({paused: true})
+    }).then(handle_json_response)
+}
+
+
+export function unpausePipeline(csrf_token, tenant_id, pipeline_id) {
+    // called when user want to pause a pipeline
+    return fetch(`/api/${tenant_id}/Pipelines/${pipeline_id}/`, {
+        method: 'post',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrf_token,
+            'X-Data-Manager-Use-Method': 'PATCH',
+        },
+        body: JSON.stringify({paused: false})
+    }).then(handle_json_response)
+}
+
+export function retirePipeline(csrf_token, tenant_id, pipeline_id) {
+    // called when user want to retire a pipeline
+    return fetch(`/api/${tenant_id}/Pipelines/${pipeline_id}/`, {
+        method: 'post',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrf_token,
+            'X-Data-Manager-Use-Method': 'PATCH',
+        },
+        body: JSON.stringify({retired: true})
+    }).then(handle_json_response)
+}
+
 
 export function getPipelineGroups(tenant_id, offset, limit) {
     const buildArgs = {

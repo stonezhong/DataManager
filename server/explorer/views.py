@@ -13,11 +13,11 @@ from django.urls import reverse
 from django.http import HttpResponse, HttpResponseForbidden, Http404
 from django.contrib.auth.models import User
 
-from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.core.exceptions import ObjectDoesNotExist, ValidationError, SuspiciousOperation
 
 from main.models import Dataset, Pipeline, PipelineGroup, PipelineInstance, \
     Application, Asset, DataRepo, Tenant, UserTenantSubscription, \
-    AccessToken, do_signup_user
+    AccessToken
 from main.serializers import PipelineSerializer, DatasetSerializer, \
     ApplicationSerializer, PipelineGroupDetailsSerializer, \
     AssetSerializer, DataRepoSerializer, UserTenantSubscriptionSerializer
@@ -31,7 +31,7 @@ import jinja2
 from graphviz import Digraph
 
 from tools.email_tools import send_signup_validate_email
-from tools.view_tools import get_model_by_pk, tenant_access_check_for_ui
+from tools.view_tools import get_model_by_pk, tenant_access_check_for_ui, get_model_by_unique_query
 
 def get_app_config():
     config = {
@@ -89,11 +89,12 @@ def datasets(request, tenant_id):
 def dataset(request, tenant_id):
     if not request.user.is_authenticated:
         return redirect(reverse('login'))
+    tenant_access_check_for_ui(request, tenant_id)
 
     dataset_id = request.GET['id']
 
     dataset = get_model_by_pk(Dataset, dataset_id, tenant_id)
-    s = DatasetSerializer(dataset, context={"request": request})
+    s = DatasetSerializer(dataset)
 
     app_context = {
         'dataset': s.data
@@ -247,6 +248,7 @@ def signup_validate(request):
 def pipelines(request, tenant_id):
     if not request.user.is_authenticated:
         return redirect(reverse('login'))
+    tenant_access_check_for_ui(request, tenant_id)
 
     applications = Application.objects.filter(retired=False, sys_app_id__isnull=True, tenant__id=tenant_id)
 
@@ -291,6 +293,7 @@ def get_task_dep_svg(pipeline):
 def pipeline(request, tenant_id):
     if not request.user.is_authenticated:
         return redirect(reverse('login'))
+    tenant_access_check_for_ui(request, tenant_id)
 
     pipeline_id = request.GET['id']
 
@@ -305,10 +308,10 @@ def pipeline(request, tenant_id):
         if task['type']=='other':
             application_ids.append(task['application_id'])
     applications = Application.objects.filter(id__in=application_ids)
-    s_apps = ApplicationSerializer(applications, many=True, context={"request": request})
+    s_apps = ApplicationSerializer(applications, many=True)
 
     active_apps = Application.objects.filter(retired=False, sys_app_id__isnull=True, tenant__id=tenant_id)
-    s_active_apps = ApplicationSerializer(active_apps, many=True, context={"request": request})
+    s_active_apps = ApplicationSerializer(active_apps, many=True)
 
     app_context = {
         'pipeline': s.data,
@@ -356,6 +359,7 @@ def pipeline_groups(request, tenant_id):
 def pipeline_group(request, tenant_id):
     if not request.user.is_authenticated:
         return redirect(reverse('login'))
+    tenant_access_check_for_ui(request, tenant_id)
 
     pipeline_group_id = request.GET['id']
 
@@ -384,6 +388,7 @@ def pipeline_group(request, tenant_id):
 def applications(request, tenant_id):
     if not request.user.is_authenticated:
         return redirect(reverse('login'))
+    tenant_access_check_for_ui(request, tenant_id)
 
     return render(
         request,
@@ -401,27 +406,28 @@ def applications(request, tenant_id):
     )
 
 
-def dataset_instance(request, tenant_id):
+def asset(request, tenant_id):
     if not request.user.is_authenticated:
         return redirect(reverse('login'))
+    tenant = tenant_access_check_for_ui(request, tenant_id)
 
-    dsi_path = request.GET['dsi_path']
+    asset_path = request.GET.get('asset_path')
 
-    if dsi_path is None:
-        return HttpResponseBadRequest()
+    if asset_path is None:
+        raise SuspiciousOperation("asset_path is missing")
 
-    execute_sql_app = Application.get_execute_sql_app(request.user)
+    execute_sql_app = tenant.get_application_by_sys_app_id(Application.SysAppID.EXECUTE_SQL)
 
-    dsi_list = Asset.revisions_from_dsi_path(tenant_id, dsi_path)
-    ds = dsi_list[0].dataset
+    assets = tenant.get_asset_revisions_from_path(asset_path)
+    dataset = assets[0].dataset
 
-    dsi_list_rendered = AssetSerializer(dsi_list, many=True, context={"request": request})
-    ds_rendered = DatasetSerializer(ds, context={"request": request})
+    assets_rendered = AssetSerializer(assets, many=True)
+    dataset_rendered = DatasetSerializer(dataset)
 
     app_context = {
-        'dsi_list': dsi_list_rendered.data,
-        'ds': ds_rendered.data,
-        'dsi_path': dsi_path,
+        'assets'        : assets_rendered.data,
+        'dataset'       : dataset_rendered.data,
+        'asset_path'    : asset_path,
         'execute_sql_app_id': str(execute_sql_app.id),
     }
 
@@ -444,6 +450,7 @@ def dataset_instance(request, tenant_id):
 def schedulers(request, tenant_id):
     if not request.user.is_authenticated:
         return redirect(reverse('login'))
+    tenant_access_check_for_ui(request, tenant_id)
 
     return render(
         request,
@@ -463,6 +470,7 @@ def schedulers(request, tenant_id):
 def application(request, tenant_id):
     if not request.user.is_authenticated:
         return redirect(reverse('login'))
+    tenant_access_check_for_ui(request, tenant_id)
 
     application_id = request.GET['id']
 
@@ -492,6 +500,7 @@ def application(request, tenant_id):
 def datarepos(request, tenant_id):
     if not request.user.is_authenticated:
         return redirect(reverse('login'))
+    tenant_access_check_for_ui(request, tenant_id)
 
     return render(
         request,
@@ -511,6 +520,7 @@ def datarepos(request, tenant_id):
 def datarepo(request, tenant_id):
     if not request.user.is_authenticated:
         return redirect(reverse('login'))
+    tenant_access_check_for_ui(request, tenant_id)
 
     try:
         datarepo_id = request.GET['id']
@@ -556,4 +566,91 @@ def datalakes(request, tenant_id=None):
             'app_config': get_app_config(),
         }
     )
+
+
+def do_signup_user(username, password, password1, first_name, last_name, email):
+    msg = None
+    while True:
+        if len(username)==0:
+            msg = "Username cannot be empty"
+            break
+        if len(password)==0:
+            msg = "Password cannot be empty"
+            break
+        if len(password1)==0:
+            msg = "Password cannot be empty"
+            break
+        if len(first_name)==0:
+            msg = "First name cannot be empty"
+            break
+        if len(last_name)==0:
+            msg = "Last name cannot be empty"
+            break
+        if len(email)==0:
+            msg = "Email name cannot be empty"
+            break
+        if password != password1:
+            msg = "Password does not match"
+            break
+        break
+    if msg is not None:
+        return {
+            "success": False,
+            "msg": msg
+        }
+
+    found_user = get_model_by_unique_query(User, username=username)
+    if found_user is not None:
+        if found_user.is_active:
+            return {
+                "success": False,
+                "msg": "Invalid username or email!"
+            }
+        if found_user.email != email:
+            return {
+                "success": False,
+                "msg": "Invalid username or email!"
+            }
+
+        token = AccessToken.create_token(
+            found_user, timedelta(days=1), AccessToken.Purpose.SIGNUP_VALIDATE,
+        )
+
+        return {
+            "success": True,
+            "msg": f"An account validation email has been sent to {email}, please click the link in the email to validate your account",
+            "send_email": True,
+            "token": token,
+            "user": found_user
+        }
+
+    users = User.objects.filter(email=email)
+    if len(users) > 0:
+        return {
+            "success": False,
+            "msg": "Use a different email!"
+        }
+
+
+    user = User.objects.create_user(
+        username,
+        email=email,
+        password=password,
+        first_name=first_name,
+        last_name=last_name,
+        is_active=False
+    )
+    user.save()
+
+    token = AccessToken.create_token(
+        user, timedelta(days=1), AccessToken.Purpose.SIGNUP_VALIDATE,
+    )
+
+    return {
+        "success": True,
+        "msg": f"An account validation email has been sent to {email}, please click the link in the email to validate your account",
+        "send_email": True,
+        "token": token,
+        "user": user
+    }
 

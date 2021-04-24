@@ -9,32 +9,33 @@ import ReactJson from 'react-json-view'
 import * as Icon from 'react-bootstrap-icons'
 import {DataTable} from '/components/generic/datatable/main.jsx'
 import {SimpleDialogBox} from '/components/generic/dialogbox/simple.jsx'
-import {AssetLink, AssetLinkFromDSIPath} from '/components/business/dataset/utils.jsx'
+import {AssetLink, AssetLinkFromPath} from '/components/business/dataset/utils.jsx'
 import {DataRepoLink} from '/components/business/datarepo'
 
 import './dataset.scss'
 
 /*********************************************************************************
- * Purpose: Show list of dataset instances
+ * Purpose: Show list of assets
  * TODO: pagination
  *
  * Props
- *     ds                    : object, dataset
+ *     tenant_id             : the tenant id
+ *     dataset               : object, dataset
  *     allowDelete           : boolean, allow delete dataset instance?
- *     onDelete              : function, onDelete(dataset_instance_id), delete a
+ *     onDelete              : function, onDelete(asset_id), delete a
  *                             dataset instance
- *     dataset               : the dataset object
- *     dataset_instances     : a list of dataset instances
+ *     get_page              : API to get current page
+ *     page_size             : page size
  *
  */
 export class DatasetInstanceTable extends React.Component {
     theLoaderViewerRef  = React.createRef();
     theDataTableRef     = React.createRef();
 
-    render_locations = dataset_instance => (
+    render_locations = asset => (
         <Table size="sm" borderless className="c-location-table">
             <tbody>
-                {dataset_instance.locations.map((location)=>{
+                {asset.locations.map((location)=>{
                     return (
                         <tr key={location.offset}>
                             <td><small><code>
@@ -56,8 +57,8 @@ export class DatasetInstanceTable extends React.Component {
         </Table>
     );
 
-    render_loader = dataset_instance => (
-        dataset_instance.loader && <Button
+    render_loader = asset => (
+        asset.loader && <Button
             variant="secondary"
             size="sm"
             variant="secondary"
@@ -65,7 +66,7 @@ export class DatasetInstanceTable extends React.Component {
                 this.theLoaderViewerRef.current.openDialog(
                     "Loader",
                     <div>
-                        <ReactJson  src={JSON.parse(dataset_instance.loader)}
+                        <ReactJson  src={JSON.parse(asset.loader)}
                             theme="colors"
                             iconStyle="circle"
                             quotesOnKeys={false}
@@ -84,17 +85,17 @@ export class DatasetInstanceTable extends React.Component {
         </Button>
     );
 
-    render_data_time = dataset_instance => {
+    render_data_time = asset => {
         // short display if data_time is at day boundary
         const suffix = " 00:00:00";
-        if (dataset_instance.data_time.endsWith(suffix)) {
-            return dataset_instance.data_time.substring(0, dataset_instance.data_time.length - suffix.length);
+        if (asset.data_time.endsWith(suffix)) {
+            return asset.data_time.substring(0, asset.data_time.length - suffix.length);
         } else {
-            return dataset_instance.data_time;
+            return asset.data_time;
         }
     };
 
-    render_dependency = dataset_instance => (
+    render_dependency = asset => (
         <Button
             variant="secondary"
             size="sm"
@@ -103,29 +104,29 @@ export class DatasetInstanceTable extends React.Component {
                 this.theLoaderViewerRef.current.openDialog(
                     "Asset Dependency",
                     <div>
-                        {(dataset_instance.src_dataset_instances.length == 0) && <p>
+                        {(asset.src_assets.length == 0) && <p>
                             From assets: none
                         </p>}
-                        {(dataset_instance.src_dataset_instances.length > 0) && <div>
+                        {(asset.src_assets.length > 0) && <div>
                             From assets:
                             <ul>
                                 {
-                                    dataset_instance.src_dataset_instances.map(
-                                        dsi_path => <li><AssetLinkFromDSIPath dsi_path={dsi_path}/></li>
+                                    asset.src_assets.map(
+                                        path => <li><AssetLinkFromPath path={path}/></li>
                                     )
                                 }
                             </ul>
                         </div>}
 
-                        {(dataset_instance.dst_dataset_instances.length == 0) && <p>
+                        {(asset.dst_assets.length == 0) && <p>
                             To assets: none
                         </p>}
-                        {(dataset_instance.dst_dataset_instances.length > 0) && <div>
+                        {(asset.dst_assets.length > 0) && <div>
                             To assets:
                             <ul>
                                 {
-                                    dataset_instance.dst_dataset_instances.map(
-                                        dsi_path => <li><AssetLinkFromDSIPath dsi_path={dsi_path}/></li>
+                                    asset.dst_assets.map(
+                                        path => <li><AssetLinkFromPath path={path}/></li>
                                     )
                                 }
                             </ul>
@@ -138,17 +139,17 @@ export class DatasetInstanceTable extends React.Component {
         </Button>
     );
 
-    onDelete = dataset_instance_id => {
-        return this.props.onDelete(dataset_instance_id).then(this.theDataTableRef.current.refresh);
+    onDelete = asset_id => {
+        return this.props.onDelete(asset_id).then(this.theDataTableRef.current.refresh);
     };
 
 
-    render_tools = dataset_instance => {
+    render_tools = asset => {
         if (!this.props.allowDelete) {
             return null;
         }
 
-        if (dataset_instance.dst_dataset_instances.length > 0) {
+        if (asset.dst_assets.length > 0) {
             return null;
         }
 
@@ -156,17 +157,17 @@ export class DatasetInstanceTable extends React.Component {
             variant="secondary"
             size="sm"
             onClick={
-                event => { this.onDelete(dataset_instance.id); }
+                event => { this.onDelete(asset.id); }
             }
         >
             <Icon.Trash />
         </Button>);
     };
 
-    render_path = dataset_instance => <AssetLink
+    render_name = asset => <AssetLink
         tenant_id={this.props.tenant_id}
         ds={this.props.ds}
-        dsi={dataset_instance}
+        asset={asset}
     />;
 
     get_page = (offset, limit) => {
@@ -175,7 +176,7 @@ export class DatasetInstanceTable extends React.Component {
 
     columns = {
         tools:              {display:"", render_data: this.render_tools},
-        path:               {display: "Path", render_data: this.render_path},
+        name:               {display: "name", render_data: this.render_name},
         data_time:          {display: "Data Time", render_data: this.render_data_time},
         publish_time:       {display: "Publish Time"},
         revision:           {display: "Revision"},

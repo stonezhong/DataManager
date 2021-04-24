@@ -59,20 +59,11 @@ models = {
         "additionalProperties": False,
         "required": ["name", "major_version", "minor_version", "description", "team"]
     },
-    "create_dataset_instance": {
+    "create_asset_input": {
         "type": "object",
         "properties": {
-            "dataset_id": {
-                "type": "string"
-            },
-            "parent_instance_id": {
-                "type": ["string", "null"]
-            },
             "name": {
                 "type": "string"
-            },
-            "publish_time": {
-                "$ref": f"#/types/datetime_string"
             },
             "data_time": {
                 "$ref": f"#/types/datetime_string"
@@ -106,7 +97,7 @@ models = {
                     "additionalProperties": False,
                 }
             },
-            "src_dsi_paths": {  # optional
+            "src_asset_paths": {  # optional
                 "type": "array",
                 "items": {
                     "type": "string"
@@ -121,7 +112,7 @@ models = {
         },
         "additionalProperties": False,
         "required": [
-            "dataset_id", "name", "data_time", "locations"
+            "name", "data_time", "locations"
         ]
     },
     "create_pipeline_input": {

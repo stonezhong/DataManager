@@ -35,7 +35,7 @@ class DatasetPage extends React.Component {
     };
 
     get_page = (offset, limit, filter={}) => getAssets(
-        this.props.tenant_id, this.props.dataset.id, offset, limit
+        this.props.tenant_id, this.props.dataset.id, offset, limit, true
     );
 
     saveDatasetAndRefresh = (mode, dataset) => {
@@ -174,7 +174,7 @@ class DatasetPage extends React.Component {
                 </Row>
                 <DatasetInstanceTable
                     tenant_id={this.props.tenant_id}
-                    ds={this.props.dataset}
+                    dataset={this.props.dataset}
                     allowDelete={!!this.props.current_user}
                     onDelete={this.onDelete}
                     get_page = {this.get_page}
