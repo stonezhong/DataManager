@@ -5,7 +5,7 @@ import Col from 'react-bootstrap/Col'
 import Row from 'react-bootstrap/Row'
 import * as Icon from 'react-bootstrap-icons'
 
-import {PipelineGroupEditor} from '/components/business/pipeline_group/pipeline_group_editor.jsx'
+import {PipelineGroupViewer} from '/components/business/pipeline_group/pipeline_group_viewer.jsx'
 import {DataTable} from '/components/generic/datatable/main.jsx'
 import {AppIcon} from '/components/generic/icons/main.jsx'
 
@@ -17,29 +17,23 @@ import './pipeline_group.scss'
  *
  * Props
  *     get_page         : A function to get the page
- *     allowEdit        : if True, user is allowed to edit pipeline group.
- *     allowNew         : if True, user is allowed to create new pipeline group
  *
  */
 export class PipelineGroupTable extends React.Component {
-    thePipelineGroupEditorRef   = React.createRef();
+    thePipelineGroupViewerRef   = React.createRef();
     theDataTableRef             = React.createRef();
-
-    canEdit = pipeline_group => {
-        return this.props.allowEdit && pipeline_group.manual && !pipeline_group.finished;
-    };
 
     render_tools = pipeline_group =>
         <Button
             variant="secondary"
             size="sm"
             onClick = {event => {
-                this.thePipelineGroupEditorRef.current.openDialog(
-                    this.canEdit(pipeline_group)?"edit":"view", pipeline_group
+                this.thePipelineGroupViewerRef.current.openDialog(
+                    {pipeline_group:pipeline_group}
                 )
             }}
         >
-            { this.canEdit(pipeline_group)?<Icon.Pencil />:<Icon.Info /> }
+            <Icon.Info />
         </Button>;
 
     render_name = pipeline_group => <a href={`/explorer/${this.props.tenant_id}/execution?id=${pipeline_group.id}`}>{pipeline_group.name}</a>;
@@ -82,6 +76,10 @@ export class PipelineGroupTable extends React.Component {
                     page_size={this.props.page_size}
                     fast_step_count={10}
                     get_page={this.get_page}
+                />
+                <PipelineGroupViewer
+                    ref={this.thePipelineGroupViewerRef}
+                    onSave={null}
                 />
             </div>
         )
