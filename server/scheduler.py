@@ -32,7 +32,7 @@ django.setup()
 # from django.db.models import Q
 from django.db import transaction
 from main.models import PipelineInstance, Dataset, Asset, \
-    Pipeline, PipelineInstance, PipelineGroup, Timer
+    Pipeline, PipelineInstance, PipelineGroup, Timer, AccessToken
 import explorer.airflow_lib as airflow_lib
 
 ################################################################################
@@ -128,7 +128,7 @@ def handle_pipeline_instance_created(pi):
         return
 
     # we need to generate a DM access token
-    token = AccessToken(
+    token = AccessToken.create_token(
         pi.pipeline.author,
         timedelta(days=1),
         AccessToken.Purpose.API_TOKEN,
@@ -140,6 +140,7 @@ def handle_pipeline_instance_created(pi):
     pipeline_instance_id = str(pi.id).replace("-", "")
     pipeline_id = str(pi.pipeline.id).replace("-", "")
     tenant_id = pi.tenant.id
+
     r = airflow_lib.trigger_dag(
         f"{pi.pipeline.name}.{pipeline_id}",
         {
