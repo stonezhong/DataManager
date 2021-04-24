@@ -177,7 +177,7 @@ class DatasetViewSet(APIBaseView):
     #   retrieve                    -- default behavior
     #   list                        -- default behavior
     #   destroy                     -- not supported
-    #   update                      -- not supported
+    #   update                      -- default behavior
     #   create                      -- custom
     #   set_schema_and_sample_data  -- custom
     #   create_asset                -- custom
@@ -225,9 +225,6 @@ class DatasetViewSet(APIBaseView):
 
     def destroy(self, request, tenant_id_str=None, *args, **kwargs):
         raise ValidationError("destroy is not supported for Dataset")
-
-    def update(self, request, tenant_id_str=None, *args, **kwargs):
-        raise ValidationError("update is not supported for Dataset")
 
     @action(detail=True, methods=['post'])
     @transaction.atomic
