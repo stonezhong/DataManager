@@ -23,8 +23,6 @@ class PipelineGroupsPage extends React.Component {
             <Container fluid>
                 <PipelineGroupTable
                     tenant_id={this.props.tenant_id}
-                    allowEdit={!!this.props.current_user}
-                    allowNew={!!this.props.current_user}
                     get_page={this.get_page}
                     page_size={15}
                     size="sm"

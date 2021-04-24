@@ -2,23 +2,17 @@ import React from 'react'
 
 import Button from 'react-bootstrap/Button'
 
-import {PipelineGroupEditor} from './pipeline_group_editor.jsx'
+import {PipelineGroupViewer} from './pipeline_group_viewer.jsx'
 
-export class TestPipelineGroupEditor extends React.Component {
+export class TestPipelineGroupViewer extends React.Component {
     testPipelineGroupEditorRef = React.createRef();
-
-    onSave = (mode, pipeline_group) => {
-        console.log(`pipeline group is saved as ${mode}`);
-        console.log(pipeline_group);
-    };
 
     render() {
         return (
             <div>
                 <h2>Test SQLSetepEditor</h2>
-                <PipelineGroupEditor
+                <PipelineGroupViewer
                     ref={this.testPipelineGroupEditorRef}
-                    onSave={this.onSave}
                 />
                 <Button
                     className="mr-2"
