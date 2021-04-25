@@ -342,22 +342,20 @@ class DataCatalogClientProxy:
             raise Exception("spark is not set")
         return server_ask_client(spark, self.channel, content, timeout=self.timeout, check_interval=self.check_interval)
 
-    def get_dataset(self, tenant_id, name, major_version, minor_version=None, spark=None):
+    def get_dataset(self, *, name, major_version, minor_version=None, spark=None):
         return self._ask(spark, {
             "topic": "dc_client.get_dataset",
             "payload": {
-                "tenant_id": tenant_id,
                 "name": name,
                 "major_version": major_version,
                 "minor_version": minor_version
             }
         })
 
-    def create_dataset(self, tenant_id, name, major_version, minor_version, description, team, spark=None):
+    def create_dataset(self, *, name, major_version, minor_version, description, team, spark=None):
         return self._ask(spark, {
             "topic": "dc_client.create_dataset",
             "payload": {
-                "tenant_id": tenant_id,
                 "name": name,
                 "major_version": major_version,
                 "minor_version": minor_version,
@@ -366,7 +364,7 @@ class DataCatalogClientProxy:
             }
         })
 
-    def set_dataset_schema_and_sample_data(self, id, schema, sample_data="", spark=None):
+    def set_dataset_schema_and_sample_data(self, *, id, schema, sample_data="", spark=None):
         return self._ask(spark, {
             "topic": "dc_client.set_dataset_schema_and_sample_data",
             "payload": {
@@ -384,41 +382,39 @@ class DataCatalogClientProxy:
             }
         })
 
-    def get_dataset_instance(self, tenant_id, name, major_version, minor_version, path, revision=None, spark=None):
+    def get_asset(self, *, dataset_name, major_version, minor_version, name, revision=None, spark=None):
         return self._ask(spark, {
             "topic": "dc_client.get_dataset_instance",
             "payload": {
-                "tenant_id": tenant_id,
-                "name": name,
+                "dataset_name": dataset_name,
                 "major_version": major_version,
                 "minor_version": minor_version,
-                "path": path,
+                "name": name,
                 "revision": revision,
             }
         })
 
-    def create_dataset_instance(self, tenant_id, name, major_version, minor_version, path, locations, data_time,
-                                row_count=None, loader=None, src_dsi_paths=[],
+    def create_dataset_instance(self, *, dataset_name, major_version, minor_version, name, locations, data_time,
+                                row_count=None, loader=None, src_asset_paths=[],
                                 application_id = None, application_args = None, spark=None):
         return self._ask(spark, {
             "topic": "dc_client.create_dataset_instance",
             "payload": {
-                "tenant_id": tenant_id,
-                "name": name,
+                "dataset_name": dataset_name,
                 "major_version": major_version,
                 "minor_version": minor_version,
-                "path": path,
+                "name": name,
                 "locations": locations,
                 "data_time": data_time.strftime('%Y-%m-%d %H:%M:%S'),
                 "row_count": row_count,
                 "loader": loader,
-                "src_dsi_paths": src_dsi_paths,
+                "src_asset_paths": src_asset_paths,
                 "application_id": application_id,
                 "application_args": application_args,
             }
         })
 
-    def delete_dataset_instance(self, id, spark=None):
+    def delete_dataset_instance(self, *, id, spark=None):
         return self._ask(spark, {
             "topic": "dc_client.delete_dataset_instance",
             "payload": {
@@ -426,11 +422,10 @@ class DataCatalogClientProxy:
             }
         })
 
-    def get_data_repo(self, tenant_id, name, spark=None):
+    def get_data_repo(self, *, name, spark=None):
         return self._ask(spark, {
             "topic": "dc_client.get_data_repo",
             "payload": {
-                "tenant_id": tenant_id,
                 "name": name,
             }
         })
