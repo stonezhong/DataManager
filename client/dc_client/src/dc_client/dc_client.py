@@ -1,6 +1,7 @@
 import requests
 import json
 from datetime import datetime
+import os
 
 def _update_locations(locations):
     # sort locations array and remove field 'offset'
@@ -12,34 +13,39 @@ def _update_locations(locations):
 class DataCatalogClient:
     """Data Catalog Client"""
 
-    def __init__(self, url_base, auth=None, dm_username=None, dm_token=None):
+    def __init__(self, *, url_base, tenant_id, auth=None, dm_username=None, dm_token=None):
         """
         Parameters
         ----------
         url_base: str
             The endpoint of the API. For example, http://www.myserver.com:8080/api
+        tenant_id: int
+            The tenant id.
         auth: tuple
             Tuple of username and password. Optional.
-        dm_username:
+        dm_username: str
             when auth is not provided, user can use "token" auth
             this is the username who owns the auth token
-        dm_token
+        dm_token: str
             A one-time toekn for API call
         """
-        self.url_base = url_base
+        self.url_base = os.path.join(url_base, str(tenant_id))
+        self.tenant_id = tenant_id
         self.session = requests.Session()
         if auth is None:
+            self.use_token   = True
             self.dm_username = dm_username
             self.dm_token    = dm_token
         else:
+            self.use_token   = False
             self.session.auth = auth
 
     def inject_token(self, params):
-        if self.dm_username is not None:
+        if self.use_token:
             params['dm_username'] = this.dm_username
             params['dm_token']    = this.dm_token
 
-    def get_dataset(self, tenant_id, name, major_version, minor_version=None, spark=None):
+    def get_dataset(self, *, name, major_version, minor_version=None, spark=None):
         """Get dataset.
 
         Parameters
@@ -54,9 +60,8 @@ class DataCatalogClient:
         spark: placeholder, to keep the API compatible
         """
 
-        url = "{}/Datasets/".format(self.url_base)
+        url = os.path.join(self.url_base, 'Datasets/')
         params = {
-            'tenant_id': tenant_id,
             'name': name,
             'major_version': major_version,
         }
@@ -83,13 +88,11 @@ class DataCatalogClient:
 
         return None
 
-    def create_dataset(self, tenant_id, name, major_version, minor_version, description, team, spark=None):
+    def create_dataset(self, *, name, major_version, minor_version, description, team, spark=None):
         """Create a dataset.
 
         Parameters
         ----------
-        tenant_id: integer
-            The id of the tenant.
         name: str
             The name of the dataset.
         major_version: str
@@ -102,22 +105,23 @@ class DataCatalogClient:
             The team who own the dataset.
         spark: placeholder, to keep the API compatible
         """
-        url = "{}/Datasets/".format(self.url_base)
+        url = os.path.join(self.url_base, 'Datasets/')
+        params = { }
+        self.inject_token(params)
+
         data = {
-            'tenant_id': tenant_id,
             'name': name,
             'major_version': major_version,
             'minor_version': minor_version,
             'description': description,
             'team': team
         }
-        self.inject_token(data)
 
-        r = self.session.post(url=url, json = data)
+        r = self.session.post(url=url, params=params, json=data)
         r.raise_for_status()
         return r.json()
 
-    def set_dataset_schema_and_sample_data(self, id, schema, sample_data="", spark=None):
+    def set_dataset_schema_and_sample_data(self, *, id, schema, sample_data="", spark=None):
         """set dataset schema.
 
         If dataset already have schema, and new schema is different it raise exception
@@ -131,19 +135,23 @@ class DataCatalogClient:
             The schema of the dataset
         spark: placeholder, to keep the API compatible
         """
-        url = "{}/Datasets/{}/set_schema_and_sample_data/".format(self.url_base, id, )
+        url = os.path.join(
+            self.url_base, 'Datasets', id,
+            "set_schema_and_sample_data/"
+        )
+        params = { }
+        self.inject_token(params)
+
         data = {
             'schema': schema,
             'sample_data': sample_data,
         }
-        self.inject_token(data)
-
-        r = self.session.post(url=url, json = data)
+        r = self.session.post(url=url, params=params, json=data)
         r.raise_for_status()
         return r.json()
 
 
-    def delete_dataset(self, id, spark=None):
+    def delete_dataset(self, *, id, spark=None):
         """Data a dataset by id.
 
         Parameters
@@ -152,41 +160,41 @@ class DataCatalogClient:
             The dataset ID.
         spark: placeholder, to keep the API compatible
         """
-        url = "{}/Datasets/{}".format(self.url_base, id)
+        url = os.path.join(self.url_base, "Datasets", f"{id}/")
         params = {}
         self.inject_token(params)
         r = self.session.delete(url=url, params=params)
         r.raise_for_status()
 
-
-    def get_dataset_instance(self, tenant_id, name, major_version, minor_version, path, revision=None, spark=None):
+    def get_asset(self, *, dataset_name, major_version, minor_version, name, revision=None, spark=None):
         """Get a dataset instance.
 
         Parameters
         ----------
-        tenant_id: integer
-            The ID of the tenant.
-        name: str
+        dataset_name: str
             The name of the dataset.
         major_version: str
             The major version of the dataset.
         minor_version: integer
             The minor version of the dataset.
-        path: str
-            The path of the dataset instance.
+        name: str
+            The name of the asset.
         revision: integer
             Optional. If specified, only dataset matching the revision will be returned.
             Otherwise, the latest revision will be returned.
         spark: placeholder, to keep the API compatible
         """
-        dataset = self.get_dataset(tenant_id, name, major_version, minor_version)
+        dataset = self.get_dataset(
+            name=dataset_name,
+            major_version=major_version,
+            minor_version=minor_version
+        )
         if dataset is None:
             return None
 
-        url = "{}/DatasetInstances/".format(self.url_base)
+        url = os.path.join(self.url_base, 'Assets/')
         params = {
-            'tenant_id': tenant_id,
-            'path': path,
+            'name': name,
             'dataset': dataset['id'],
         }
         if revision is None:
@@ -201,41 +209,37 @@ class DataCatalogClient:
             })
         self.inject_token(params)
 
-        r = self.session.get(url=url, params = params)
+        r = self.session.get(url=url, params=params)
         r.raise_for_status()
 
         d = r.json()
         if d['count'] > 0:
-            dsi = d['results'][0]
-            if dsi['deleted_time'] is not None:
+            asset = d['results'][0]
+            if asset['deleted_time'] is not None:
                 # dataset instance is already deleted
                 return None
-            return dsi
+            return asset
 
         return None
 
 
-    def create_dataset_instance(self, tenant_id, name, major_version, minor_version, path, locations, data_time,
-                                row_count=None, loader=None, src_dsi_paths=[],
-                                application_id = None, application_args = None, spark=None
+    def create_asset(self, *, dataset_name, major_version, minor_version, name, locations, data_time,
+                     row_count=None, loader=None, src_asset_paths=[],
+                     application_id = None, application_args = None, spark=None
 
         ):
         """Create a dataset instance.
 
         Parameters
         ----------
-        tenant_id: integer
-            The ID of the tenant.
-        name: str
+        dataset_name: str
             The name of the dataset.
         major_version: str
             The major version of the dataset.
         minor_version: integer
             The minor version of the dataset.
-        row_count: integer
-            The number of rows for this dataset instance.
-        path: str
-            The path of the dataset instance.
+        name: str
+            The asset name
         locations: [Location]
             An array of location. A location is a dict object that has following fields:
             type: str
@@ -246,7 +250,9 @@ class DataCatalogClient:
                 Optional. The storage size of the data in this location.
             repo_name: string
                 Optional. The name of the data repo
-        src_dsi_paths: [string]
+        row_count: integer
+            The number of rows for this dataset instance.
+        src_asset_paths: [string]
             list of dataset instances path that this asset depend on. the path MUST contain revision.
         application_id: string, optional
             if present, it is the application id which produces this asset
@@ -254,54 +260,38 @@ class DataCatalogClient:
             if present, it is the args passed to this application.
         spark: placeholder, to keep the API compatible
         """
-        dataset = self.get_dataset(tenant_id, name, major_version, minor_version)
+        dataset = self.get_dataset(
+            name=dataset_name,
+            major_version=major_version,
+            minor_version=minor_version
+        )
         if dataset is None:
             raise Exception("dataset not found")
 
-        if not path.startswith('/'):
-            raise Exception("path must be absolute")
-        if path.endswith('/'):
-            raise Exception("path must not end with /")
-        di_names = path[1:].split('/')
-
-        for di_name in di_names:
-            if len(di_name) == 0:
-                raise Exception('Invalid path: name cannot be empty')
-
-        if len(di_names) == 0:
-            raise Exception('Invalid path: name not specified')
-
-        if len(di_names) == 1:
-            parent_instance = None
-        else:
-            new_path = '/' + '/'.join(di_names[:-1])
-            parent_instance = self.get_dataset_instance(tenant_id, name, major_version, minor_version, new_path)
-
-        url = "{}/DatasetInstances/".format(self.url_base)
+        url = os.path.join(self.url_base, 'Datasets', dataset['id'], "create_asset/")
         data = {
-            'dataset_id': dataset['id'],
-            'parent_instance_id': None if parent_instance is None else  parent_instance['id'],
-            'name': di_names[-1],
+            'name': name,
             'data_time': data_time.strftime('%Y-%m-%d %H:%M:%S'),
             'row_count': row_count,
             'loader': loader,
             'locations': locations,
-            'src_dsi_paths': src_dsi_paths,
+            'src_asset_paths': src_asset_paths,
             'application_id': application_id,
             'application_args': application_args,
         }
         if row_count is None:
             data.pop("row_count")
-        self.inject_token(data)
+        params = { }
+        self.inject_token(params)
 
-        r = self.session.post(url=url, json = data)
+        r = self.session.post(url=url, params=params, json=data)
         r.raise_for_status()
 
         ret = r.json()
         _update_locations(ret['locations'])
         return ret
 
-    def delete_dataset_instance(self, id, spark=None):
+    def delete_asset(self, *, id, spark=None):
         """Delete a dataset instance by id.
 
         Parameters
@@ -310,31 +300,28 @@ class DataCatalogClient:
             The dataset ID.
         spark: placeholder, to keep the API compatible
         """
-        url = "{}/DatasetInstances/{id}".format(self.url_base)
+        url = os.path.join(self.url_base, "Assets", f"{id}/")
         params = {}
         self.inject_token(params)
         r = self.session.delete(url=url, params=params)
         r.raise_for_status()
 
-    def get_data_repo(self, tenant_id, name, spark=None):
+    def get_data_repo(self, *, name, spark=None):
         """Get a data repo by name.
         Data repo's name is unique
 
         Parameters
         ----------
-        tenant_id: integer
-            The ID of the tenant
         name: str
             The data repo name.
         spark: placeholder, to keep the API compatible
         """
-        url = "{}/DataRepos/".format(self.url_base)
+        url = os.path.join(self.url_base, 'DataRepos/')
         params = {
-            'tenant_id': tenant_id,
             'name': name,
         }
         self.inject_token(params)
-        r = self.session.get(url=url, params = params)
+        r = self.session.get(url=url, params=params)
         r.raise_for_status()
 
         d = r.json()

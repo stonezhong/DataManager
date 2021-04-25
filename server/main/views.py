@@ -176,7 +176,7 @@ class DatasetViewSet(APIBaseView):
     # Support
     #   retrieve                    -- default behavior
     #   list                        -- default behavior
-    #   destroy                     -- not supported
+    #   destroy                     -- default behavior
     #   update                      -- default behavior
     #   create                      -- custom
     #   set_schema_and_sample_data  -- custom
@@ -223,8 +223,6 @@ class DatasetViewSet(APIBaseView):
         response = DatasetSerializer(instance=ds).data
         return Response(response)
 
-    def destroy(self, request, tenant_id_str=None, *args, **kwargs):
-        raise ValidationError("destroy is not supported for Dataset")
 
     @action(detail=True, methods=['post'])
     @transaction.atomic
@@ -238,7 +236,6 @@ class DatasetViewSet(APIBaseView):
         data = request.data
         ssasd_input = SetSchemaAndSampleDataInput.from_json(data, tenant_id)
         ds.set_schema_and_sample_data(
-            request.user,
             ssasd_input.schema,
             ssasd_input.sample_data
         )
