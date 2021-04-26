@@ -475,7 +475,7 @@ class Dataset(models.Model):
         if application is not None and application.tenant.id != self.tenant.id:
             raise ValidationError("Application not in the tenant")
 
-        if len(locations)==0:
+        if len(locations)==0 and loader is None:
             raise ValidationError("No location specified")
 
         tenant = self.tenant
